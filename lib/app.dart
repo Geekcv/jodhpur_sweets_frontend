@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:js_order_website/Screens/LoginScreen.dart';
 import 'package:js_order_website/Screens/MainDashboard.dart';
-import 'package:js_order_website/Screens/SplashScreen.dart';
 import 'package:js_order_website/controllers/api_controller.dart';
-import '../provider/provider.dart';
 import 'Screens/LoginUserDetails.dart';
 
 class App extends ConsumerStatefulWidget {
