@@ -389,7 +389,7 @@ class _ChalanListScreenState extends ConsumerState<ChalanListScreen> {
                     const SizedBox(height: 12),
                     _buildModalSection("Transport / Vehicle", data.transportDetails ?? "-"),
                     const SizedBox(height: 24),
-                    const Text("DISPATCHED ITEMS", style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: Color(0xff64748B), letterSpacing: 1.5)),
+                    const Text("ITEMS", style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: Color(0xff64748B), letterSpacing: 1.5)),
                     const SizedBox(height: 12),
                     Container(
                       decoration: BoxDecoration(borderRadius: BorderRadius.circular(8), border: Border.all(color: const Color(0xffE2E8F0))),
