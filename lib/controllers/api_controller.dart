@@ -9,6 +9,7 @@ import 'package:js_order_website/models/UserProfileModel.dart';
 import '../Screens/LoginUserDetails.dart';
 import '../app.dart';
 import '../models/ChalanDataModel.dart';
+import '../models/DashboardAccordingToRoleModel.dart';
 import '../models/DashboardModel.dart';
 import '../models/ExpiredItemModel.dart';
 import '../models/FetchNotificationModel.dart';
@@ -695,6 +696,68 @@ class ApiController {
     print("verifyChallanForAutoInv response:-----$res");
 
     if (res != null && (res['status'] == 0 || res['status'] == "0")) {
+      return res;
+    } else {
+      return res;
+    }
+  }
+
+
+
+  // static fetchDashboardAccordingToRole({context, params}) async {
+  //   var token = await getloggedinUserToken();
+  //   var res = await ApiService().fetchDashboardAccordingToRole(param: params, token: token);
+  //
+  //   print("fetchDashboardAccordingToRole response:-----$res");
+  //
+  //   if (res != null && (res['status'] == 0 || res['status'] == "0")) {
+  //     return res;
+  //   } else {
+  //     return res;
+  //   }
+  // }
+
+  static Future<dynamic> fetchDashboardAccordingToRole({required BuildContext context,Map<String, dynamic>? params,required String role}) async {
+    try {
+      var token = await getloggedinUserToken();
+      var res = await ApiService().fetchDashboardAccordingToRole(param: params, token: token);
+
+      print("role-----$role");
+      print("fetchDashboardAccordingToRole response:-----$res");
+
+      if (res != null && (res['status'] == 0 || res['status'] == "0")) {
+        final data = res['data'];
+
+        // Role mapping logic (Case insensitive)
+        switch (role.toLowerCase()) {
+          case 'admin':
+            return AdminDashboardModel.fromJson(data);
+          case 'shop_admin':
+            return ShopDashboardModel.fromJson(data);
+          case 'counter_user':
+            return CounterDashboardModel.fromJson(data);
+          case 'supplier':
+            return SupplierDashboardModel.fromJson(data);
+          default:
+            return data;
+        }
+      } else {
+        return null;
+      }
+    } catch (e) {
+      print("Error in fetchDashboardAccordingToRole: $e");
+      return null;
+    }
+  }
+
+
+
+  static downloadOrderRequestSupplierSide({context,params})async{
+    var token = await getloggedinUserToken();
+    var res = await ApiService().downloadOrderRequestSupplierSide(param: params,token: token);
+    print("downloadOrderRequestSupplierSide response:-----$res");
+
+    if (res != null && res['status'] == 0) {
       return res;
     } else {
       return res;

@@ -745,4 +745,39 @@ class ApiService extends ChangeNotifier {
   }
 
 
+
+
+  fetchDashboardAccordingToRole({token, param}) async {
+    var data = {
+      "fn": "common_fn",
+      "se": "fe_dash_role",
+      "data": {}
+    };
+
+    print("data send fetchDashboardAccordingToRole:----------$data");
+    var encodedData = await Functions.encodeData(data);
+    var res = await Functions.httpPostToken(data: encodedData,token: token);
+    var decodedData = await Functions.decodeData(res);
+    return decodedData;
+  }
+
+
+
+  downloadOrderRequestSupplierSide({token, param}) async {
+    var data = {
+      "fn": "common_fn",
+      "se": "dow_ord_req",
+      "data": {
+        'order_id':param['order_id']
+      }
+    };
+
+    print("data send downloadOrderRequestSupplierSide:----------$data");
+    var encodedData = await Functions.encodeData(data);
+    var res = await Functions.httpPostToken(data: encodedData,token: token);
+    var decodedData = await Functions.decodeData(res);
+    return decodedData;
+  }
+
+
 }

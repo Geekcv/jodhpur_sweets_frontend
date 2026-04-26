@@ -3,6 +3,9 @@ import 'package:intl/intl.dart';
 import 'package:js_order_website/controllers/api_controller.dart';
 import '../constants/static.dart';
 import '../models/SupplierOrder.dart';
+import 'package:http/http.dart' as http;
+import 'dart:html' as html;
+
 
 class SupplierOrdersScreen extends StatefulWidget {
   const SupplierOrdersScreen({super.key});
@@ -281,6 +284,50 @@ class _SupplierOrdersScreenState extends State<SupplierOrdersScreen> {
     ));
   }
 
+
+  Set<String> downloadingIds = {};
+  Future<void> _handleDownload(SupplierOrder order, StateSetter setModalState) async {
+    final String orderId = order.orderId.toString();
+    setModalState(() => downloadingIds.add(orderId));
+
+    try {
+      var res = await ApiController.downloadOrderRequestSupplierSide(context: context,params: {'order_id': orderId});
+
+      if (res != null && res['status'] == 0) {
+        String url = res['filePath'];
+        String fileName = "Order_${orderId.split('_').last}.pdf";
+
+        final response = await http.get(Uri.parse(url));
+        final bytes = response.bodyBytes;
+
+        final blob = html.Blob([bytes], 'application/pdf');
+        final blobUrl = html.Url.createObjectUrlFromBlob(blob);
+        html.AnchorElement(href: blobUrl)
+          ..setAttribute("download", fileName)
+          ..click();
+        html.Url.revokeObjectUrl(blobUrl);
+
+        _showSnackBar("Download Completed", Colors.green);
+      } else {
+        _showSnackBar(res['msg'] ?? "Failed to fetch file", Colors.red);
+      }
+    } catch (e) {
+      _showSnackBar("Error: $e", Colors.red);
+    } finally {
+      if (mounted) {
+        setModalState(() => downloadingIds.remove(orderId));
+      }
+    }
+  }
+
+
+
+
+
+
+
+
+
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
@@ -329,7 +376,8 @@ class _SupplierOrdersScreenState extends State<SupplierOrdersScreen> {
                 Expanded(flex: 2, child: Text("SWEET NAME", style: _headerStyle)),
                 Expanded(flex: 2, child: Text("QTY", style: _headerStyle)),
                 Expanded(flex: 1, child: Text("TOTAL ITEMS", style: _headerStyle)), // Naya Column
-                Expanded(flex: 1, child: Text("STATUS", style: _headerStyle, textAlign: TextAlign.right)),
+                Expanded(flex: 1, child: Text("STATUS", style: _headerStyle,)),
+                Expanded(flex: 1, child: Text("ACTION", style: _headerStyle, textAlign: TextAlign.center)),
               ],
             ),
           ),
@@ -343,6 +391,7 @@ class _SupplierOrdersScreenState extends State<SupplierOrdersScreen> {
               itemBuilder: (context, index) {
                 var item = supplierOrders[index];
                 bool isSelected = selectedOrder?.orderId == item.orderId;
+                bool isDownloading = downloadingIds.contains(item.orderId.toString());
 
                 // Logic for "More" sweets
                 int itemsCount = item.items?.length ?? 0;
@@ -350,7 +399,19 @@ class _SupplierOrdersScreenState extends State<SupplierOrdersScreen> {
                 String sweetDisplay = itemsCount > 1 ? "$firstSweet +${itemsCount - 1} More" : firstSweet;
 
                 return InkWell(
-                  onTap: () => setState(() { selectedOrder = item; showDetails = true; }),
+                  // onTap: () => setState(() { selectedOrder = item; showDetails = true; }),
+                  onTap: () {
+                    setState(() {
+                      if (selectedOrder?.orderId == item.orderId) {
+                        // Agar wahi item hai, toh band kar do (toggle)
+                        showDetails = !showDetails;
+                      } else {
+                        // Agar naya item hai, toh select karo aur panel khol do
+                        selectedOrder = item;
+                        showDetails = true;
+                      }
+                    });
+                  },
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -419,7 +480,21 @@ class _SupplierOrdersScreenState extends State<SupplierOrdersScreen> {
                         ),
 
                         // 6. Status
-                        Expanded(flex: 1, child: Align(alignment: Alignment.centerRight, child: _statusBadge(item.orderStatus))),
+                        Expanded(flex: 1, child: Align(alignment: Alignment.centerLeft, child: _statusBadge(item.orderStatus))),
+                        Expanded(
+                          flex: 1,
+                          child: Center(
+                            child: isDownloading ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                            : SizedBox(
+                              // width: 32,// height: 32,
+                              child: IconButton(padding: EdgeInsets.zero, constraints: const BoxConstraints(),
+                                icon: const Icon(Icons.print, size: 16, color: Colors.blue),
+                                tooltip: "Download Order Copy",
+                                onPressed: () => _handleDownload(item, setState)
+                              ),
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                   ),
