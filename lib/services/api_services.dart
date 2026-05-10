@@ -115,6 +115,8 @@ class ApiService extends ChangeNotifier {
       "fn": "common_fn",
       "se": "cr_supplier",
       "data": {
+        if (param['row_id'] != null)
+        "row_id": param['row_id'],
         "supplier_name": param['supplier_name'],
         "phone": param['phone'],
         "email": param['email'],
@@ -154,6 +156,8 @@ class ApiService extends ChangeNotifier {
       "fn": "common_fn",
       "se": "cr_dep",
       "data": {
+        if (param['row_id'] != null)
+        "row_id": param['row_id'],
         "shop_id": param['shop_id'],
         "department_name": param['department_name'],
         "description": param['description'],
@@ -212,6 +216,8 @@ class ApiService extends ChangeNotifier {
       "fn": "common_fn",
       "se": "cr_cat",
       "data": {
+        if (param['row_id'] != null)
+        "row_id": param['row_id'],
         "shop_id": param['shop_id'],
         "department_id": param['department_id'],
         "category_name": param['category_name'],
@@ -773,6 +779,21 @@ class ApiService extends ChangeNotifier {
     };
 
     print("data send downloadOrderRequestSupplierSide:----------$data");
+    var encodedData = await Functions.encodeData(data);
+    var res = await Functions.httpPostToken(data: encodedData,token: token);
+    var decodedData = await Functions.decodeData(res);
+    return decodedData;
+  }
+
+
+  factoryReset({token, param}) async {
+    var data = {
+      "fn": "common_fn",
+      "se": "de_ness_data",
+      "data": {}
+    };
+
+    print("data send factoryReset:----------$data");
     var encodedData = await Functions.encodeData(data);
     var res = await Functions.httpPostToken(data: encodedData,token: token);
     var decodedData = await Functions.decodeData(res);

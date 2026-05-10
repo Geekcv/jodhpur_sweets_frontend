@@ -39,6 +39,8 @@ class _AddSupplierScreenState extends ConsumerState<AddSupplierScreen> {
     });
   }
 
+  var editingRowId;
+
   Future<void> _submitSupplier() async {
     // Sabhi fields required hain validation
     bool isFormInvalid = controllers.values.any((ctrl) => ctrl.text.trim().isEmpty) ||
@@ -53,6 +55,7 @@ class _AddSupplierScreenState extends ConsumerState<AddSupplierScreen> {
     setState(() => isLoading = true);
 
     final tobeSendData = {
+      if (editingRowId != null) "row_id": editingRowId, // Edit mode ke liye ID
       "supplier_name": controllers['name']!.text.trim(),
       "phone": controllers['phone']!.text.trim(),
       "email": controllers['email']!.text.trim(),
@@ -71,7 +74,10 @@ class _AddSupplierScreenState extends ConsumerState<AddSupplierScreen> {
 
   void _clearForm() {
     controllers.forEach((key, controller) => controller.clear());
-    setState(() => showErrors = false);
+    setState(() {
+      editingRowId = null;
+      showErrors = false;
+    });
   }
 
   @override
@@ -270,9 +276,21 @@ class _AddSupplierScreenState extends ConsumerState<AddSupplierScreen> {
           //   child: Row(
           //     mainAxisAlignment: MainAxisAlignment.end,
           //     children: [
-          //       _actionBtn(Icons.edit_outlined, Colors.blue, () {}),
+          //       _actionBtn(Icons.edit_outlined, Colors.blue, () {
+          //         setState(() {
+          //           editingRowId = s.row_id;
+          //           controllers['name']!.text = s.supplier_name ?? "";
+          //           controllers['phone']!.text = s.phone ?? "";
+          //           controllers['email']!.text = s.email ?? "";
+          //           controllers['address']!.text = s.address ?? "";
+          //           controllers['password']!.text = s. ?? "";
+          //         });
+          //
+          //         // Agar list niche hai toh scroll up karein
+          //         // _scrollController.animateTo(0, duration: const Duration(milliseconds: 500), curve: Curves.easeIn);
+          //       }),
           //       const SizedBox(width: 8),
-          //       _actionBtn(Icons.delete_outline, Colors.redAccent, () {}),
+          //       // _actionBtn(Icons.delete_outline, Colors.redAccent, () {}),
           //     ],
           //   ),
           // ),

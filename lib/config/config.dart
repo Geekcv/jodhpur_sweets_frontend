@@ -1,4 +1,5 @@
-const url = 'https://stock.abhishekcv.in';
+// const url = 'https://stock.abhishekcv.in';
+const url = 'https://api.joswee.cloud';
 // const url = 'http://192.168.20.144:8000';
 // const url = 'https://1064-223-185-19-105.ngrok-free.app';
 // const url = 'http://192.168.0.51:3000';

@@ -26,6 +26,7 @@ class _AddCategoryScreenState extends ConsumerState<AddCategoryScreen> {
   final TextEditingController catNameController = TextEditingController();
   String? selectedDeptId;
   String? shop_id;
+  var editingRowId;
 
   static const Color primaryDark = Color(0xff1A2B4C);
   static const Color successGreen = Color(0xff108548);
@@ -56,6 +57,7 @@ class _AddCategoryScreenState extends ConsumerState<AddCategoryScreen> {
 
     setState(() => isLoading = true);
     final tobeSendData = {
+      if (editingRowId != null) "row_id": editingRowId,
       "department_id": selectedDeptId,
       "shop_id": LoginUserDetails.isAdmin ? shop_id : LoginUserDetails.shopId,
       "category_name": catNameController.text.trim(),
@@ -69,6 +71,7 @@ class _AddCategoryScreenState extends ConsumerState<AddCategoryScreen> {
         selectedDeptId = null;
         shop_id = null;
         showErrors = false;
+        editingRowId = null;
       });
       ref.read(master_Provider).fetchCategory();
     }
@@ -300,13 +303,14 @@ class _AddCategoryScreenState extends ConsumerState<AddCategoryScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
       color: const Color(0xffF8FAFC),
-      child: const Row(
+      child: Row(
         children: [
-          SizedBox(width: 50, child: Text("S.N.", style: _hStyle)),
-          Expanded(flex: 3, child: Text("SHOP NAME", style: _hStyle)),
-          Expanded(flex: 3, child: Text("CATEGORY NAME", style: _hStyle)),
-          Expanded(flex: 2, child: Text("DEPARTMENT", style: _hStyle)),
-          // SizedBox(width: 80, child: Text("ACTIONS", textAlign: TextAlign.right, style: _hStyle)),
+          const SizedBox(width: 50, child: Text("S.N.", style: _hStyle)),
+          const Expanded(flex: 3, child: Text("SHOP NAME", style: _hStyle)),
+          const Expanded(flex: 3, child: Text("CATEGORY NAME", style: _hStyle)),
+          const Expanded(flex: 2, child: Text("DEPARTMENT", style: _hStyle)),
+          // if(LoginUserDetails.isAdmin)
+          // const SizedBox(width: 80, child: Text("ACTIONS", textAlign: TextAlign.right, style: _hStyle)),
         ],
       ),
     );
@@ -321,14 +325,25 @@ class _AddCategoryScreenState extends ConsumerState<AddCategoryScreen> {
           Expanded(flex: 3, child: Text(cat.shop_name ?? "-", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: primaryDark))),
           Expanded(flex: 3, child: Text(cat.category_name ?? "-", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: primaryDark))),
           Expanded(flex: 2, child: Text(cat.department_name ?? "-", style: const TextStyle(fontSize: 13, color: Colors.black54))),
+          // if(LoginUserDetails.isAdmin)
           // SizedBox(
           //   width: 80,
           //   child: Row(
           //     mainAxisAlignment: MainAxisAlignment.end,
           //     children: [
-          //       _actionBtn(Icons.edit_outlined, Colors.blue, () {}),
-          //       const SizedBox(width: 8),
-          //       _actionBtn(Icons.delete_outline, Colors.redAccent, () {}),
+          //       _actionBtn(Icons.edit_outlined, Colors.blue, () {
+          //         setState(() {
+          //           editingRowId = cat.row_id;
+          //           catNameController.text = cat.category_name ?? "";
+          //           selectedDeptId = cat.department_id;
+          //
+          //           if (LoginUserDetails.isAdmin) {
+          //             shop_id = cat.shop_id;
+          //           }
+          //         });
+          //       }),
+          //       // const SizedBox(width: 8),
+          //       // _actionBtn(Icons.delete_outline, Colors.redAccent, () {}),
           //     ],
           //   ),
           // ),

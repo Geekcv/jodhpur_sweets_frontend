@@ -599,7 +599,12 @@ class _MainDashboardState extends ConsumerState<MainDashboard> with TickerProvid
             },
           ),
 
-          SizedBox(width: 18),
+          SizedBox(width: 12),
+
+          if (LoginUserDetails.role == 'ADMIN')
+          buildFactoryResetButton(context),
+
+          SizedBox(width: 12),
 
           // 4. Premium Profile Section
           InkWell(
@@ -689,4 +694,168 @@ class _MainDashboardState extends ConsumerState<MainDashboard> with TickerProvid
     );
   }
 
-}
+  Widget buildFactoryResetButton(BuildContext context) {
+    return Container(
+      height: 40,
+      child: OutlinedButton.icon(
+        style: OutlinedButton.styleFrom(
+          // Border ko thoda soft red rakha hai
+          side: BorderSide(color: Colors.red.withOpacity(0.4), width: 1.2),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          backgroundColor: Colors.red.withOpacity(0.02), // Halka sa background tint
+          elevation: 0,
+          // Hover effect ke liye
+          foregroundColor: Colors.redAccent.shade700,
+        ).copyWith(
+          overlayColor: WidgetStateProperty.all(Colors.red.withOpacity(0.05)),
+        ),
+        // Icon ko delete_forever ya restart_alt mein change kiya hai
+        icon: Icon(Icons.restart_alt_rounded, size: 18, color: Colors.redAccent.shade700),
+        label: Text(
+          "FACTORY RESET",
+          style: TextStyle(
+            fontSize: 10.5,
+            fontWeight: FontWeight.w900, // Zyada bold for authority
+            color: Colors.redAccent.shade700,
+            letterSpacing: 0.8, // Professional spacing
+          ),
+        ),
+        onPressed: () => _showPremiumResetDialog(context),
+      ),
+    );
+  }
+
+
+  void _showPremiumResetDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        const Color slate900 = Color(0xFF0F172A);
+        const Color slate500 = Color(0xFF64748B);
+        const Color slate100 = Color(0xFFF1F5F9);
+
+        // ValueNotifier loading state handle karne ke liye (API call ke waqt)
+        ValueNotifier<bool> isApiLoading = ValueNotifier(false);
+
+        return ValueListenableBuilder(
+            valueListenable: isApiLoading,
+            builder: (context, loading, child) {
+              return AlertDialog(
+                backgroundColor: Colors.white,
+                surfaceTintColor: Colors.white,
+                // Width fix karne ke liye insetPadding aur ConstrainedBox ka use
+                insetPadding: const EdgeInsets.symmetric(horizontal: 20),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                title: loading ? null : const Text(
+                  "Factory Reset",
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: slate900),
+                ),
+                content: SizedBox(
+                  width: 380, // Fixed width for premium feel
+                  child: loading
+                      ? const Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(height: 20),
+                      CircularProgressIndicator(strokeWidth: 2, color: Colors.redAccent),
+                      SizedBox(height: 20),
+                      Text("Purging system data...", style: TextStyle(fontSize: 13, color: slate500)),
+                      SizedBox(height: 20),
+                    ],
+                  )
+                      : Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "This operation will delete all order histories, and inventory records.",
+                        style: TextStyle(fontSize: 13, color: slate500, height: 1.5),
+                      ),
+                      const SizedBox(height: 24),
+
+                      // Micro Timer & Progress
+                      FutureBuilder(
+                        future: Future.delayed(const Duration(seconds: 5)),
+                        builder: (context, snapshot) {
+                          bool isWaiting = snapshot.connectionState == ConnectionState.waiting;
+                          return AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 400),
+                            child: isWaiting
+                                ? Column(
+                              key: const ValueKey(1),
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text("Safety Validation in Progress...", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.orange)),
+                                const SizedBox(height: 6),
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(10),
+                                  child: const SizedBox(height: 2, child: LinearProgressIndicator(backgroundColor: slate100, valueColor: AlwaysStoppedAnimation(Colors.orange))),
+                                ),
+                              ],
+                            )
+                                : Row(
+                              key: const ValueKey(2),
+                              children: [
+                                Icon(Icons.verified_user_outlined, size: 14, color: Colors.green.shade600),
+                                const SizedBox(width: 6),
+                                Text("Ready to reset", style: TextStyle(fontSize: 11, color: Colors.green.shade700, fontWeight: FontWeight.w600)),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                actions: loading ? [] : [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text("Cancel", style: TextStyle(color: slate500, fontSize: 13, fontWeight: FontWeight.w600)),
+                  ),
+                  FutureBuilder(
+                    future: Future.delayed(const Duration(seconds: 5)),
+                    builder: (context, snapshot) {
+                      bool isReady = snapshot.connectionState != ConnectionState.waiting;
+                      return ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: isReady ? Colors.red.shade700 : slate100,
+                          foregroundColor: isReady ? Colors.white : Colors.grey.shade400,
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                        ),
+                        onPressed: isReady ? () async {
+                          // 1. Loading Start
+                          isApiLoading.value = true;
+
+                          // 3. Call API
+                          var res = await ApiController.factoryReset(context: context);
+
+                          // 4. Handle Result
+                          isApiLoading.value = false;
+                          if (res != null && res['status'] == 0) {
+                            Navigator.pop(context);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text("Factory Reset Successful"), backgroundColor: Colors.green),
+                            );
+                          } else {
+                            Navigator.pop(context);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text("Failed to reset. Try again."), backgroundColor: Colors.red),
+                            );
+                          }
+                        } : null,
+                        child: const Text("Yes", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                      );
+                    },
+                  ),
+                ],
+              );
+            }
+        );
+      },
+    );
+  }}

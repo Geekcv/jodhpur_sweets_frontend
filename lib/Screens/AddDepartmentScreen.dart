@@ -41,6 +41,7 @@ class _AddDepartmentScreenState extends ConsumerState<AddDepartmentScreen> {
   }
 
   String? shop_id;
+  var editingRowId;
 
   // Helper function for Date Formatting (DD-MM-YYYY)
   String formatDate(String? dateStr) {
@@ -55,32 +56,86 @@ class _AddDepartmentScreenState extends ConsumerState<AddDepartmentScreen> {
 
 
 
-  Future<void> _submitDepartment() async {
-    if (shop_id == null && LoginUserDetails.isAdmin) {
+  // Future<void> _submitDepartment() async {
+  //   if (shop_id == null && LoginUserDetails.isAdmin) {
+  //     showToast(context: context, msg: "Please Select a Shop!", color: Colors.orange);
+  //     return;
+  //   }
+  //
+  //   if (!_formKey.currentState!.validate()) return;
+  //   setState(() => isLoading = true);
+  //   final tobeSendData = {
+  //     "shop_id": LoginUserDetails.isAdmin ? shop_id : LoginUserDetails.shopId,
+  //     "department_name": nameController.text.trim(),
+  //     "description": descController.text.trim(),
+  //   };
+  //
+  //   var response = await ApiController.addDepartment(params: tobeSendData);
+  //   if (response != null && response['status'] == 0) {
+  //     showToast(context: context, msg: "Department Created Successfully!",color: Colors.green);
+  //     shop_id = null;
+  //     nameController.clear();
+  //     descController.clear();
+  //     await ref.read(master_Provider).fetchDepartment();
+  //   } else {
+  //     showToast(context: context, msg: response?['msg'] ?? "Error Occurred",color: Colors.redAccent);
+  //   }
+  //   if (mounted) setState(() => isLoading = false);
+  // }
+
+
+
+  Future<void> handleDepartmentSubmit() async {
+    // 1. Validation Logic
+    if (LoginUserDetails.isAdmin && shop_id == null) {
       showToast(context: context, msg: "Please Select a Shop!", color: Colors.orange);
       return;
     }
 
     if (!_formKey.currentState!.validate()) return;
-    setState(() => isLoading = true);
-    final tobeSendData = {
-      "shop_id": LoginUserDetails.isAdmin ? shop_id : LoginUserDetails.shopId,
-      "department_name": nameController.text.trim(),
-      "description": descController.text.trim(),
-    };
 
-    var response = await ApiController.addDepartment(params: tobeSendData);
-    if (response != null && response['status'] == 0) {
-      showToast(context: context, msg: "Department Created Successfully!",color: Colors.green);
-      shop_id = null;
-      nameController.clear();
-      descController.clear();
-      await ref.read(master_Provider).fetchDepartment();
-    } else {
-      showToast(context: context, msg: response?['msg'] ?? "Error Occurred",color: Colors.redAccent);
+    setState(() => isLoading = true);
+
+    try {
+      final tobeSendData = {
+        if (editingRowId != null) "row_id": editingRowId, // Edit mode ke liye
+        "shop_id": LoginUserDetails.isAdmin ? shop_id : LoginUserDetails.shopId,
+        "department_name": nameController.text.trim(),
+        "description": descController.text.trim(),
+      };
+
+      // 3. API Call (Single Controller Method)
+      var response = await ApiController.addDepartment(params: tobeSendData);
+
+      if (response != null && response['status'] == 0) {
+        String successMsg = editingRowId == null
+            ? "Department Created Successfully!"
+            : "Department Updated Successfully!";
+
+        showToast(context: context, msg: successMsg, color: Colors.green);
+
+        // 4. Reset Form and Refresh Data
+        _clearForm();
+        await ref.read(master_Provider).fetchDepartment();
+      } else {
+        showToast(context: context, msg: response?['msg'] ?? "Operation Failed", color: Colors.redAccent);
+      }
+    } catch (e) {
+      showToast(context: context, msg: "Something went wrong!", color: Colors.redAccent);
+    } finally {
+      if (mounted) setState(() => isLoading = false);
     }
-    if (mounted) setState(() => isLoading = false);
   }
+
+  void _clearForm() {
+    nameController.clear();
+    descController.clear();
+    shop_id = null;
+    editingRowId = null;
+    setState(() {});
+  }
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -206,7 +261,7 @@ class _AddDepartmentScreenState extends ConsumerState<AddDepartmentScreen> {
           Padding(
             padding: const EdgeInsets.only(bottom: 2), // Align with textfields
             child: ElevatedButton.icon(
-              onPressed: isLoading ? null : _submitDepartment,
+              onPressed: isLoading ? null : handleDepartmentSubmit,
               style: ElevatedButton.styleFrom(
                 backgroundColor: successGreen,
                 foregroundColor: Colors.white,
@@ -262,13 +317,14 @@ class _AddDepartmentScreenState extends ConsumerState<AddDepartmentScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
       color: tableHeaderBg,
-      child: const Row(
+      child: Row(
         children: [
           SizedBox(width: 40, child: Text("S.N.", style: _hStyle)),
           Expanded(flex: 3, child: Text("SHOP NAME", style: _hStyle)),
           Expanded(flex: 3, child: Text("DEPARTMENT NAME", style: _hStyle)),
           Expanded(flex: 4, child: Text("DESCRIPTION", style: _hStyle)),
           Expanded(flex: 2, child: Text("CREATED DATE", style: _hStyle)),
+          // if(LoginUserDetails.isAdmin)
           // SizedBox(width: 80, child: Text("ACTIONS", textAlign: TextAlign.right, style: _hStyle)),
         ],
       ),
@@ -286,18 +342,26 @@ class _AddDepartmentScreenState extends ConsumerState<AddDepartmentScreen> {
           Expanded(flex: 4, child: Text(dept.description ?? "N/A", style: TextStyle(fontSize: 13, color: Colors.grey[700]), maxLines: 1, overflow: TextOverflow.ellipsis)),
           Expanded(flex: 2, child: Text(formatDate(dept.cr_on.toString()), style: const TextStyle(fontSize: 13, color: Colors.black87))),
 
+          // if(LoginUserDetails.isAdmin)
           // SizedBox(
           //   width: 80,
           //   child: Row(
           //     mainAxisAlignment: MainAxisAlignment.end,
           //     children: [
           //       _actionBtn(Icons.edit_outlined, Colors.blue, () {
-          //         // TODO: Map Edit Logic
+          //         nameController.text = dept.department_name ?? "";
+          //         descController.text = dept.description ?? "";
+          //         if (LoginUserDetails.isAdmin) {
+          //           shop_id = dept.shop_id;
+          //         }
+          //         setState(() {
+          //           editingRowId = dept.row_id;
+          //         });
           //       }),
-          //       const SizedBox(width: 8),
-          //       _actionBtn(Icons.delete_outline, Colors.redAccent, () {
-          //         // TODO: Map Delete Logic
-          //       }),
+          //       // const SizedBox(width: 8),
+          //       // _actionBtn(Icons.delete_outline, Colors.redAccent, () {
+          //       //   // TODO: Map Delete Logic
+          //       // }),
           //     ],
           //   ),
           // ),

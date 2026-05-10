@@ -8,8 +8,9 @@ class CustomDropdownSearch<T> extends StatelessWidget {
   final bool Function(T, T)? compareFn;
   final Function(T?) onChanged;
   final String hintText;
+  var enabled;
 
-  const CustomDropdownSearch({
+  CustomDropdownSearch({
     super.key,
     required this.items,
     this.selectedItem,
@@ -17,11 +18,13 @@ class CustomDropdownSearch<T> extends StatelessWidget {
     this.compareFn,
     required this.onChanged,
     this.hintText = "Select Option",
+    this.enabled,
   });
 
   @override
   Widget build(BuildContext context) {
     return DropdownSearch<T>(
+      enabled: enabled ?? true,
       items: (filter, loadProps) => items,
       itemAsString: itemLabelBuilder,
       compareFn: compareFn,

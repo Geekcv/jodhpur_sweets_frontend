@@ -924,6 +924,25 @@ class _DashboardOverviewState extends State<DashboardOverview> {
 
     return BarChart(
       BarChartData(
+        // gridData: const FlGridData(show: false),
+        gridData: FlGridData(
+          show: true,
+          drawVerticalLine: false,
+          horizontalInterval: 1,
+          getDrawingHorizontalLine: (value) => FlLine(
+            color: const Color(0xffEAF4FF), // very light blue
+            strokeWidth: 1,
+          ),
+        ),
+        borderData: FlBorderData(
+          show: true,
+          border: const Border(
+            bottom: BorderSide(color: Color(0xFFF1F5F9), width: 1), // Light Grey Bottom Border
+            left: BorderSide(color: Color(0xFFF1F5F9), width: 1),   // Light Grey Left Border
+            top: BorderSide.none,
+            right: BorderSide.none,
+          ),
+        ),
         maxY: maxYValue,
         barTouchData: BarTouchData(
           touchTooltipData: BarTouchTooltipData(

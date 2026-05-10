@@ -766,6 +766,20 @@ class ApiController {
 
 
 
+  static factoryReset({context,params})async{
+    var token = await getloggedinUserToken();
+    var res = await ApiService().factoryReset(param: params,token: token);
+    print("factoryReset response:-----$res");
+
+    if (res != null && res['status'] == 0) {
+      return res;
+    } else {
+      return res;
+    }
+  }
+
+
+
 
 
   static logOut(context) async {
