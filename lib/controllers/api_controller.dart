@@ -92,7 +92,7 @@ class ApiController {
   static addShop({context,params})async{
     var token = await getloggedinUserToken();
     var res = await ApiService().addShop(param: params,token: token);
-    print("Add shop response:----$res");
+    //print("Add shop response:----$res");
     if(res['status']==0){
       return res;
     }
@@ -104,7 +104,7 @@ class ApiController {
   static fetchShop({context,params})async{
     var token = await getloggedinUserToken();
     var res = await ApiService().fetchShop(param: params,token: token);
-    print("fetchShop response:-----$res");
+    //print("fetchShop response:-----$res");
 
     List<FetchShopModel> shopData = [];
     if (res != null && res['status'] == 0) {
@@ -125,7 +125,7 @@ class ApiController {
   static addCounter({context,params})async{
     var token = await getloggedinUserToken();
     var res = await ApiService().addCounter(param: params,token: token);
-    print("Add shop response:- $res");
+    //print("Add shop response:- $res");
     if(res['status']==0){
       return res;
     }
@@ -137,7 +137,7 @@ class ApiController {
   static fetchCounter({context,params})async{
     var token = await getloggedinUserToken();
     var res = await ApiService().fetchCounters(param: params,token: token);
-    print("fetchCounters response:-----$res");
+    //print("fetchCounters response:-----$res");
 
     List<FetchCounterModel> counterDataList = [];
     if (res != null && res['status'] == 0) {
@@ -158,7 +158,7 @@ class ApiController {
   static addSupplier({context,params})async{
     var token = await getloggedinUserToken();
     var res = await ApiService().addSupplier(param: params,token: token);
-    print("Add addSupplier response:- $res");
+    //print("Add addSupplier response:- $res");
     if(res['status']==0){
       return res;
     }
@@ -170,7 +170,7 @@ class ApiController {
   static fetchSupplier({context,params})async{
     var token = await getloggedinUserToken();
     var res = await ApiService().fetchSupplier(param: params,token: token);
-    print("fetchSupplier response:-----$res");
+    //print("fetchSupplier response:-----$res");
     List<FetchSupplierModel> supplierDataList = [];
     if (res != null && res['status'] == 0) {
       for (var i = 0; i < res['data'].length; i++) {
@@ -190,7 +190,7 @@ class ApiController {
   static addDepartment({context,params})async{
     var token = await getloggedinUserToken();
     var res = await ApiService().addDepartment(param: params,token: token);
-    print("addDepartment response:- $res");
+    //print("addDepartment response:- $res");
     if(res['status']==0){
       return res;
     }
@@ -202,7 +202,7 @@ class ApiController {
   static fetchDepartments({context,params})async{
     var token = await getloggedinUserToken();
     var res = await ApiService().fetchDepartments(param: params,token: token);
-    print("fetchDepartments response:-----$res");
+    //print("fetchDepartments response:-----$res");
     List<FetchDepartmentModel> data = [];
     if (res != null && res['status'] == 0) {
       for (var i = 0; i < res['data'].length; i++) {
@@ -221,7 +221,7 @@ class ApiController {
   static addCategory({context,params})async{
     var token = await getloggedinUserToken();
     var res = await ApiService().addCategory(param: params,token: token);
-    print("addCategory response:- $res");
+    //print("addCategory response:- $res");
     if(res['status']==0){
       return res;
     }
@@ -234,7 +234,7 @@ class ApiController {
   static fetchCategory({context,params})async{
     var token = await getloggedinUserToken();
     var res = await ApiService().fetchCategory(param: params,token: token);
-    print("fetchCategory response:-----$res");
+    //print("fetchCategory response:-----$res");
     List<FetchCategoryModel> data = [];
     if (res != null && res['status'] == 0) {
       for (var i = 0; i < res['data'].length; i++) {
@@ -254,7 +254,7 @@ class ApiController {
   static addSweets({context,params})async{
     var token = await getloggedinUserToken();
     var res = await ApiService().addSweets(param: params,token: token);
-    print("addSweets response:- $res");
+    //print("addSweets response:- $res");
     if(res['status']==0){
       return res;
     }
@@ -266,7 +266,7 @@ class ApiController {
   static fetchSweets({context,params})async{
     var token = await getloggedinUserToken();
     var res = await ApiService().fetchSweets(param: params,token: token);
-    print("fetchSweets response:-----$res");
+    //print("fetchSweets response:-----$res");
     List<FetchSweetsModel> data = [];
     if (res != null && res['status'] == 0) {
       for (var i = 0; i < res['data'].length; i++) {
@@ -287,7 +287,7 @@ class ApiController {
   static addInventory({context,params})async{
     var token = await getloggedinUserToken();
     var res = await ApiService().addInventory(param: params,token: token);
-    print("addInventory response:- $res");
+    //print("addInventory response:- $res");
     if(res['status']==0){
       return res;
     }
@@ -301,7 +301,7 @@ class ApiController {
   static creteOrderRequestByCounterUser({context,params})async{
     var token = await getloggedinUserToken();
     var res = await ApiService().creteOrderRequestByCounterUser(param: params,token: token);
-    print("creteOrderRequestByCounterUser response:- $res");
+    //print("creteOrderRequestByCounterUser response:- $res");
     if(res['status']==0){
       return res;
     }
@@ -319,7 +319,7 @@ class ApiController {
   static fetchOrderRequest({context,params})async{
     var token = await getloggedinUserToken();
     var res = await ApiService().fetchOrderRequest(param: params,token: token);
-    print("fetchOrderRequest response:-----$res");
+    //print("fetchOrderRequest response:-----$res");
     List<FetchOrderRequestModel> data = [];
     if (res != null && res['status'] == 0) {
       for (var i = 0; i < res['data'].length; i++) {
@@ -338,7 +338,7 @@ class ApiController {
   static createFinalOrderByShopAdmin({context,params})async{
     var token = await getloggedinUserToken();
     var res = await ApiService().createFinalOrderByShopAdmin(param: params,token: token);
-    print("createFinalOrderByShopAdmin response:- $res");
+    //print("createFinalOrderByShopAdmin response:- $res");
     if(res['status']==0){
       return res;
     }
@@ -356,7 +356,7 @@ class ApiController {
   static fetchAllRequestOrderByShopAdmin({context,params})async{
     var token = await getloggedinUserToken();
     var res = await ApiService().fetchAllRequestOrderByShopAdmin(param: params,token: token);
-    print("fetchAllRequestOrderByShopAdmin response:-----$res");
+    //print("fetchAllRequestOrderByShopAdmin response:-----$res");
     List<ShopAdminOrderRequestModel> data = [];
     if (res != null && res['status'] == 0) {
       for (var i = 0; i < res['data'].length; i++) {
@@ -375,7 +375,7 @@ class ApiController {
   static Future<DashboardModel?> fetchDashboard({params}) async {
     var token = await getloggedinUserToken();
     var res = await ApiService().fetchDashboard(param: params, token: token);
-    print("fetchDashboard response:-----$res");
+    //print("fetchDashboard response:-----$res");
 
     if (res != null && res['status'] == 0) {
       // Response['data'] ek Map hai, List nahi. Isliye loop nahi chalega.
@@ -390,7 +390,7 @@ class ApiController {
     var token = await getloggedinUserToken();
     var res = await ApiService().fetchMyOrderSupplier(param: params, token: token);
 
-    print("fetchMyOrderSupplier response:-----$res");
+    //print("fetchMyOrderSupplier response:-----$res");
 
     List<SupplierOrder> data = [];
 
@@ -414,7 +414,7 @@ class ApiController {
   static fetchInventory({context,params}) async{
     var token = await getloggedinUserToken();
     var res = await ApiService().fetchInventory(param: params,token: token);
-    print("fetchInventory response:-----$res");
+    //print("fetchInventory response:-----$res");
     List<InventoryModel> data = [];
     if (res != null && res['status'] == 0) {
       for (var i = 0; i < res['data'].length; i++) {
@@ -431,7 +431,7 @@ class ApiController {
   static fetchStockHistory({context,params})async{
     var token = await getloggedinUserToken();
     var res = await ApiService().fetchStockHistory(param: params,token: token);
-    print("fetchStockHistory response:-----$res");
+    //print("fetchStockHistory response:-----$res");
     List<StockHistoryModel> data = [];
     if (res != null && res['status'] == 0) {
       for (var i = 0; i < res['data'].length; i++) {
@@ -452,7 +452,7 @@ class ApiController {
   static updateOrderStatus({context,params})async{
     var token = await getloggedinUserToken();
     var res = await ApiService().updateOrderStatus(param: params,token: token);
-    print("updateOrderStatus response:-----$res");
+    //print("updateOrderStatus response:-----$res");
     if (res != null && res['status'] == 0) {
       return res;
     } else {
@@ -466,7 +466,7 @@ class ApiController {
   static createChalanBySupplier({context,params})async{
     var token = await getloggedinUserToken();
     var res = await ApiService().createChalanBySupplier(param: params,token: token);
-    print("createChalanBySupplier response:-----$res");
+    //print("createChalanBySupplier response:-----$res");
     if (res != null && res['status'] == 0) {
       return res;
     } else {
@@ -482,7 +482,7 @@ class ApiController {
   static fetchChallan({context,params})async{
     var token = await getloggedinUserToken();
     var res = await ApiService().fetchChallan(param: params,token: token);
-    print("fetchChallan response:-----$res");
+    //print("fetchChallan response:-----$res");
     List<ChalanDataModel> data = [];
     if (res != null && res['status'] == 0) {
       for (var i = 0; i < res['data'].length; i++) {
@@ -500,7 +500,7 @@ class ApiController {
   static downLoadChalan({context,params})async{
     var token = await getloggedinUserToken();
     var res = await ApiService().downloadChalan(param: params,token: token);
-    print("downloadChalan response:-----$res");
+    //print("downloadChalan response:-----$res");
 
     if (res != null && res['status'] == 0) {
       return res;
@@ -515,7 +515,7 @@ class ApiController {
   static trackOrderStatusShopAdminSendToSupplier({context,params})async{
     var token = await getloggedinUserToken();
     var res = await ApiService().trackOrderStatusShopAdminSendToSupplier(param: params,token: token);
-    print("trackOrderStatusShopAdminSendToSupplier response:-----$res");
+    //print("trackOrderStatusShopAdminSendToSupplier response:-----$res");
     List<TrackOwnOrdersByShopAdminModel> data = [];
     if (res != null && res['status'] == 0) {
       for (var i = 0; i < res['data'].length; i++) {
@@ -534,7 +534,7 @@ class ApiController {
     var token = await getloggedinUserToken();
     var res = await ApiService().fetchOwnProfile(param: params, token: token);
 
-    print("fetchOwnProfile response:-----$res");
+    //print("fetchOwnProfile response:-----$res");
 
     List<UserProfileModel> data = [];
 
@@ -562,7 +562,7 @@ class ApiController {
   static updateProfile({context,params})async{
     var token = await getloggedinUserToken();
     var res = await ApiService().updateProfile(param: params,token: token);
-    print("$res");
+    //print("$res");
     if (res != null && res['status'] == 0) {
       return res;
     } else {
@@ -579,7 +579,7 @@ class ApiController {
     var token = await getloggedinUserToken();
     var res = await ApiService().fetchDeptAccoridngToShopIdWhenAddCategory(param: params, token: token);
 
-    print("fetchDeptAccoridngToShopIdWhenAddCategory response:-----$res");
+    //print("fetchDeptAccoridngToShopIdWhenAddCategory response:-----$res");
 
     List<FetchDepartmentModel> data = [];
 
@@ -600,7 +600,7 @@ class ApiController {
     var token = await getloggedinUserToken();
     var res = await ApiService().fetchCategoryAndCounterAccoridngToShopIdWhenAddSweet(param: params, token: token);
 
-    print("API Response: $res");
+    //print("API Response: $res");
 
     Map<String, List<dynamic>> finalData = {
       'categories': [],
@@ -627,7 +627,7 @@ class ApiController {
     var token = await getloggedinUserToken();
     var res = await ApiService().fetchExpireItems(param: params, token: token);
 
-    print("fetchExpireItems response:-----$res");
+    //print("fetchExpireItems response:-----$res");
 
     List<ExpiredItemModel> data = [];
 
@@ -648,7 +648,7 @@ class ApiController {
     var token = await getloggedinUserToken();
     var res = await ApiService().fetchNotification(param: params, token: token);
 
-    print("fetchNotification response:-----$res");
+    //print("fetchNotification response:-----$res");
 
     if (res != null && (res['status'] == 0 || res['status'] == "0")) {
       return FetchNotificationModel.fromJson(res['data']);
@@ -662,7 +662,7 @@ class ApiController {
     var token = await getloggedinUserToken();
     var res = await ApiService().markAsReadNotification(param: params, token: token);
 
-    print("fetchNotification response:-----$res");
+    //print("fetchNotification response:-----$res");
 
     if (res != null && (res['status'] == 0 || res['status'] == "0")) {
       return res;
@@ -677,7 +677,7 @@ class ApiController {
     var token = await getloggedinUserToken();
     var res = await ApiService().updateOrderItemBySupplier(param: params, token: token);
 
-    print("updateOrderItemBySupplier response:-----$res");
+    //print("updateOrderItemBySupplier response:-----$res");
 
     if (res != null && (res['status'] == 0 || res['status'] == "0")) {
       return res;
@@ -693,7 +693,7 @@ class ApiController {
     var token = await getloggedinUserToken();
     var res = await ApiService().verifyChallanForAutoInv(param: params, token: token);
 
-    print("verifyChallanForAutoInv response:-----$res");
+    //print("verifyChallanForAutoInv response:-----$res");
 
     if (res != null && (res['status'] == 0 || res['status'] == "0")) {
       return res;
@@ -708,7 +708,7 @@ class ApiController {
   //   var token = await getloggedinUserToken();
   //   var res = await ApiService().fetchDashboardAccordingToRole(param: params, token: token);
   //
-  //   print("fetchDashboardAccordingToRole response:-----$res");
+  //   //print("fetchDashboardAccordingToRole response:-----$res");
   //
   //   if (res != null && (res['status'] == 0 || res['status'] == "0")) {
   //     return res;
@@ -722,8 +722,8 @@ class ApiController {
       var token = await getloggedinUserToken();
       var res = await ApiService().fetchDashboardAccordingToRole(param: params, token: token);
 
-      print("role-----$role");
-      print("fetchDashboardAccordingToRole response:-----$res");
+      //print("role-----$role");
+      //print("fetchDashboardAccordingToRole response:-----$res");
 
       if (res != null && (res['status'] == 0 || res['status'] == "0")) {
         final data = res['data'];
@@ -745,7 +745,7 @@ class ApiController {
         return null;
       }
     } catch (e) {
-      print("Error in fetchDashboardAccordingToRole: $e");
+      //print("Error in fetchDashboardAccordingToRole: $e");
       return null;
     }
   }
@@ -755,7 +755,7 @@ class ApiController {
   static downloadOrderRequestSupplierSide({context,params})async{
     var token = await getloggedinUserToken();
     var res = await ApiService().downloadOrderRequestSupplierSide(param: params,token: token);
-    print("downloadOrderRequestSupplierSide response:-----$res");
+    //print("downloadOrderRequestSupplierSide response:-----$res");
 
     if (res != null && res['status'] == 0) {
       return res;
@@ -769,7 +769,7 @@ class ApiController {
   static factoryReset({context,params})async{
     var token = await getloggedinUserToken();
     var res = await ApiService().factoryReset(param: params,token: token);
-    print("factoryReset response:-----$res");
+    //print("factoryReset response:-----$res");
 
     if (res != null && res['status'] == 0) {
       return res;

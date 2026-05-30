@@ -35,9 +35,9 @@ class _CounterOrderRequestScreenState extends ConsumerState<CounterOrderRequestS
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(master_Provider).fetchSweets();
 
-      print("This is the user:---------${LoginUserDetails.isCounterUser}");
+      // print("This is the user:---------${LoginUserDetails.isCounterUser}");
       if(!LoginUserDetails.isCounterUser){
-        print("This is the usedsfdsfr:---------${LoginUserDetails.isCounterUser}");
+        // print("This is the usedsfdsfr:---------${LoginUserDetails.isCounterUser}");
         ref.read(master_Provider).fetchCounter();
       }
 

@@ -15,11 +15,11 @@ class ApiService extends ChangeNotifier {
       }
     };
 
-    print("dataaaaaaaaaaaaaaaaaa:----------$data");
+    //print("dataaaaaaaaaaaaaaaaaa:----------$data");
     var encodedData = await Functions.encodeData(data);
     var res = await Functions.httpPost(data: encodedData,endPoint: endpoint);
     var decodedData = await Functions.decodeData(res);
-    print("this is the response:--------$decodedData");
+    //print("this is the response:--------$decodedData");
     return decodedData;
   }
 
@@ -44,7 +44,7 @@ class ApiService extends ChangeNotifier {
       }
     };
 
-    print("data send:----------$data");
+    //print("data send:----------$data");
     var encodedData = await Functions.encodeData(data);
     var res = await Functions.httpPostToken(data: encodedData,token: token);
     var decodedData = await Functions.decodeData(res);
@@ -60,7 +60,7 @@ class ApiService extends ChangeNotifier {
       "data": {}
     };
 
-    print("data send fe_shop:----------$data");
+    //print("data send fe_shop:----------$data");
     var encodedData = await Functions.encodeData(data);
     var res = await Functions.httpPostToken(data: encodedData,token: token);
     var decodedData = await Functions.decodeData(res);
@@ -85,7 +85,7 @@ class ApiService extends ChangeNotifier {
       }
     };
 
-    print("data send:----------$data");
+    //print("data send:----------$data");
     var encodedData = await Functions.encodeData(data);
     var res = await Functions.httpPostToken(data: encodedData,token: token);
     var decodedData = await Functions.decodeData(res);
@@ -101,7 +101,7 @@ class ApiService extends ChangeNotifier {
       "data": {}
     };
 
-    print("data send fe_counter:----------$data");
+    //print("data send fe_counter:----------$data");
     var encodedData = await Functions.encodeData(data);
     var res = await Functions.httpPostToken(data: encodedData,token: token);
     var decodedData = await Functions.decodeData(res);
@@ -125,7 +125,7 @@ class ApiService extends ChangeNotifier {
       }
     };
 
-    print("data send addSupplier:----------$data");
+    //print("data send addSupplier:----------$data");
     var encodedData = await Functions.encodeData(data);
     var res = await Functions.httpPostToken(data: encodedData,token: token);
     var decodedData = await Functions.decodeData(res);
@@ -141,7 +141,7 @@ class ApiService extends ChangeNotifier {
       "data": {}
     };
 
-    print("data send fetchSupplier:----------$data");
+    //print("data send fetchSupplier:----------$data");
     var encodedData = await Functions.encodeData(data);
     var res = await Functions.httpPostToken(data: encodedData,token: token);
     var decodedData = await Functions.decodeData(res);
@@ -164,7 +164,7 @@ class ApiService extends ChangeNotifier {
       }
     };
 
-    print("data send addDepartment:----------$data");
+    //print("data send addDepartment:----------$data");
     var encodedData = await Functions.encodeData(data);
     var res = await Functions.httpPostToken(data: encodedData,token: token);
     var decodedData = await Functions.decodeData(res);
@@ -180,11 +180,11 @@ class ApiService extends ChangeNotifier {
       "data": {}
     };
 
-    print("data send fe_dep:----------$data");
+    //print("data send fe_dep:----------$data");
     var encodedData = await Functions.encodeData(data);
     var res = await Functions.httpPostToken(data: encodedData,token: token);
     var decodedData = await Functions.decodeData(res);
-    // print("this is the data:-----------$decodedData");
+    // //print("this is the data:-----------$decodedData");
     return decodedData;
   }
 
@@ -200,7 +200,7 @@ class ApiService extends ChangeNotifier {
       }
     };
 
-    print("data send fetchDeptAccoridngToShopIdWhenAddCategory:----------$data");
+    //print("data send fetchDeptAccoridngToShopIdWhenAddCategory:----------$data");
     var encodedData = await Functions.encodeData(data);
     var res = await Functions.httpPostToken(data: encodedData,token: token);
     var decodedData = await Functions.decodeData(res);
@@ -224,7 +224,7 @@ class ApiService extends ChangeNotifier {
       }
     };
 
-    print("data send addCategory:----------$data");
+    //print("data send addCategory:----------$data");
     var encodedData = await Functions.encodeData(data);
     var res = await Functions.httpPostToken(data: encodedData,token: token);
     var decodedData = await Functions.decodeData(res);
@@ -239,7 +239,7 @@ class ApiService extends ChangeNotifier {
       "data": {}
     };
 
-    print("data send fetchCategory:----------$data");
+    //print("data send fetchCategory:----------$data");
     var encodedData = await Functions.encodeData(data);
     var res = await Functions.httpPostToken(data: encodedData,token: token);
     var decodedData = await Functions.decodeData(res);
@@ -269,7 +269,7 @@ class ApiService extends ChangeNotifier {
       }
     };
 
-    print("data send addSweets:----------$data");
+    //print("data send addSweets:----------$data");
     var encodedData = await Functions.encodeData(data);
     var res = await Functions.httpPostToken(data: encodedData,token: token);
     var decodedData = await Functions.decodeData(res);
@@ -285,7 +285,7 @@ class ApiService extends ChangeNotifier {
       "data": {}
     };
 
-    print("data send fetchSweets:----------$data");
+    //print("data send fetchSweets:----------$data");
     var encodedData = await Functions.encodeData(data);
     var res = await Functions.httpPostToken(data: encodedData,token: token);
     var decodedData = await Functions.decodeData(res);
@@ -299,7 +299,7 @@ class ApiService extends ChangeNotifier {
 
   addInventory({token, param}) async {
     var transactionType = param['transaction_type'];
-    print("This is the tran type:-----$transactionType");
+    //print("This is the tran type:-----$transactionType");
     var data = {
       "fn": "common_fn",
       "se": "add_in",
@@ -320,7 +320,7 @@ class ApiService extends ChangeNotifier {
       }
     };
 
-    print("data send addInventory:----------$data");
+    //print("data send addInventory:----------$data");
     var encodedData = await Functions.encodeData(data);
     var res = await Functions.httpPostToken(data: encodedData,token: token);
     var decodedData = await Functions.decodeData(res);
@@ -342,7 +342,7 @@ class ApiService extends ChangeNotifier {
       }
     };
 
-    print("data send creteOrderRequestByCounterUser:----------$data");
+    //print("data send creteOrderRequestByCounterUser:----------$data");
     var encodedData = await Functions.encodeData(data);
     var res = await Functions.httpPostToken(data: encodedData,token: token);
     var decodedData = await Functions.decodeData(res);
@@ -366,7 +366,7 @@ class ApiService extends ChangeNotifier {
       }
     };
 
-    print("data send createFinalOrderByShopAdmin:----------$data");
+    //print("data send createFinalOrderByShopAdmin:----------$data");
     var encodedData = await Functions.encodeData(data);
     var res = await Functions.httpPostToken(data: encodedData,token: token);
     var decodedData = await Functions.decodeData(res);
@@ -385,7 +385,7 @@ class ApiService extends ChangeNotifier {
       }
     };
 
-    print("data send fetchMyOrderSupplier:----------$data");
+    //print("data send fetchMyOrderSupplier:----------$data");
     var encodedData = await Functions.encodeData(data);
     var res = await Functions.httpPostToken(data: encodedData,token: token);
     var decodedData = await Functions.decodeData(res);
@@ -408,7 +408,7 @@ class ApiService extends ChangeNotifier {
       }
     };
 
-    print("data send updateOrderStatus:----------$data");
+    //print("data send updateOrderStatus:----------$data");
     var encodedData = await Functions.encodeData(data);
     var res = await Functions.httpPostToken(data: encodedData,token: token);
     var decodedData = await Functions.decodeData(res);
@@ -430,7 +430,7 @@ class ApiService extends ChangeNotifier {
       }
     };
 
-    print("data send createChalanBySupplier:----------$data");
+    //print("data send createChalanBySupplier:----------$data");
     var encodedData = await Functions.encodeData(data);
     var res = await Functions.httpPostToken(data: encodedData,token: token);
     var decodedData = await Functions.decodeData(res);
@@ -449,7 +449,7 @@ class ApiService extends ChangeNotifier {
       "data": {}
     };
 
-    print("data send fetchInventory:----------$data");
+    //print("data send fetchInventory:----------$data");
     var encodedData = await Functions.encodeData(data);
     var res = await Functions.httpPostToken(data: encodedData,token: token);
     var decodedData = await Functions.decodeData(res);
@@ -467,7 +467,7 @@ class ApiService extends ChangeNotifier {
       "data": {}
     };
 
-    print("data send fetchStockHistory:----------$data");
+    //print("data send fetchStockHistory:----------$data");
     var encodedData = await Functions.encodeData(data);
     var res = await Functions.httpPostToken(data: encodedData,token: token);
     var decodedData = await Functions.decodeData(res);
@@ -487,7 +487,7 @@ class ApiService extends ChangeNotifier {
       }
     };
 
-    print("data send fetchOrderRequest:----------$data");
+    //print("data send fetchOrderRequest:----------$data");
     var encodedData = await Functions.encodeData(data);
     var res = await Functions.httpPostToken(data: encodedData,token: token);
     var decodedData = await Functions.decodeData(res);
@@ -508,7 +508,7 @@ class ApiService extends ChangeNotifier {
       }
     };
 
-    print("data send fetchAllRequestOrderByShopAdmin:----------$data");
+    //print("data send fetchAllRequestOrderByShopAdmin:----------$data");
     var encodedData = await Functions.encodeData(data);
     var res = await Functions.httpPostToken(data: encodedData,token: token);
     var decodedData = await Functions.decodeData(res);
@@ -527,7 +527,7 @@ class ApiService extends ChangeNotifier {
       }
     };
 
-    print("data send fetchDashboard:----------$data");
+    //print("data send fetchDashboard:----------$data");
     var encodedData = await Functions.encodeData(data);
     var res = await Functions.httpPostToken(data: encodedData,token: token);
     var decodedData = await Functions.decodeData(res);
@@ -549,7 +549,7 @@ class ApiService extends ChangeNotifier {
       }
     };
 
-    print("data send fetchChallan:----------$data");
+    //print("data send fetchChallan:----------$data");
     var encodedData = await Functions.encodeData(data);
     var res = await Functions.httpPostToken(data: encodedData,token: token);
     var decodedData = await Functions.decodeData(res);
@@ -569,7 +569,7 @@ class ApiService extends ChangeNotifier {
       }
     };
 
-    print("data send downLoadChalan:----------$data");
+    //print("data send downLoadChalan:----------$data");
     var encodedData = await Functions.encodeData(data);
     var res = await Functions.httpPostToken(data: encodedData,token: token);
     var decodedData = await Functions.decodeData(res);
@@ -582,14 +582,16 @@ class ApiService extends ChangeNotifier {
 
   /////////////  fetch Order status which approvied or reject by supplier /////////////////
   trackOrderStatusShopAdminSendToSupplier({token, param}) async {
+    // //print("this is the paramsjoid:=====#${param['shop_id']}");
     var data = {
       "fn": "common_fn",
       "se": "fe_or_details",
       "data": {
+        if (param != null && param['shop_id'] != null) "shop_id": param['shop_id']
       }
     };
 
-    print("data send trackOrderStatusShopAdminSendToSupplier:----------$data");
+    //print("data send trackOrderStatusShopAdminSendToSupplier:----------$data");
     var encodedData = await Functions.encodeData(data);
     var res = await Functions.httpPostToken(data: encodedData,token: token);
     var decodedData = await Functions.decodeData(res);
@@ -609,7 +611,7 @@ class ApiService extends ChangeNotifier {
       }
     };
 
-    print("data send fetchOwnProfile:----------$data");
+    //print("data send fetchOwnProfile:----------$data");
     var encodedData = await Functions.encodeData(data);
     var res = await Functions.httpPostToken(data: encodedData,token: token);
     var decodedData = await Functions.decodeData(res);
@@ -625,7 +627,7 @@ class ApiService extends ChangeNotifier {
       "data": param
     };
 
-    print("data send updateProfile:----------$data");
+    //print("data send updateProfile:----------$data");
     var encodedData = await Functions.encodeData(data);
     var res = await Functions.httpPostToken(data: encodedData,token: token);
     var decodedData = await Functions.decodeData(res);
@@ -645,7 +647,7 @@ class ApiService extends ChangeNotifier {
       }
     };
 
-    print("data send fe_cat_con_by_admin:----------$data");
+    //print("data send fe_cat_con_by_admin:----------$data");
     var encodedData = await Functions.encodeData(data);
     var res = await Functions.httpPostToken(data: encodedData,token: token);
     var decodedData = await Functions.decodeData(res);
@@ -665,7 +667,7 @@ class ApiService extends ChangeNotifier {
       }
     };
 
-    print("data send fetchExpireItems:----------$data");
+    //print("data send fetchExpireItems:----------$data");
     var encodedData = await Functions.encodeData(data);
     var res = await Functions.httpPostToken(data: encodedData,token: token);
     var decodedData = await Functions.decodeData(res);
@@ -685,7 +687,7 @@ class ApiService extends ChangeNotifier {
       "data": {}
     };
 
-    print("data send fetchNotification:----------$data");
+    //print("data send fetchNotification:----------$data");
     var encodedData = await Functions.encodeData(data);
     var res = await Functions.httpPostToken(data: encodedData,token: token);
     var decodedData = await Functions.decodeData(res);
@@ -702,7 +704,7 @@ class ApiService extends ChangeNotifier {
       }
     };
 
-    print("data send markAsReadNotification:----------$data");
+    //print("data send markAsReadNotification:----------$data");
     var encodedData = await Functions.encodeData(data);
     var res = await Functions.httpPostToken(data: encodedData,token: token);
     var decodedData = await Functions.decodeData(res);
@@ -722,7 +724,7 @@ class ApiService extends ChangeNotifier {
       }
     };
 
-    print("data send updateOrderItemBySupplier:----------$data");
+    //print("data send updateOrderItemBySupplier:----------$data");
     var encodedData = await Functions.encodeData(data);
     var res = await Functions.httpPostToken(data: encodedData,token: token);
     var decodedData = await Functions.decodeData(res);
@@ -743,7 +745,7 @@ class ApiService extends ChangeNotifier {
       }
     };
 
-    print("data send verifyChallanForAutoInv:----------$data");
+    //print("data send verifyChallanForAutoInv:----------$data");
     var encodedData = await Functions.encodeData(data);
     var res = await Functions.httpPostToken(data: encodedData,token: token);
     var decodedData = await Functions.decodeData(res);
@@ -760,7 +762,7 @@ class ApiService extends ChangeNotifier {
       "data": {}
     };
 
-    print("data send fetchDashboardAccordingToRole:----------$data");
+    //print("data send fetchDashboardAccordingToRole:----------$data");
     var encodedData = await Functions.encodeData(data);
     var res = await Functions.httpPostToken(data: encodedData,token: token);
     var decodedData = await Functions.decodeData(res);
@@ -778,7 +780,7 @@ class ApiService extends ChangeNotifier {
       }
     };
 
-    print("data send downloadOrderRequestSupplierSide:----------$data");
+    //print("data send downloadOrderRequestSupplierSide:----------$data");
     var encodedData = await Functions.encodeData(data);
     var res = await Functions.httpPostToken(data: encodedData,token: token);
     var decodedData = await Functions.decodeData(res);
@@ -793,7 +795,7 @@ class ApiService extends ChangeNotifier {
       "data": {}
     };
 
-    print("data send factoryReset:----------$data");
+    //print("data send factoryReset:----------$data");
     var encodedData = await Functions.encodeData(data);
     var res = await Functions.httpPostToken(data: encodedData,token: token);
     var decodedData = await Functions.decodeData(res);

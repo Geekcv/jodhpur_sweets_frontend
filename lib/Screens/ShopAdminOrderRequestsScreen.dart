@@ -18,17 +18,12 @@ class _ShopAdminOrderRequestsScreenState extends ConsumerState<ShopAdminOrderReq
   @override
   void initState() {
     super.initState();
-    myorders();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(master_Provider).fetchAllRequestOrderByShopAdmin();
       ref.read(master_Provider).fetchSuppliers();
     });
   }
 
-
-  myorders() async{
-    await ApiController.trackOrderStatusShopAdminSendToSupplier();
-  }
 
   void _toggleSelection(String id) {
     setState(() {

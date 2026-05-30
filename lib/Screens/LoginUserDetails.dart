@@ -38,14 +38,14 @@ class LoginUserDetails {
   }
 
   static void _printDetails(String source) {
-    print("------- $source -------");
-    print("Token: $token");
-    print("User ID: $userId");
-    print("Role: $role");
-    print("Shop ID: $shopId");
-    print("Counter ID: $counterId");
-    print("Supplier ID: $supplierId");
-    print("-----------------------------------------");
+    // print("------- $source -------");
+    // print("Token: $token");
+    // print("User ID: $userId");
+    // print("Role: $role");
+    // print("Shop ID: $shopId");
+    // print("Counter ID: $counterId");
+    // print("Supplier ID: $supplierId");
+    // print("-----------------------------------------");
   }
 
   static void clear() {

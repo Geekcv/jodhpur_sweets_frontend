@@ -194,7 +194,7 @@ class _MainDashboardState extends ConsumerState<MainDashboard> with TickerProvid
                   _sidebarItem(10, Icons.pending_actions_rounded, "Counter Requests"),
 
 
-                if (LoginUserDetails.role == 'SHOP_ADMIN')
+                if (LoginUserDetails.role == 'SHOP_ADMIN' || LoginUserDetails.isAdmin)
                   _sidebarItem(16, Icons.pending_actions_rounded, "Track Orders"),
 
                 if (LoginUserDetails.role == 'SHOP_ADMIN' || LoginUserDetails.role == 'COUNTER_USER')
@@ -728,6 +728,8 @@ class _MainDashboardState extends ConsumerState<MainDashboard> with TickerProvid
 
 
   void _showPremiumResetDialog(BuildContext context) {
+    final parentContext = context;
+
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -832,18 +834,24 @@ class _MainDashboardState extends ConsumerState<MainDashboard> with TickerProvid
                           isApiLoading.value = true;
 
                           // 3. Call API
-                          var res = await ApiController.factoryReset(context: context);
+                          var res = await ApiController.factoryReset();
+                          // print("This is the respon:----------$res");
 
                           // 4. Handle Result
                           isApiLoading.value = false;
                           if (res != null && res['status'] == 0) {
-                            Navigator.pop(context);
-                            ScaffoldMessenger.of(context).showSnackBar(
+                            // print("This is the ddddd");
+
+                            ScaffoldMessenger.of(parentContext).showSnackBar(
                               const SnackBar(content: Text("Factory Reset Successful"), backgroundColor: Colors.green),
                             );
+                            Navigator.pop(parentContext);
+                            setState(() {
+
+                            });
                           } else {
-                            Navigator.pop(context);
-                            ScaffoldMessenger.of(context).showSnackBar(
+                            Navigator.pop(parentContext);
+                            ScaffoldMessenger.of(parentContext).showSnackBar(
                               const SnackBar(content: Text("Failed to reset. Try again."), backgroundColor: Colors.red),
                             );
                           }

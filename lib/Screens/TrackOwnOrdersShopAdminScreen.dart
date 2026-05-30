@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../constants/static.dart';
+import '../models/FetchShopModel.dart';
 import '../models/TrackOwnOrdersByShopAdminModel.dart';
 import '../provider/provider.dart';
+import '../widgets/CustomDropDownSearch.dart';
+import 'LoginUserDetails.dart';
 
 class TrackOwnOrdersShopAdminScreen extends ConsumerStatefulWidget {
   const TrackOwnOrdersShopAdminScreen({super.key});
@@ -16,12 +19,18 @@ class _TrackOwnOrdersShopAdminScreenState extends ConsumerState<TrackOwnOrdersSh
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(master_Provider).trackOrderStatusShopAdminSendToSupplier();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (mounted) {
+        if (LoginUserDetails.isAdmin) {
+          await ref.read(master_Provider).fetchShop();
+        }
+        await ref.read(master_Provider).trackOrderStatusShopAdminSendToSupplier();
+      }
     });
   }
 
 
+  String? shop_id;
 
 
   String formatDate(String? dateStr) {
@@ -37,35 +46,114 @@ class _TrackOwnOrdersShopAdminScreenState extends ConsumerState<TrackOwnOrdersSh
   @override
   Widget build(BuildContext context) {
     final orderProv = ref.watch(master_Provider);
+    final shops = ref.watch(master_Provider).allShops ?? [];
+    bool isMobile = MediaQuery.of(context).size.width < 600;
 
     return Scaffold(
       backgroundColor: const Color(0xffF1F5F9),
       body: orderProv.loading
           ? buildShimmerEffectCard(context: context)
-          : orderProv.ownOrdersShopAdmin.isEmpty
-          ? _buildEmptyState()
-          : SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text("Order Tracking History",
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xff1A2B4C))),
-            const SizedBox(height: 20),
-            Wrap(
-              spacing: 16,
-              runSpacing: 16,
-              alignment: WrapAlignment.start,
-              children: orderProv.ownOrdersShopAdmin.map((order) {
-                return SizedBox(
-                  width: 360,
-                  child: OrderCard(order: order, formattedDate: formatDate(order.orderDate.toString())),
+          // : orderProv.ownOrdersShopAdmin.isEmpty
+          // ? _buildEmptyState()
+          : ScrollConfiguration(
+        behavior: ScrollConfiguration.of(context).copyWith(
+          scrollbars: false, // 1. CRITICAL FIX: Pure page se grey scrollbar permanently hide ho jayega
+        ),
+            child: SingleChildScrollView(
+            
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text("Order Tracking History",
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xff1A2B4C))),
+              const SizedBox(height: 20),
+              if (LoginUserDetails.isAdmin) ...[
+                _dropdownBoxFoShop("FILTER BY SHOP", shops, isMobile ? double.infinity : 270),
+                const SizedBox(height: 20),
+              ],
+              orderProv.ownOrdersShopAdmin.isEmpty
+                  ? Padding(
+                padding: const EdgeInsets.only(top: 80),
+                child: _buildEmptyState(),
+              )
+                  : Wrap(
+                spacing: 16,
+                runSpacing: 16,
+                alignment: WrapAlignment.start,
+                children: orderProv.ownOrdersShopAdmin.map((order) {
+                  return SizedBox(
+                    width: 360,
+                    child: OrderCard(order: order, formattedDate: formatDate(order.orderDate.toString())),
+                  );
+                }).toList(),
+              ),
+            ],
+                    ),
+                  ),
+          ),
+    );
+  }
+
+
+
+  Widget _dropdownBoxFoShop(String label, List<FetchShopModel> shop, double width) {
+    FetchShopModel? currentSelected;
+    if (shop_id != null && shop.any((s) => s.row_id.toString() == shop_id)) {
+      currentSelected = shop.firstWhere((d) => d.row_id.toString() == shop_id);
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.blueGrey)),
+        const SizedBox(height: 5),
+        Container(
+          width: width,
+          height: 38, // Tight container height restriction
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(color: Colors.grey[300]!),
+          ),
+          child: DropdownButtonHideUnderline( // Default line hatane ke liye
+            child: DropdownButton<FetchShopModel>(
+              value: currentSelected,
+              isExpanded: true, // Yeh text ko baahar bhaagne se rokega aur wrap karega
+              icon: const Icon(Icons.arrow_drop_down, size: 20, color: Colors.grey),
+              dropdownColor: Colors.white,
+              hint: const Text(
+                "Select Shop",
+                style: TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+              items: shop.map((FetchShopModel item) {
+                return DropdownMenuItem<FetchShopModel>(
+                  value: item,
+                  child: Text(
+                    item.shop_name ?? "-",
+                    style: const TextStyle(fontSize: 13, color: Colors.black87),
+                    overflow: TextOverflow.ellipsis, // Agar naam bada ho toh dot-dot ho jaye
+                  ),
                 );
               }).toList(),
+              onChanged: (FetchShopModel? val) {
+                if (val?.row_id.toString() == shop_id) return;
+
+                setState(() {
+                  shop_id = val?.row_id.toString();
+                });
+
+                if (shop_id != null) {
+                  ref.read(master_Provider).trackOrderStatusShopAdminSendToSupplier(
+                    params: {'shop_id': shop_id},
+                  );
+                }
+              },
             ),
-          ],
+          ),
         ),
-      ),
+      ],
     );
   }
 
