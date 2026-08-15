@@ -583,7 +583,7 @@ class _SupplierOrdersScreenState extends State<SupplierOrdersScreen> {
                   // _buildActionBtn("Dispatch Order", const Color(0xff3B82F6), Colors.white, Icons.local_shipping,
                   //         () => handleUpdateStatus(selectedOrder!.orderId.toString(), "DISPATCHED")),
                   // const SizedBox(height: 8),
-                  _buildActionBtn("Generate Challan", Colors.white, Colors.black87, Icons.description,
+                  _buildActionBtn("Dispatch", Colors.white, Colors.black87, Icons.description,
                           () => _showChallanDialog(selectedOrder!.orderId.toString()), isOutline: true),
                 ],
                 if (status == "DISPATCHED")

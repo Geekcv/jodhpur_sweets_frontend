@@ -8,7 +8,7 @@ import '../provider/provider.dart';
 import 'package:http/http.dart' as http;
 import 'dart:html' as html;
 
-import 'LoginUserDetails.dart'; // Sabse important line download ke liye
+import 'LoginUserDetails.dart';
 
 class ChalanListScreen extends ConsumerStatefulWidget {
   const ChalanListScreen({super.key});
@@ -520,8 +520,9 @@ class _ChalanListScreenState extends ConsumerState<ChalanListScreen> {
 
   Future<void> _handleVerifyOTP(ChalanDataModel data) async {
     // JSON se verification_code nikaal kar pehle hi controller mein daal diya
-    print("this is the vericatio_code:-----------${data.verification_code}");
-    final otpController = TextEditingController(text: data.verification_code?.toString() ?? "");
+    // print("this is the vericatio_code:-----------${data.verification_code}");
+    // final otpController = TextEditingController(text: data.verification_code?.toString() ?? "");
+    final otpController = TextEditingController();
 
     showDialog(
       context: context,
