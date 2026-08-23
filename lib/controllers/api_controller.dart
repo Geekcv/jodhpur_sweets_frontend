@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:js_order_website/models/FetchCategoryModel.dart';
 import 'package:js_order_website/models/FetchCounterModel.dart';
@@ -266,7 +268,7 @@ class ApiController {
   static fetchSweets({context,params})async{
     var token = await getloggedinUserToken();
     var res = await ApiService().fetchSweets(param: params,token: token);
-    //print("fetchSweets response:-----$res");
+    log("fetchSweets response:-----$res");
     List<FetchSweetsModel> data = [];
     if (res != null && res['status'] == 0) {
       for (var i = 0; i < res['data'].length; i++) {
@@ -319,7 +321,7 @@ class ApiController {
   static fetchOrderRequest({context,params})async{
     var token = await getloggedinUserToken();
     var res = await ApiService().fetchOrderRequest(param: params,token: token);
-    //print("fetchOrderRequest response:-----$res");
+    log("fetchOrderRequest response:-----$res");
     List<FetchOrderRequestModel> data = [];
     if (res != null && res['status'] == 0) {
       for (var i = 0; i < res['data'].length; i++) {
@@ -356,17 +358,16 @@ class ApiController {
   static fetchAllRequestOrderByShopAdmin({context,params})async{
     var token = await getloggedinUserToken();
     var res = await ApiService().fetchAllRequestOrderByShopAdmin(param: params,token: token);
-    //print("fetchAllRequestOrderByShopAdmin response:-----$res");
-    List<ShopAdminOrderRequestModel> data = [];
+    log("fetchAllRequestOrderByShopAdmin response:-----$res");
+    List<ShopAdminOrderGroupModel> data = [];
     if (res != null && res['status'] == 0) {
       for (var i = 0; i < res['data'].length; i++) {
-        data.add(ShopAdminOrderRequestModel.fromJson(res['data'][i]));
+        data.add(ShopAdminOrderGroupModel.fromJson(res['data'][i]));
       }
       return data;
     } else {
       return data;
     }
-    // return res;
   }
 
 
@@ -515,7 +516,7 @@ class ApiController {
   static trackOrderStatusShopAdminSendToSupplier({context,params})async{
     var token = await getloggedinUserToken();
     var res = await ApiService().trackOrderStatusShopAdminSendToSupplier(param: params,token: token);
-    //print("trackOrderStatusShopAdminSendToSupplier response:-----$res");
+    log("trackOrderStatusShopAdminSendToSupplier response:-----$res");
     List<TrackOwnOrdersByShopAdminModel> data = [];
     if (res != null && res['status'] == 0) {
       for (var i = 0; i < res['data'].length; i++) {
@@ -627,7 +628,7 @@ class ApiController {
     var token = await getloggedinUserToken();
     var res = await ApiService().fetchExpireItems(param: params, token: token);
 
-    //print("fetchExpireItems response:-----$res");
+    log("fetchExpireItems response:-----$res");
 
     List<ExpiredItemModel> data = [];
 

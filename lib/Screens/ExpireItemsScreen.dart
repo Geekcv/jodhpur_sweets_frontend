@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:js_order_website/Screens/LoginUserDetails.dart';
-import 'package:js_order_website/controllers/api_controller.dart';
 import '../constants/static.dart';
 import '../provider/provider.dart';
 import '../widgets/CustomDropDownSearch.dart';
@@ -15,25 +14,30 @@ class ExpireItemsScreen extends ConsumerStatefulWidget {
 }
 
 class _ExpireItemsScreenState extends ConsumerState<ExpireItemsScreen> {
+  static const Color primaryNavy = Color(0xff0F172A);
+  static const Color slateDark = Color(0xff334155);
+  static const Color bgCol = Color(0xffF8FAFC);
+  static const Color borderCol = Color(0xffE2E8F0);
+  static const Color dangerRed = Color(0xffDC2626);
+
   String? selectedCounterId;
-
-
-
-  fetchNotification() async{
-    await ApiController.fetchNotification();
-  }
-
+  String searchQuery = "";
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    fetchNotification();
     _initFlow();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   void _initFlow() {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      // 1. Counters fetch karein
       await ref.read(master_Provider).fetchCounter();
 
       final String role = LoginUserDetails.role?.toUpperCase() ?? "";
@@ -42,7 +46,6 @@ class _ExpireItemsScreenState extends ConsumerState<ExpireItemsScreen> {
       if (role == 'SHOPADMIN' || role == 'SHOP_ADMIN') {
         if (counters.isNotEmpty) {
           selectedCounterId = counters.first.row_id.toString();
-          // Initial data load for first counter
           ref.read(master_Provider).fetchExpireItems(params: {"counter_id": selectedCounterId});
         }
       } else {
@@ -54,15 +57,350 @@ class _ExpireItemsScreenState extends ConsumerState<ExpireItemsScreen> {
     });
   }
 
-  // --- AAPKA BATAAYA HUA DROPDOWN WIDGET (Unchanged) ---
+  @override
+  Widget build(BuildContext context) {
+    final masterProv = ref.watch(master_Provider);
+    final counters = masterProv.allCounters ?? [];
+    final rawExpiredItems = masterProv.expireItmesData ?? [];
+    final isLoading = masterProv.loading;
+
+    // --- SEARCH FILTER ---
+    final filteredItems = rawExpiredItems.where((item) {
+      final name = (item.sweet_name ?? "").toString().toLowerCase();
+      final reason = (item.reason ?? "").toString().toLowerCase();
+      final query = searchQuery.toLowerCase();
+      return name.contains(query) || reason.contains(query);
+    }).toList();
+
+    return Scaffold(
+      backgroundColor: bgCol,
+      body: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            double width = constraints.maxWidth;
+
+            int crossAxisCount = 1;
+            if (width >= 1280) {
+              crossAxisCount = 4;
+            } else if (width >= 900) {
+              crossAxisCount = 3;
+            } else if (width >= 600) {
+              crossAxisCount = 2;
+            }
+
+            return Padding(
+              padding: EdgeInsets.all(width < 600 ? 12 : 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Top Header & Actions
+                  _buildTopBar(width, counters),
+                  const SizedBox(height: 26),
+
+
+                  // Items Grid Content
+                  Expanded(
+                    child: isLoading
+                        ? buildShimmerEffect(context: context)
+                        : filteredItems.isEmpty
+                        ? _buildEmptyState()
+                        : GridView.builder(
+                      physics: const BouncingScrollPhysics(),
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: crossAxisCount,
+                        crossAxisSpacing: 14,
+                        mainAxisSpacing: 14,
+                        mainAxisExtent: 120,
+                      ),
+                      itemCount: filteredItems.length,
+                      itemBuilder: (context, index) {
+                        return _buildExpiredCard(filteredItems[index]);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  // ---------- HEADER & SEARCH BAR ----------
+  Widget _buildTopBar(double screenWidth, List counters) {
+    final String role = LoginUserDetails.role?.toUpperCase() ?? "";
+    bool isShopAdmin = (role == 'SHOPADMIN' || role == 'SHOP_ADMIN');
+
+    String currentCounterName = "Assigned Counter";
+    if (!isShopAdmin && selectedCounterId != null) {
+      try {
+        var current = counters.firstWhere((e) => e.row_id.toString() == selectedCounterId);
+        currentCounterName = current.counter_name ?? "Assigned Counter";
+      } catch (_) {
+        currentCounterName = "Counter ID: $selectedCounterId";
+      }
+    }
+
+    // --- Title Section ---
+    Widget titleSection = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Wrap(
+          crossAxisAlignment: WrapCrossAlignment.center,
+          spacing: 8,
+          children: [
+            const Text(
+              "Expired Inventory",
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
+                color: primaryNavy,
+                letterSpacing: -0.5,
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: dangerRed.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Text(
+                "EXPIRED",
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w800,
+                  color: dangerRed,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 2),
+        const Text(
+          "Track items that have reached their shelf life",
+          style: TextStyle(fontSize: 11, color: Colors.grey),
+        ),
+      ],
+    );
+
+    // --- Search Bar Widget ---
+    Widget searchWidget = SizedBox(
+      width: screenWidth < 768 ? double.infinity : 260,
+      height: 38,
+      child: TextField(
+        controller: _searchController,
+        onChanged: (val) => setState(() => searchQuery = val),
+        style: const TextStyle(fontSize: 12),
+        decoration: InputDecoration(
+          isDense: true,
+          hintText: "Search item...",
+          hintStyle: const TextStyle(fontSize: 12, color: Colors.grey),
+          prefixIcon: const Icon(Icons.search, size: 16, color: Colors.blueGrey),
+          suffixIcon: searchQuery.isNotEmpty
+              ? InkWell(
+            onTap: () {
+              _searchController.clear();
+              setState(() => searchQuery = "");
+            },
+            child: const Icon(Icons.clear, size: 14, color: Colors.grey),
+          )
+              : null,
+          filled: true,
+          fillColor: Colors.white,
+          contentPadding: const EdgeInsets.symmetric(vertical: 8),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: borderCol),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: borderCol),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: primaryNavy),
+          ),
+        ),
+      ),
+    );
+
+    // --- Counter Selector Widget ---
+    Widget counterSelector = isShopAdmin
+        ? SizedBox(
+      width: screenWidth < 768 ? double.infinity : 220,
+      child: _dropdown("SELECT COUNTER", counters, (v) => v.counter_name, (v) {
+        setState(() {
+          selectedCounterId = v.row_id.toString();
+        });
+        ref.read(master_Provider).fetchExpireItems(params: {"counter_id": selectedCounterId});
+      }),
+    )
+        : _infoBadge("Counter: $currentCounterName");
+
+    // --- Mobile View (<768px) ---
+    if (screenWidth < 768) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          titleSection,
+          const SizedBox(height: 12),
+          counterSelector,
+          const SizedBox(height: 10),
+          searchWidget,
+        ],
+      );
+    }
+
+    // --- Desktop/Tablet View (≥768px - Align Right Side) ---
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Expanded(child: titleSection),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            counterSelector,
+            const SizedBox(width: 12),
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: 16), // Dropdown title baseline match
+                searchWidget,
+              ],
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+
+  // ---------- EXPIRED ITEM CARD ----------
+  Widget _buildExpiredCard(dynamic item) {
+    double lossAmount = double.tryParse(item.loss_amount?.toString() ?? "0") ?? 0.0;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: borderCol),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x05000000),
+            blurRadius: 10,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(10),
+        child: Container(
+          decoration: const BoxDecoration(
+            border: Border(left: BorderSide(color: dangerRed, width: 3.5)),
+          ),
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Row 1: Item Name + Loss Amount
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Text(
+                      item.sweet_name?.toString().toUpperCase() ?? "N/A",
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                        color: primaryNavy,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: dangerRed.withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(4),
+                      border: Border.all(color: dangerRed.withOpacity(0.2)),
+                    ),
+                    child: Text(
+                      "₹${lossAmount.toStringAsFixed(2)}",
+                      style: const TextStyle(
+                        color: dangerRed,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              const Divider(height: 12, color: Color(0xffF1F5F9)),
+
+              // Row 2: Metadata Details (Quantity, Counter, Expiry Date)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _metaBlock("QUANTITY", "${item.quantity ?? '0'}", isBold: true),
+                  _metaBlock("EXPIRY DATE", _formatDate(item.expiry_date?.toString())),
+                  _metaBlock("COUNTER", item.counter_name ?? "-", alignRight: true),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _metaBlock(String label, String value,
+      {bool alignRight = false, bool isBold = false}) {
+    return Column(
+      crossAxisAlignment:
+      alignRight ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 8,
+            fontWeight: FontWeight.w700,
+            color: Colors.grey,
+            letterSpacing: 0.3,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          value,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: isBold ? FontWeight.w800 : FontWeight.w600,
+            color: slateDark,
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ---------- HELPER DROPDOWNS & BADGES ----------
   Widget _dropdown(String label, List items, String Function(dynamic) labelBuilder, Function(dynamic) onSel) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: Colors.blueGrey)),
-        const SizedBox(height: 6),
+        // Text(label, style: const TextStyle(fontSize: 8.5, fontWeight: FontWeight.w800, color: Colors.blueGrey)),
+        // const SizedBox(height: 4),
         SizedBox(
-          height: 38,
+          height: 40,
           child: CustomDropdownSearch<dynamic>(
             items: items,
             itemLabelBuilder: labelBuilder,
@@ -72,228 +410,79 @@ class _ExpireItemsScreenState extends ConsumerState<ExpireItemsScreen> {
                 onSel(val);
               }
             },
-            hintText: "Select",
+            hintText: "Select Counter",
           ),
         ),
       ],
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final masterProv = ref.watch(master_Provider);
-    final counters = masterProv.allCounters ?? [];
-    final expiredItems = masterProv.expireItmesData ?? []; // Dynamic Data from Provider
-    final isLoading = masterProv.loading;
-
-    double width = MediaQuery.of(context).size.width;
-    bool isMobile = width < 600;
-
-    return Scaffold(
-      backgroundColor: const Color(0xffF1F5F9),
-      body: SafeArea(
-        child: Padding(
-          padding: EdgeInsets.all(isMobile ? 12 : 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildTopBar(isMobile, counters),
-              const SizedBox(height: 24),
-              Expanded(
-                child: Container(
-                  clipBehavior: Clip.antiAlias,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xffE2E8F0)),
-                  ),
-                  child: isLoading
-                      ? buildShimmerEffect(context: context)
-                      : expiredItems.isEmpty
-                      ? _buildEmptyState()
-                      : _buildResponsiveView(isMobile, expiredItems),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTopBar(bool isMobile, List counters) {
-    final String role = LoginUserDetails.role?.toUpperCase() ?? "";
-    bool isShopAdmin = (role == 'SHOPADMIN' || role == 'SHOP_ADMIN');
-
-    String currentCounterName = "Assigned Counter";
-    if (!isShopAdmin && selectedCounterId != null) {
-      try {
-        var current = counters.firstWhere((element) => element.row_id.toString() == selectedCounterId);
-        currentCounterName = current.counter_name ?? "Assigned Counter";
-      } catch (e) {
-        currentCounterName = "Counter ID: $selectedCounterId";
-      }
-    }
-
-    return Wrap(
-      spacing: 20,
-      runSpacing: 20,
-      alignment: WrapAlignment.spaceBetween,
-      crossAxisAlignment: WrapCrossAlignment.end,
-      children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text("Expired Inventory",
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Color(0xff0F172A))),
-            const Text("Track items that have reached their shelf life",
-                style: TextStyle(fontSize: 12, color: Color(0xff64748B))),
-          ],
-        ),
-        if (isShopAdmin)
-          SizedBox(
-            width: isMobile ? double.infinity : 300,
-            child: _dropdown("SELECT COUNTER", counters, (v) => v.counter_name, (v) {
-              setState(() {
-                selectedCounterId = v.row_id.toString();
-              });
-              // Refresh dynamic data for this counter
-              ref.read(master_Provider).fetchExpireItems(params: {"counter_id": selectedCounterId});
-            }),
-          )
-        else
-          _infoBadge("Counter: $currentCounterName")
-      ],
-    );
-  }
-
-  Widget _buildResponsiveView(bool isMobile, List expiredItems) {
-    if (isMobile) {
-      return ListView.separated(
-        padding: const EdgeInsets.all(16),
-        itemCount: expiredItems.length,
-        separatorBuilder: (c, i) => const Divider(height: 24),
-        itemBuilder: (c, i) => _buildMobileCard(expiredItems[i]),
-      );
-    }
-    return _buildDesktopTable(expiredItems);
-  }
-
-  Widget _buildDesktopTable(List expiredItems) {
-    return Column(
-      children: [
-        Container(
-          color: const Color(0xffF8FAFC),
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-          child: const Row(
-            children: [
-              Expanded(flex: 2, child: Text("ITEM NAME", style: _tableHeaderStyle)),
-              Expanded(flex: 1, child: Text("QUANTITY", style: _tableHeaderStyle)),
-              Expanded(flex: 1, child: Text("LOSS AMOUNT", style: _tableHeaderStyle)),
-              Expanded(flex: 1, child: Text("EXPIRY DATE", style: _tableHeaderStyle)),
-              Expanded(flex: 1, child: Text("STATUS", style: _tableHeaderStyle, textAlign: TextAlign.right)),
-            ],
-          ),
-        ),
-        const Divider(height: 1,color: Color(0xffE2E8F0),),
-        Expanded(
-          child: ListView.builder(
-            itemCount: expiredItems.length,
-            itemBuilder: (c, i) {
-              final item = expiredItems[i];
-              // Format Expiry Date
-              String formattedDate = "-";
-              if (item.expiry_date != null) {
-                DateTime dt = DateTime.parse(item.expiry_date.toString());
-                formattedDate = DateFormat('dd MMM yyyy').format(dt);
-              }
-
-              return Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: Color(0xffF1F5F9)))),
-                child: Row(
-                  children: [
-                    Expanded(flex: 2, child: Text(item.sweet_name ?? "-", style: const TextStyle(fontWeight: FontWeight.w600, color: Color(0xff334155)))),
-                    Expanded(flex: 1, child: Text("${item.quantity ?? "0"}", style: const TextStyle(fontWeight: FontWeight.bold))),
-                    Expanded(flex: 1, child: Text("₹${double.parse(item.loss_amount?.toString() ?? "0").toStringAsFixed(2)}", style: const TextStyle(color: Colors.redAccent))),
-                    Expanded(flex: 1, child: Text(formattedDate, style: const TextStyle(fontWeight: FontWeight.w400, color: Color(0xff334155)))),
-                    Expanded(flex: 1, child: Align(alignment: Alignment.centerRight, child: _statusBadge())),
-                  ],
-                ),
-              );
-            },
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildMobileCard(dynamic item) {
-    String formattedDate = "-";
-    if (item.expiry_date != null) {
-      DateTime dt = DateTime.parse(item.expiry_date.toString());
-      formattedDate = DateFormat('dd MMM yyyy').format(dt);
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(item.sweet_name ?? "-", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-            _statusBadge(),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text("Qty: ${item.quantity ?? "0"}", style: TextStyle(color: Colors.grey.shade700)),
-            Text("Loss: ₹${item.loss_amount ?? "0.00"}", style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
-          ],
-        ),
-        const SizedBox(height: 4),
-        Text("Expired on: $formattedDate", style: const TextStyle(fontSize: 12, color: Colors.blueGrey)),
-      ],
-    );
-  }
-
-  Widget _statusBadge() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(color: Colors.red.shade50, borderRadius: BorderRadius.circular(4)),
-      child: const Text("EXPIRED", style: TextStyle(color: Colors.red, fontSize: 10, fontWeight: FontWeight.bold)),
     );
   }
 
   Widget _infoBadge(String text) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      decoration: BoxDecoration(color: Colors.blue.shade50, borderRadius: BorderRadius.circular(6), border: Border.all(color: Colors.blue.shade100)),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: borderCol), // light slate border
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x03000000),
+            blurRadius: 4,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          const Icon(Icons.storefront, size: 16, color: Colors.blue),
-          const SizedBox(width: 4),
-          Text(text, style: const TextStyle(color: Colors.blue, fontWeight: FontWeight.w600, fontSize: 12)),
+          // Active Indicator Dot
+          Container(
+            width: 6,
+            height: 6,
+            decoration: const BoxDecoration(
+              color: Color(0xff2563EB), // Professional Royal Blue
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            text.toUpperCase(),
+            style: const TextStyle(
+              color: primaryNavy,
+              fontWeight: FontWeight.w700,
+              fontSize: 10.5,
+              letterSpacing: 0.4,
+            ),
+          ),
         ],
       ),
     );
   }
 
+  String _formatDate(String? dateStr) {
+    if (dateStr == null || dateStr.isEmpty || dateStr == "null") return "-";
+    try {
+      DateTime dt = DateTime.parse(dateStr);
+      return DateFormat('dd MMM yyyy').format(dt);
+    } catch (_) {
+      return dateStr;
+    }
+  }
+
   Widget _buildEmptyState() {
-    return const Center(
+    return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.event_busy, size: 48, color: Color(0xffCBD5E1)),
-          SizedBox(height: 16),
-          Text("No Expired Items Found", style: TextStyle(color: Color(0xff64748B), fontWeight: FontWeight.w600)),
+        children: const [
+          Icon(Icons.event_busy_rounded, size: 40, color: Color(0xffCBD5E1)),
+          SizedBox(height: 8),
+          Text(
+            "No Expired Items Found",
+            style: TextStyle(color: Color(0xff64748B), fontWeight: FontWeight.w600, fontSize: 13),
+          ),
         ],
       ),
     );
   }
 }
-
-const _tableHeaderStyle = TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: Color(0xff64748B), letterSpacing: 1);

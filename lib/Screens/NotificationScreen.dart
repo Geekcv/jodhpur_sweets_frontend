@@ -208,144 +208,265 @@ class _NotificationScreenState extends ConsumerState<NotificationScreen> {
       context: context,
       builder: (context) => Dialog(
         backgroundColor: Colors.transparent,
-        insetPadding: const EdgeInsets.symmetric(horizontal: 20),
-        child: Container(
-          constraints: const BoxConstraints(maxWidth: 400),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(18),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xff1A2B4C).withOpacity(0.15),
-                blurRadius: 30,
-                offset: const Offset(0, 15),
-              )
-            ],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // --- Top Visual Accent (Subtle Gradient) ---
-              Container(
-                height: 12,
-                decoration: const BoxDecoration(
-                  borderRadius: BorderRadius.only(topLeft: Radius.circular(28), topRight: Radius.circular(28)),
-                  gradient: LinearGradient(
-                    colors: [Color(0xff1E293B), Color(0xff334155)], // Premium Dark Slate
+        elevation: 0,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+        child: Center(
+          child: Container(
+            width: 420,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xffE2E8F0), width: 1),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xff0F172A).withOpacity(0.08),
+                  blurRadius: 30,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // --- HEADER ROW ---
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 18, 16, 16),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      // Simple Clean Icon Box
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: const Color(0xffEFF6FF),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: const Color(0xffDBEAFE)),
+                        ),
+                        child: Icon(
+                          _getIcon(item.type ?? ""),
+                          color: const Color(0xff2563EB),
+                          size: 20,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+
+                      // Title & Priority Badge
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              item.title ?? "Details",
+                              style: const TextStyle(
+                                color: Color(0xff0F172A),
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            _simplePriorityBadge(item.priority ?? "NORMAL"),
+                          ],
+                        ),
+                      ),
+
+                      // Close Button (X)
+                      IconButton(
+                        onPressed: () => Navigator.pop(context),
+                        icon: const Icon(
+                          Icons.close_rounded,
+                          color: Color(0xff64748B),
+                          size: 20,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ),
 
-              Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  children: [
-                    // --- Header Icon with Dynamic Ring ---
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                          color: const Color(0xffF1F5F9),
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 4),
-                          boxShadow: [
-                            BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)
-                          ]
+                const Divider(height: 1, color: Color(0xffF1F5F9)),
+
+                // --- BODY CONTENT ---
+                Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // MESSAGE BOX (Only shows if message exists)
+                      if ((item.message ?? "").toString().isNotEmpty) ...[
+                        const Text(
+                          "Message",
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xff64748B),
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xffF8FAFC),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: const Color(0xffE2E8F0)),
+                          ),
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(maxHeight: 140),
+                            child: SingleChildScrollView(
+                              physics: const BouncingScrollPhysics(),
+                              child: Text(
+                                item.message ?? "",
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  color: Color(0xff1E293B),
+                                  height: 1.5,
+                                  fontWeight: FontWeight.w400,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                      ],
+
+                      // SIMPLE DETAILS TABLE
+                      const Text(
+                        "Information",
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xff64748B),
+                        ),
                       ),
-                      child: Icon(_getIcon(item.type ?? ""), color: const Color(0xff1A2B4C), size: 28),
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    // --- Title & Priority ---
-                    Text(
-                      item.title ?? "Details",
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Color(0xff1A2B4C), letterSpacing: -0.5),
-                    ),
-
-                    const SizedBox(height: 6),
-
-                    // Simple Tag for Priority
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: const Color(0xffF1F5F9),
-                        borderRadius: BorderRadius.circular(6),
+                      const SizedBox(height: 6),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: const Color(0xffE2E8F0)),
+                        ),
+                        child: Column(
+                          children: [
+                            _cleanMetaRow(
+                              label: "Type",
+                              value: "${item.type ?? 'N/A'}",
+                              icon: Icons.category_outlined,
+                            ),
+                            const Divider(height: 1, color: Color(0xffE2E8F0)),
+                            _cleanMetaRow(
+                              label: "Date",
+                              value: _formatFullDate(item.cr_on),
+                              icon: Icons.calendar_today_rounded,
+                            ),
+                          ],
+                        ),
                       ),
-                      child: Text(
-                        (item.priority ?? "NORMAL").toUpperCase(),
-                        style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w900, color: Color(0xff64748B), letterSpacing: 1),
-                      ),
-                    ),
 
-                    const SizedBox(height: 20),
+                      const SizedBox(height: 20),
 
-                    // --- Message Box (Professional Slate Look) ---
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: const Color(0xffF8FAFC),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: const Color(0xffF1F5F9)),
-                      ),
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxHeight: 180),
-                        child: SingleChildScrollView(
-                          physics: const BouncingScrollPhysics(),
-                          child: Text(
-                            item.message ?? "",
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(fontSize: 14, color: Color(0xff334155), height: 1.6, fontWeight: FontWeight.w500),
+                      // CLOSE BUTTON
+                      SizedBox(
+                        width: double.infinity,
+                        height: 42,
+                        child: ElevatedButton(
+                          onPressed: () => Navigator.pop(context),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xff2563EB),
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: const Text(
+                            "Close",
+                            style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 13,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    // --- Data Table (Clean & Modern) ---
-                    _modernDataRow(Icons.layers_rounded, "TYPE", "${item.type ?? 'N/A'}"),
-                    const SizedBox(height: 8),
-                    _modernDataRow(Icons.event_note_rounded, "DATE", _formatFullDate(item.cr_on)),
-                    const SizedBox(height: 35),
-
-                    // --- Primary Action Button ---
-                    SizedBox(
-                      width: double.infinity,
-                      height: 45,
-                      child: ElevatedButton(
-                        onPressed: () => Navigator.pop(context),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xff1A2B4C),
-                          foregroundColor: Colors.white,
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                        ),
-                        child: const Text("CLOSE DETAILS", style: TextStyle(fontWeight: FontWeight.w800, letterSpacing: 1, fontSize: 13)),
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-// Helper for Modern Data Rows
-  Widget _modernDataRow(IconData icon, String label, String value) {
-    return Row(
-      children: [
-        Icon(icon, size: 14, color: const Color(0xff94A3B8)),
-        const SizedBox(width: 8),
-        Text(label, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Color(0xff94A3B8), letterSpacing: 0.5)),
-        const Spacer(),
-        Text(value, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xff1E293B))),
-      ],
+// --- EASY TO READ PRIORITY BADGE ---
+  Widget _simplePriorityBadge(String priority) {
+    Color bg = const Color(0xffF1F5F9);
+    Color text = const Color(0xff475569);
+
+    switch (priority.toUpperCase()) {
+      case 'HIGH':
+      case 'URGENT':
+        bg = const Color(0xffFEF2F2);
+        text = const Color(0xffDC2626);
+        break;
+      case 'MEDIUM':
+        bg = const Color(0xffFFFBEB);
+        text = const Color(0xffD97706);
+        break;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        priority.toUpperCase(),
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w800,
+          color: text,
+        ),
+      ),
     );
   }
+
+// --- CLEAN TABLE ROW ---
+  Widget _cleanMetaRow({
+    required String label,
+    required String value,
+    required IconData icon,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      child: Row(
+        children: [
+          Icon(icon, size: 16, color: const Color(0xff64748B)),
+          const SizedBox(width: 8),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 12,
+              color: Color(0xff64748B),
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const Spacer(),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 12,
+              color: Color(0xff0F172A),
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+// Helper for Modern Data Rows
 
 
 

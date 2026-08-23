@@ -209,17 +209,18 @@ class ProviderClass extends ChangeNotifier {
 
 
 
-  List<ShopAdminOrderRequestModel> orderRequest=[];
+  List<ShopAdminOrderGroupModel> orderGroups = [];
+
   fetchAllRequestOrderByShopAdmin({params}) async {
     loading = true;
-    orderRequest.clear();
+    orderGroups.clear();
     notifyListeners();
 
-    orderRequest = await ApiController.fetchAllRequestOrderByShopAdmin(params: params);
+    orderGroups = await ApiController.fetchAllRequestOrderByShopAdmin(params: params);
 
     loading = false;
     notifyListeners();
-    return orderRequest;
+    return orderGroups;
   }
 
 
