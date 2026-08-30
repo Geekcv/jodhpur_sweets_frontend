@@ -64,6 +64,7 @@ class _MainDashboardState extends ConsumerState<MainDashboard> with TickerProvid
 
   static const Color sideBarColor = Color(0xff1A2B4C);
   static const Color accentColor = Color(0xffD4AF37);
+  static const Color borderColor = Color(0xffE2E8F0);
 
   @override
   void initState() {
@@ -184,7 +185,7 @@ class _MainDashboardState extends ConsumerState<MainDashboard> with TickerProvid
 
                 // Agar Counter User hai toh hi Order Create dikhe
                 if (LoginUserDetails.role == 'COUNTER_USER')
-                  _sidebarItem(1, Icons.add_box_outlined, "Create Order"),
+                  _sidebarItem(1, Icons.shopping_cart_outlined, "Create Order"),
 
                 if (LoginUserDetails.role == 'COUNTER_USER')
                   _sidebarItem(14, Icons.receipt_long_rounded, "Track Requests"),
@@ -383,7 +384,7 @@ class _MainDashboardState extends ConsumerState<MainDashboard> with TickerProvid
               const SizedBox(width: 15),
               Text(title,
                 style: TextStyle(color: isSelected ? Colors.white : Colors.white60,
-                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w400, fontSize: 14, letterSpacing: 0.5),
+                  fontWeight: isSelected ? FontWeight.w500 : FontWeight.w400, fontSize: 14, letterSpacing: 0.5),
               ),
               const Spacer(),
               if (isSelected)
@@ -508,25 +509,100 @@ class _MainDashboardState extends ConsumerState<MainDashboard> with TickerProvid
                   _titles[_selectedIndex] ?? "Overview",
                   style: const TextStyle(
                       fontSize: 16,
-                      fontWeight: FontWeight.w900,
+                      fontWeight: FontWeight.w800,
                       color: Color(0xff1E293B),
                       // letterSpacing: -0.5
                   )
               ),
-              Text(
-                formattedDate,
-                style: TextStyle(fontSize: 10, color: Colors.grey[500], fontWeight: FontWeight.w500),
-              ),
+              // Text(
+              //   formattedDate,
+              //   style: TextStyle(fontSize: 10, color: Colors.grey[500], fontWeight: FontWeight.w500),
+              // ),
             ],
           ),
 
           const Spacer(),
 
+          // Consumer(
+          //   builder: (context, ref, child) {
+          //     final masterProv = ref.watch(master_Provider);
+          //
+          //     // Yahan fix hai: Pehle check karo null toh nahi, fir string ko int mein badlo
+          //     var rawUnread = masterProv.allNotifications?.unread;
+          //     int unreadCount = 0;
+          //
+          //     if (rawUnread != null) {
+          //       unreadCount = int.tryParse(rawUnread.toString()) ?? 0;
+          //     }
+          //
+          //     return Stack(
+          //       alignment: Alignment.center,
+          //       children: [
+          //         Material(
+          //           color: Colors.transparent,
+          //           child: InkWell(
+          //             borderRadius: BorderRadius.circular(12),
+          //             onTap: () {
+          //               setState(() => _selectedIndex = 18);
+          //             },
+          //             child: Container(
+          //               padding: const EdgeInsets.all(10),
+          //               decoration: BoxDecoration(
+          //                 color: unreadCount > 0
+          //                     ? Colors.blue.withOpacity(0.05)
+          //                     : Colors.grey.withOpacity(0.05),
+          //                 borderRadius: BorderRadius.circular(12),
+          //               ),
+          //               child: Icon(
+          //                 unreadCount > 0
+          //                     ? Icons.notifications_active_rounded
+          //                     : Icons.notifications_none_rounded,
+          //                 color: unreadCount > 0 ? Colors.blue : Colors.blueGrey,
+          //                 size: 24,
+          //               ),
+          //             ),
+          //           ),
+          //         ),
+          //
+          //         // Badge tabhi dikhao jab count sach mein 0 se bada ho
+          //         if (unreadCount > 0)
+          //           Positioned(
+          //             right: 6,
+          //             top: 6,
+          //             child: Container(
+          //               padding: const EdgeInsets.all(4),
+          //               decoration: BoxDecoration(
+          //                 color: Colors.redAccent,
+          //                 shape: BoxShape.circle,
+          //                 border: Border.all(color: Colors.white, width: 2),
+          //                 boxShadow: [
+          //                   BoxShadow(
+          //                     color: Colors.redAccent.withOpacity(0.4),
+          //                     blurRadius: 6,
+          //                     spreadRadius: 1,
+          //                   )
+          //                 ],
+          //               ),
+          //               constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+          //               child: Text(
+          //                 unreadCount > 9 ? "9+" : "$unreadCount",
+          //                 style: const TextStyle(
+          //                   color: Colors.white,
+          //                   fontSize: 8,
+          //                   fontWeight: FontWeight.bold,
+          //                 ),
+          //                 textAlign: TextAlign.center,
+          //               ),
+          //             ),
+          //           ),
+          //       ],
+          //     );
+          //   },
+          // ),
+
           Consumer(
             builder: (context, ref, child) {
               final masterProv = ref.watch(master_Provider);
-
-              // Yahan fix hai: Pehle check karo null toh nahi, fir string ko int mein badlo
               var rawUnread = masterProv.allNotifications?.unread;
               int unreadCount = 0;
 
@@ -536,58 +612,30 @@ class _MainDashboardState extends ConsumerState<MainDashboard> with TickerProvid
 
               return Stack(
                 alignment: Alignment.center,
+                clipBehavior: Clip.none,
                 children: [
-                  Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(12),
-                      onTap: () {
-                        setState(() => _selectedIndex = 18);
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: unreadCount > 0
-                              ? Colors.blue.withOpacity(0.05)
-                              : Colors.grey.withOpacity(0.05),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Icon(
-                          unreadCount > 0
-                              ? Icons.notifications_active_rounded
-                              : Icons.notifications_none_rounded,
-                          color: unreadCount > 0 ? Colors.blue : Colors.blueGrey,
-                          size: 24,
-                        ),
-                      ),
-                    ),
+                  IconButton(
+                    icon: const Icon(Icons.notifications_none_rounded, color: Color(0xff475569), size: 22),
+                    onPressed: () {
+                      // _showNotificationMenu(context);
+                    },
                   ),
-
-                  // Badge tabhi dikhao jab count sach mein 0 se bada ho
                   if (unreadCount > 0)
                     Positioned(
                       right: 6,
                       top: 6,
                       child: Container(
                         padding: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          color: Colors.redAccent,
+                        decoration: const BoxDecoration(
+                          color: Color(0xffEF4444),
                           shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 2),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.redAccent.withOpacity(0.4),
-                              blurRadius: 6,
-                              spreadRadius: 1,
-                            )
-                          ],
                         ),
-                        constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+                        constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
                         child: Text(
                           unreadCount > 9 ? "9+" : "$unreadCount",
                           style: const TextStyle(
                             color: Colors.white,
-                            fontSize: 8,
+                            fontSize: 9,
                             fontWeight: FontWeight.bold,
                           ),
                           textAlign: TextAlign.center,
@@ -598,101 +646,117 @@ class _MainDashboardState extends ConsumerState<MainDashboard> with TickerProvid
               );
             },
           ),
-
           SizedBox(width: 12),
 
           if (LoginUserDetails.role == 'ADMIN')
           buildFactoryResetButton(context),
-
+          if (LoginUserDetails.role == 'ADMIN')
           SizedBox(width: 12),
 
           // 4. Premium Profile Section
-          InkWell(
-            onTap:() {
-              setState(() {
-                _selectedIndex=3;
-              });
-            },
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              decoration: BoxDecoration(
-                // Deep Navy (Sidebar match) ke liye subtle glass effect
-                color: accentColor.withOpacity(0.08),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: accentColor.withOpacity(0.2), // Light indigo border
-                  width: 1.5,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: accentColor.withOpacity(0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Pulsing Active Dot (Premium Signal)
-                  Container(
-                    width: 6,
-                    height: 6,
-                    decoration: BoxDecoration(
-                      color: accentColor, // Pulsing dot color
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: accentColor.withOpacity(0.4),
-                          blurRadius: 4,
-                          spreadRadius: 1,
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-
-                  // The Role Text
-                  Text(
-                    "${LoginUserDetails.role?.replaceAll('_', ' ')}",
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      color: accentColor, // Chamakta hua Indigo/Cyan
-                      letterSpacing: 1.2, // Pro spacing
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-
-                  // Minimal Avatar (First Letter only)
-                  Container(
-                    height: 24,
-                    width: 24,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: LinearGradient(
-                        colors: [accentColor, accentColor.withOpacity(0.7)],
-                      ),
-                    ),
-                    child: Center(
-                      child: Text(
-                        LoginUserDetails.role?[0].toUpperCase() ?? "U",
-                        style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
+          _buildUserProfileMenu(context)
         ],
       ),
     );
   }
+
+
+
+
+  Widget _buildUserProfileMenu(BuildContext context) {
+    final String userRole = LoginUserDetails.role?.replaceAll('_', ' ') ?? "Sharma Suppliers";
+    final String userInitial = userRole.isNotEmpty ? userRole[0].toUpperCase() : "S";
+
+    return PopupMenuButton<int>(
+      offset: const Offset(0, 48),
+      elevation: 6,
+      shadowColor: Colors.black.withOpacity(0.08),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: const BorderSide(color: borderColor, width: 1),
+      ),
+      color: Colors.white,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+        child: Row(
+          children: [
+            CircleAvatar(
+              radius: 14,
+              backgroundColor: const Color(0xff2563EB),
+              child: Text(
+                userInitial,
+                style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              userRole,
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xff0F172A)),
+            ),
+            const SizedBox(width: 4),
+            const Icon(Icons.keyboard_arrow_down_rounded, size: 18, color: Color(0xff64748B)),
+          ],
+        ),
+      ),
+      onSelected: (value) async {
+        if (value == 0) {
+          setState(() {
+            _selectedIndex = 3; // Navigate to Profile
+          });
+        } else if (value == 1) {
+          await ApiController.logOut(context);
+          setState(() {});
+        }
+      },
+      itemBuilder: (context) => [
+        PopupMenuItem<int>(
+          enabled: false,
+          padding: EdgeInsets.zero,
+          child: Container(
+            width: 220,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(userRole,style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xff0F172A))),
+              ],
+            ),
+          ),
+        ),
+        const PopupMenuDivider(height: 1),
+        PopupMenuItem<int>(
+          value: 0,
+          height: 40,
+          child: Row(
+            children: const [
+              Icon(Icons.person_outline_rounded, size: 18, color: Color(0xff475569)),
+              SizedBox(width: 12),
+              Text("My Profile", style: TextStyle(fontSize: 13, color: Color(0xff0F172A))),
+            ],
+          ),
+        ),
+        PopupMenuItem<int>(
+          value: 1,
+          height: 40,
+          child: Row(
+            children: const [
+              Icon(Icons.logout_rounded, size: 18, color: Color(0xffEF4444)),
+              SizedBox(width: 12),
+              Text("Sign Out", style: TextStyle(fontSize: 13, color: Color(0xffEF4444), fontWeight: FontWeight.w500)),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+
+
+
+
+
+
+
 
   Widget buildFactoryResetButton(BuildContext context) {
     return Container(

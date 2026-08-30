@@ -19,7 +19,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Jodhpur Sweets Order',
       theme: ThemeData(
-          fontFamily: 'Poppins',
+          fontFamily: 'Inter',
           colorScheme: .fromSeed(seedColor: Colors.deepPurple),
       ),
       // home: SplashScreen()

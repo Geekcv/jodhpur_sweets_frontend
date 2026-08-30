@@ -1,6 +1,7 @@
-// Inner Item Model (Aapka original name exact same rakha hai)
+// Inner Item Model
 class ShopAdminOrderRequestModel {
   var rowId;
+  var requestedOrder; // Added missing JSON field
   var requestedQuantity;
   var suppliedQuantity;
   var pendingQuantity;
@@ -17,6 +18,7 @@ class ShopAdminOrderRequestModel {
 
   ShopAdminOrderRequestModel({
     this.rowId,
+    this.requestedOrder,
     this.requestedQuantity,
     this.suppliedQuantity,
     this.pendingQuantity,
@@ -35,6 +37,7 @@ class ShopAdminOrderRequestModel {
   factory ShopAdminOrderRequestModel.fromJson(Map<String, dynamic> json) {
     return ShopAdminOrderRequestModel(
       rowId: json['row_id'],
+      requestedOrder: json['requested_order'],
       requestedQuantity: json['requested_quantity'],
       suppliedQuantity: json['supplied_quantity'],
       pendingQuantity: json['pending_quantity'],
@@ -54,6 +57,7 @@ class ShopAdminOrderRequestModel {
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = <String, dynamic>{};
     data['row_id'] = rowId;
+    data['requested_order'] = requestedOrder;
     data['requested_quantity'] = requestedQuantity;
     data['supplied_quantity'] = suppliedQuantity;
     data['pending_quantity'] = pendingQuantity;
@@ -71,7 +75,7 @@ class ShopAdminOrderRequestModel {
   }
 }
 
-// Outer Group Model (JSON ke top-level objects ke liye)
+// Outer Group Model
 class ShopAdminOrderGroupModel {
   var requestGroup;
   var crOn;

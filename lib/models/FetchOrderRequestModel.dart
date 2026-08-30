@@ -1,53 +1,88 @@
 class FetchOrderRequestModel {
-  var row_id;
-  var quantity;
-  var status;
-  var cr_on;
-  var counter_id;
-  var counter_name;
-  var sweet_id;
-  var sweet_name;
-  var unit;
+  dynamic requestGroup;
+  dynamic crOn;
+  dynamic totalRequests;
+  dynamic totalRequestedQuantity;
+  dynamic totalSuppliedQuantity;
+  dynamic totalPendingQuantity;
+  List<OrderItemModel>? requests;
 
   FetchOrderRequestModel({
-    this.row_id,
-    this.quantity,
-    this.status,
-    this.cr_on,
-    this.counter_id,
-    this.counter_name,
-    this.sweet_id,
-    this.sweet_name,
+    this.requestGroup,
+    this.crOn,
+    this.totalRequests,
+    this.totalRequestedQuantity,
+    this.totalSuppliedQuantity,
+    this.totalPendingQuantity,
+    this.requests,
+  });
+
+  factory FetchOrderRequestModel.fromJson(Map<String, dynamic> json) {
+    return FetchOrderRequestModel(
+      requestGroup: json['request_group'],
+      crOn: json['cr_on'],
+      totalRequests: json['total_requests'],
+      totalRequestedQuantity: json['total_requested_quantity'],
+      totalSuppliedQuantity: json['total_supplied_quantity'],
+      totalPendingQuantity: json['total_pending_quantity'],
+      requests: json['requests'] != null
+          ? (json['requests'] as List)
+          .map((i) => OrderItemModel.fromJson(i))
+          .toList()
+          : [],
+    );
+  }
+}
+
+class OrderItemModel {
+  dynamic rowId;
+  dynamic requestedOrder;
+  dynamic requestedQuantity;
+  dynamic shopStatus;
+  dynamic supplierStatus;
+  dynamic suppliedQuantity;
+  dynamic pendingQuantity;
+  dynamic crOn;
+  dynamic requestGroup;
+  dynamic counterId;
+  dynamic counterName;
+  dynamic sweetId;
+  dynamic sweetName;
+  dynamic unit;
+
+  OrderItemModel({
+    this.rowId,
+    this.requestedOrder,
+    this.requestedQuantity,
+    this.shopStatus,
+    this.supplierStatus,
+    this.suppliedQuantity,
+    this.pendingQuantity,
+    this.crOn,
+    this.requestGroup,
+    this.counterId,
+    this.counterName,
+    this.sweetId,
+    this.sweetName,
     this.unit,
   });
 
-  // JSON se Model banane ke liye
-  factory FetchOrderRequestModel.fromJson(Map<String, dynamic> json) {
-    return FetchOrderRequestModel(
-      row_id: json['row_id'],
-      quantity: json['quantity'],
-      status: json['status'],
-      cr_on: json['cr_on'],
-      counter_id: json['counter_id'],
-      counter_name: json['counter_name'],
-      sweet_id: json['sweet_id'],
-      sweet_name: json['sweet_name'],
+  factory OrderItemModel.fromJson(Map<String, dynamic> json) {
+    return OrderItemModel(
+      rowId: json['row_id'],
+      requestedOrder: json['requested_order'],
+      requestedQuantity: json['requested_quantity'],
+      shopStatus: json['shop_status'],
+      supplierStatus: json['supplier_status'],
+      suppliedQuantity: json['supplied_quantity'],
+      pendingQuantity: json['pending_quantity'],
+      crOn: json['cr_on'],
+      requestGroup: json['request_group'],
+      counterId: json['counter_id'],
+      counterName: json['counter_name'],
+      sweetId: json['sweet_id'],
+      sweetName: json['sweet_name'],
       unit: json['unit'],
     );
-  }
-
-  // Model se wapis JSON banane ke liye (Optional)
-  Map<String, dynamic> toJson() {
-    return {
-      'row_id': row_id,
-      'quantity': quantity,
-      'status': status,
-      'cr_on': cr_on,
-      'counter_id': counter_id,
-      'counter_name': counter_name,
-      'sweet_id': sweet_id,
-      'sweet_name': sweet_name,
-      'unit': unit,
-    };
   }
 }

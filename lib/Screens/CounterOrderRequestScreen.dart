@@ -34,7 +34,7 @@ class _CounterOrderRequestScreenState extends ConsumerState<CounterOrderRequestS
   static const Color primaryDark = Color(0xff0F172A);
   static const Color accentGold = Color(0xffD97706);
   static const Color borderCol = Color(0xffE2E8F0);
-  static const Color bgCol = Color(0xffF8FAFC);
+  static const Color bgCol = Color(0xF9FAFB);
   static const Color bgLight = Color(0xffF1F5F9);
   static const Color cardBg = Colors.white;
 
@@ -303,7 +303,7 @@ class _CounterOrderRequestScreenState extends ConsumerState<CounterOrderRequestS
                         _handleFinalSubmit();
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: primaryNavy,
+                        backgroundColor: Color(0xff2563EB),
                         elevation: 0,
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
@@ -499,12 +499,12 @@ class _CounterOrderRequestScreenState extends ConsumerState<CounterOrderRequestS
                 "ADD ITEM",
                 style: TextStyle(
                   color: Colors.white,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w700,
                   fontSize: 11,
                 ),
               ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: accentGold,
+                backgroundColor: Color(0xff2563EB),
                 elevation: 0,
                 padding: const EdgeInsets.symmetric(horizontal: 14),
                 shape: RoundedRectangleBorder(
@@ -541,7 +541,7 @@ class _CounterOrderRequestScreenState extends ConsumerState<CounterOrderRequestS
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(6),
-            borderSide: const BorderSide(color: primaryNavy),
+            borderSide: const BorderSide(color: Color(0xff2563EB)),
           ),
         ),
       ),
@@ -851,7 +851,7 @@ class _CounterOrderRequestScreenState extends ConsumerState<CounterOrderRequestS
                   ),
                 ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: primaryNavy,
+                  backgroundColor: Color(0xff2563EB),
                   elevation: 0,
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   shape: RoundedRectangleBorder(

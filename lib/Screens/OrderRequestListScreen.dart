@@ -1,8 +1,11 @@
+import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../constants/static.dart';
+import '../models/FetchOrderRequestModel.dart';
 import '../provider/provider.dart';
+import '../widgets/CustomDropDownSearch.dart';
 
 class OrderRequestListScreen extends ConsumerStatefulWidget {
   const OrderRequestListScreen({super.key});
@@ -12,18 +15,20 @@ class OrderRequestListScreen extends ConsumerStatefulWidget {
       _OrderRequestListScreenState();
 }
 
-class _OrderRequestListScreenState
-    extends ConsumerState<OrderRequestListScreen> {
+class _OrderRequestListScreenState extends ConsumerState<OrderRequestListScreen> {
   static const Color primaryNavy = Color(0xff0F172A);
   static const Color slateDark = Color(0xff334155);
+  static const Color slateSub = Color(0xff64748B);
   static const Color bgCol = Color(0xffF8FAFC);
   static const Color borderCol = Color(0xffE2E8F0);
-  static const Color cardBg = Colors.white;
 
   // --- FILTER STATES ---
-  String selectedTab = "ALL"; // ALL, PENDING, APPROVED, REJECTED
+  String selectedFilter = "ALL"; // ALL, PENDING, ACCEPTED, REJECTED
   String searchQuery = "";
+  bool isCardView = true;
   final TextEditingController _searchController = TextEditingController();
+
+  final List<String> filterOptions = ["ALL", "PENDING", "ACCEPTED", "REJECTED"];
 
   @override
   void initState() {
@@ -42,22 +47,38 @@ class _OrderRequestListScreenState
   @override
   Widget build(BuildContext context) {
     final masterProv = ref.watch(master_Provider);
-    final List<dynamic> rawOrders = masterProv.allOrdersOfCounterUser ?? [];
+    final List<FetchOrderRequestModel> rawGroupList = masterProv.allOrdersOfCounterUser ?? [];
     final bool isLoading = masterProv.loading;
 
-    // --- APPLY FILTERS ---
-    final filteredOrders = rawOrders.where((order) {
-      final status = (order.status ?? "PENDING").toString().toUpperCase();
-      final sweetName = (order.sweet_name ?? "").toString().toLowerCase();
-      final counterName = (order.counter_name ?? "").toString().toLowerCase();
-      final String query = searchQuery.toLowerCase();
+    final List<Map<String, dynamic>> processedGroups = [];
 
-      bool matchesTab = (selectedTab == "ALL") || (status == selectedTab);
-      bool matchesSearch =
-          sweetName.contains(query) || counterName.contains(query);
+    for (var group in rawGroupList) {
+      final List<OrderItemModel> items = group.requests ?? [];
 
-      return matchesTab && matchesSearch;
-    }).toList();
+      final filteredItems = items.where((item) {
+        final status = (item.shopStatus ?? "PENDING").toString().toUpperCase();
+        final sweetName = (item.sweetName ?? "").toString().toLowerCase();
+        final reqOrder = (item.requestedOrder ?? "").toString().toLowerCase();
+        final counterName = (item.counterName ?? "").toString().toLowerCase();
+        final groupTime = (group.requestGroup ?? "").toString().toLowerCase();
+        final query = searchQuery.toLowerCase();
+
+        bool matchesFilter = (selectedFilter == "ALL") || (status == selectedFilter);
+        bool matchesSearch = sweetName.contains(query) ||
+            reqOrder.contains(query) ||
+            counterName.contains(query) ||
+            groupTime.contains(query);
+
+        return matchesFilter && matchesSearch;
+      }).toList();
+
+      if (filteredItems.isNotEmpty) {
+        processedGroups.add({
+          'group': group,
+          'items': filteredItems,
+        });
+      }
+    }
 
     return Scaffold(
       backgroundColor: bgCol,
@@ -65,47 +86,49 @@ class _OrderRequestListScreenState
         builder: (context, constraints) {
           double width = constraints.maxWidth;
 
-          int crossAxisCount = 1;
-          if (width >= 1280) {
-            crossAxisCount = 4;
-          } else if (width >= 900) {
-            crossAxisCount = 3;
-          } else if (width >= 600) {
-            crossAxisCount = 2;
-          }
-
           return Padding(
-            padding: EdgeInsets.all(width < 600 ? 12 : 20),
+            padding: EdgeInsets.all(width < 600 ? 12 : 24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header Title + Search Bar on Right
-                _buildHeaderWithSearch(rawOrders.length, width),
+                // Page Header Title & Subtitle
+                const Text(
+                  "Track Request",
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                    color: primaryNavy,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                const Text(
+                  "Track all your submitted orders",
+                  style: TextStyle(fontSize: 12, color: slateSub, fontWeight: FontWeight.w400),
+                ),
                 const SizedBox(height: 16),
 
-                // Modern Segmented Status Bar
-                _buildSegmentedTabs(rawOrders),
+                // Top Controls: Search Bar + Filter Dropdown + View Toggle Icons
+                _buildControlHeader(width),
                 const SizedBox(height: 16),
 
-                // Dynamic Cards Grid
+                // Content Section
                 Expanded(
                   child: isLoading
                       ? buildShimmerEffectCard(context: context)
-                      : filteredOrders.isEmpty
+                      : processedGroups.isEmpty
                       ? _buildEmptyState()
-                      : GridView.builder(
+                      : ListView.separated(
                     physics: const BouncingScrollPhysics(),
-                    gridDelegate:
-                    SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: crossAxisCount,
-                      crossAxisSpacing: 14,
-                      mainAxisSpacing: 14,
-                      mainAxisExtent: 160,
-                    ),
-                    itemCount: filteredOrders.length,
+                    itemCount: processedGroups.length,
+                    separatorBuilder: (context, index) => const SizedBox(height: 12),
                     itemBuilder: (context, index) {
-                      return _buildOrderCard(
-                          filteredOrders[index], index + 1);
+                      final groupData = processedGroups[index];
+                      return _buildGroupCard(
+                        groupData['group'] as FetchOrderRequestModel,
+                        groupData['items'] as List<OrderItemModel>,
+                        width,
+                      );
                     },
                   ),
                 ),
@@ -117,50 +140,22 @@ class _OrderRequestListScreenState
     );
   }
 
-  // ---------- HEADER WITH INTEGRATED RIGHT SEARCH BAR ----------
-  Widget _buildHeaderWithSearch(int totalCount, double screenWidth) {
-    Widget titleWidget = Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        const Text(
-          "Order Requests",
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w800,
-            color: primaryNavy,
-            letterSpacing: -0.5,
-          ),
-        ),
-        const SizedBox(width: 8),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-          decoration: BoxDecoration(
-            color: primaryNavy.withOpacity(0.08),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Text(
-            "$totalCount Total",
-            style: const TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              color: primaryNavy,
-            ),
-          ),
-        ),
-      ],
-    );
+  // ---------- TOP CONTROL ROW (Search + Dropdown + Icon View Switcher) ----------
+  Widget _buildControlHeader(double width) {
+    bool isSmallScreen = width < 700;
 
-    Widget searchWidget = SizedBox(
-      width: screenWidth < 600 ? double.infinity : 340,
+    Widget searchBar = SizedBox(
+      width: isSmallScreen ? double.infinity : 300,
+      height: 38,
       child: TextField(
         controller: _searchController,
         onChanged: (val) => setState(() => searchQuery = val),
-        style: const TextStyle(fontSize: 11),
+        style: const TextStyle(fontSize: 12),
         decoration: InputDecoration(
           isDense: true,
-          hintText: "Search item...",
-          hintStyle: const TextStyle(fontSize: 11, color: Colors.grey),
-          prefixIcon: const Icon(Icons.search, size: 15, color: Colors.blueGrey),
+          hintText: "Search sweet name, REQ ID...",
+          hintStyle: const TextStyle(fontSize: 12, color: Colors.grey),
+          prefixIcon: const Icon(Icons.search, size: 16, color: slateSub),
           suffixIcon: searchQuery.isNotEmpty
               ? InkWell(
             onTap: () {
@@ -171,317 +166,416 @@ class _OrderRequestListScreenState
           )
               : null,
           filled: true,
-          fillColor: cardBg,
+          fillColor: Colors.white,
           contentPadding: const EdgeInsets.symmetric(vertical: 8),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide: const BorderSide(color: borderCol),
-          ),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
+            borderRadius: BorderRadius.circular(8),
             borderSide: const BorderSide(color: borderCol),
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide: const BorderSide(color: primaryNavy),
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: Color(0xff2563EB)),
           ),
         ),
       ),
     );
 
-    if (screenWidth < 600) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    Widget filterDropdown = SizedBox(
+      width: isSmallScreen ? double.infinity : 150,
+      height: 38,
+      child: CustomDropdownSearch<String>(
+        items: filterOptions,
+        selectedItem: selectedFilter,
+        itemLabelBuilder: (v) {
+          if (v == "ACCEPTED") return "Approved";
+          if (v == "PENDING") return "Pending";
+          if (v == "REJECTED") return "Rejected";
+          return v ?? "Select Filter";
+        },
+        compareFn: (a, b) => a == b,
+        onChanged: (v) {
+          if (v != null) {
+            setState(() => selectedFilter = v);
+          }
+        },
+        hintText: "Filter Status",
+      ),
+    );
+
+    Widget viewToggleIcons = Container(
+      height: 38,
+      padding: const EdgeInsets.all(3),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: borderCol),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          titleWidget,
-          const SizedBox(height: 12),
-          searchWidget,
+          _iconToggleButton(
+            icon: Icons.grid_view_rounded,
+            isSelected: isCardView,
+            onTap: () => setState(() => isCardView = true),
+          ),
+          const SizedBox(width: 2),
+          _iconToggleButton(
+            icon: Icons.view_list_rounded,
+            isSelected: !isCardView,
+            onTap: () => setState(() => isCardView = false),
+          ),
+        ],
+      ),
+    );
+
+    if (isSmallScreen) {
+      return Column(
+        children: [
+          searchBar,
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(child: filterDropdown),
+              const SizedBox(width: 10),
+              viewToggleIcons,
+            ],
+          ),
         ],
       );
     }
 
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        titleWidget,
-        searchWidget,
+        searchBar,
+        const SizedBox(width: 12),
+        filterDropdown,
+        const SizedBox(width: 12),
+        viewToggleIcons,
       ],
     );
   }
 
-  // ---------- MODERN SEGMENTED STATUS TAB BAR ----------
-  Widget _buildSegmentedTabs(List<dynamic> allOrders) {
-    int getCount(String tabStatus) {
-      if (tabStatus == "ALL") return allOrders.length;
-      return allOrders
-          .where((o) =>
-      (o.status ?? "PENDING").toString().toUpperCase() == tabStatus)
-          .length;
-    }
-
-    final tabs = [
-      {'key': 'ALL', 'label': 'All Requests', 'color': primaryNavy},
-      {'key': 'PENDING', 'label': 'Pending', 'color': const Color(0xffD97706)},
-      {'key': 'APPROVED', 'label': 'Approved', 'color': const Color(0xff16A34A)},
-      {'key': 'REJECTED', 'label': 'Rejected', 'color': const Color(0xffDC2626)},
-    ];
-
-    return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: const Color(0xffF1F5F9),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: borderCol),
-      ),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        physics: const BouncingScrollPhysics(),
-        child: Row(
-          children: tabs.map((tab) {
-            String key = tab['key'] as String;
-            String label = tab['label'] as String;
-            Color themeColor = tab['color'] as Color;
-            bool isSelected = selectedTab == key;
-            int count = getCount(key);
-
-            return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 2.0),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(8),
-                    onTap: () => setState(() => selectedTab = key),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: isSelected ? Colors.white : Colors.transparent,
-                        borderRadius: BorderRadius.circular(8),
-                        boxShadow: isSelected
-                            ? [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.04),
-                            blurRadius: 4,
-                            offset: const Offset(0, 2),
-                          )
-                        ]
-                            : [],
-                      ),
-                      child: Row(
-                        children: [
-                          Text(
-                            label,
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: isSelected
-                                  ? FontWeight.w700
-                                  : FontWeight.w500,
-                              color: isSelected ? primaryNavy : Colors.grey[700],
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 6, vertical: 1.5),
-                            decoration: BoxDecoration(
-                              color: isSelected
-                                  ? themeColor.withOpacity(0.12)
-                                  : Colors.black.withOpacity(0.05),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Text(
-                              "$count",
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w800,
-                                color: isSelected ? themeColor : Colors.grey[700],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            );
-          }).toList(),
+  Widget _iconToggleButton({
+    required IconData icon,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(6),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xffEFF6FF) : Colors.transparent,
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Icon(
+          icon,
+          size: 16,
+          color: isSelected ? const Color(0xff2563EB) : slateSub,
         ),
       ),
     );
   }
 
-  // ---------- MODERN & CLEAN DATA CARD ----------
-  Widget _buildOrderCard(dynamic order, int index) {
-    String status = (order.status ?? "PENDING").toString().toUpperCase();
-
-    Color baseColor;
-    if (status == "APPROVED") {
-      baseColor = const Color(0xff16A34A);
-    } else if (status == "REJECTED") {
-      baseColor = const Color(0xffDC2626);
-    } else {
-      baseColor = const Color(0xffD97706);
-    }
+  // ---------- EXPANDABLE REQUEST GROUP CARD CONTAINER ----------
+  Widget _buildGroupCard(FetchOrderRequestModel groupHeader, List<OrderItemModel> items, double screenWidth) {
+    bool isMobile = screenWidth < 700;
 
     return Container(
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        color: cardBg,
-        borderRadius: BorderRadius.circular(10),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: borderCol),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x05000000),
-            blurRadius: 10,
-            offset: Offset(0, 4),
+            color: Color(0x04000000),
+            blurRadius: 8,
+            offset: Offset(0, 3),
           ),
         ],
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(10),
-        child: Container(
-          decoration: BoxDecoration(
-            border: Border(left: BorderSide(color: baseColor, width: 3.5)),
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          initiallyExpanded: true,
+          tilePadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+          childrenPadding: const EdgeInsets.only(left: 14, right: 14, bottom: 14),
+          title: Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            runSpacing: 8,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.folder_open_rounded, size: 16, color: Color(0xff2563EB)),
+                      const SizedBox(width: 6),
+                      Text(
+                        "Group: ${groupHeader.requestGroup ?? '-'}",
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800,
+                          color: primaryNavy,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    _formatFullDate(groupHeader.crOn),
+                    style: const TextStyle(fontSize: 11, color: slateSub),
+                  ),
+                ],
+              ),
+              // Summary Counters
+              Wrap(
+                spacing: 8,
+                runSpacing: 6,
+                children: [
+                  _badgeChip("Total Items", "${groupHeader.totalRequests ?? items.length}", Colors.amber),
+                  _badgeChip("Total Req Qty", "${groupHeader.totalRequestedQuantity ?? 0}", Colors.blue),
+                  _badgeChip("Total Supplied", "${groupHeader.totalSuppliedQuantity ?? 0}", Colors.teal),
+                  _badgeChip("Total Pending", "${groupHeader.totalPendingQuantity ?? 0}", Colors.orange),
+                ],
+              ),
+            ],
           ),
+          children: [
+            const Divider(height: 16, color: borderCol),
+            isCardView
+                ? _buildGridCardLayout(items, screenWidth)
+                : _buildListRowLayout(items, isMobile),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _badgeChip(String label, String val, MaterialColor col) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: col.shade50,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: col.shade200),
+      ),
+      child: Text(
+        "$label: $val",
+        style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: col.shade800),
+      ),
+    );
+  }
+
+  // ---------- VIEW 1: RESPONSIVE GRID CARDS LAYOUT ----------
+  Widget _buildGridCardLayout(List<OrderItemModel> items, double screenWidth) {
+    int crossAxisCount = 1;
+    if (screenWidth >= 1200) {
+      crossAxisCount = 3;
+    } else if (screenWidth >= 768) {
+      crossAxisCount = 2;
+    }
+
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: crossAxisCount,
+        crossAxisSpacing: 10,
+        mainAxisSpacing: 10,
+        mainAxisExtent: 120, // Clean readable height
+      ),
+      itemCount: items.length,
+      itemBuilder: (context, index) {
+        final item = items[index];
+        final status = (item.shopStatus ?? "PENDING").toString().toUpperCase();
+
+        return Container(
           padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: const Color(0xffF8FAFC),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: borderCol),
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // Row 1: Item Name & Status Badge
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
                     child: Text(
-                      order.sweet_name?.toString().toUpperCase() ?? "N/A",
+                      item.sweetName?.toString() ?? "-",
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w800,
-                        color: primaryNavy,
-                        letterSpacing: -0.2,
-                      ),
+                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: primaryNavy),
                     ),
                   ),
                   const SizedBox(width: 6),
-                  _statusBadge(status, baseColor),
+                  _statusBadge(status),
                 ],
               ),
-
-              const Divider(height: 14, color: Color(0xffF1F5F9)),
-
-              // Row 2: Metadata Details
+              Text(
+                "${item.requestedOrder ?? ''} • ${item.counterName ?? ''}",
+                style: const TextStyle(fontSize: 11, color: slateSub, fontWeight: FontWeight.w500),
+              ),
+              const Divider(height: 8, color: Color(0xffE2E8F0)),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _metaBlock(
-                    "QUANTITY",
-                    "${order.quantity ?? '0'} ${order.unit ?? ''}",
-                    valueColor: primaryNavy,
-                    isBold: true,
-                  ),
-                  _metaBlock(
-                    "COUNTER NAME",
-                    order.counter_name ?? "-",
-                    alignRight: true,
+                  Text("Qty: ${item.requestedQuantity ?? 0} ${item.unit ?? ''}",
+                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: primaryNavy)),
+                  Row(
+                    children: [
+                      Text("Sup: ${item.suppliedQuantity ?? 0}",
+                          style: TextStyle(fontSize: 10, color: Colors.teal.shade700, fontWeight: FontWeight.w700)),
+                      const SizedBox(width: 8),
+                      Text("Pen: ${item.pendingQuantity ?? 0}",
+                          style: TextStyle(fontSize: 10, color: Colors.orange.shade800, fontWeight: FontWeight.w700)),
+                    ],
                   ),
                 ],
               ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 
-              // Row 3: Footer Timestamp
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: const Color(0xffF8FAFC),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Row(
+  // ---------- VIEW 2: RESPONSIVE LIST / ROW LAYOUT ----------
+  Widget _buildListRowLayout(List<OrderItemModel> items, bool isMobile) {
+    return ListView.separated(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: items.length,
+      separatorBuilder: (context, index) => const SizedBox(height: 8),
+      itemBuilder: (context, index) {
+        final item = items[index];
+        final status = (item.shopStatus ?? "PENDING").toString().toUpperCase();
+
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            color: const Color(0xffF8FAFC),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: borderCol),
+          ),
+          child: isMobile
+              ? Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
+                      item.sweetName?.toString() ?? "-",
+                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: primaryNavy),
+                    ),
+                  ),
+                  _statusBadge(status),
+                ],
+              ),
+              const SizedBox(height: 2),
+              Text(
+                "${item.requestedOrder ?? ''} • ${item.counterName ?? ''}",
+                style: const TextStyle(fontSize: 11, color: slateSub),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text("Qty: ${item.requestedQuantity ?? 0} ${item.unit ?? ''}",
+                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: primaryNavy)),
+                  Text("Supplied: ${item.suppliedQuantity ?? 0}",
+                      style: TextStyle(fontSize: 11, color: Colors.teal.shade700, fontWeight: FontWeight.w600)),
+                  Text("Pending: ${item.pendingQuantity ?? 0}",
+                      style: TextStyle(fontSize: 11, color: Colors.orange.shade800, fontWeight: FontWeight.w600)),
+                ],
+              ),
+            ],
+          )
+              : Row(
+            children: [
+              Expanded(
+                flex: 3,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(Icons.access_time_rounded,
-                        size: 11, color: Colors.blueGrey),
-                    const SizedBox(width: 4),
                     Text(
-                      _formatDate(order.cr_on?.toString()),
-                      style: const TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w600,
-                        color: slateDark,
-                      ),
+                      item.sweetName?.toString() ?? "-",
+                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: primaryNavy),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      "${item.requestedOrder ?? ''} • ${item.counterName ?? ''}",
+                      style: const TextStyle(fontSize: 11, color: slateSub),
                     ),
                   ],
                 ),
               ),
+              Expanded(
+                flex: 4,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    Text("Qty: ${item.requestedQuantity ?? 0} ${item.unit ?? ''}",
+                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: primaryNavy)),
+                    Text("Supplied: ${item.suppliedQuantity ?? 0}",
+                        style: TextStyle(fontSize: 11, color: Colors.teal.shade700, fontWeight: FontWeight.w600)),
+                    Text("Pending: ${item.pendingQuantity ?? 0}",
+                        style: TextStyle(fontSize: 11, color: Colors.orange.shade800, fontWeight: FontWeight.w600)),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 14),
+              _statusBadge(status),
             ],
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
-  Widget _metaBlock(String label, String value,
-      {bool alignRight = false,
-        Color valueColor = slateDark,
-        bool isBold = false}) {
-    return Column(
-      crossAxisAlignment:
-      alignRight ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 8,
-            fontWeight: FontWeight.w700,
-            color: Colors.grey,
-            letterSpacing: 0.3,
-          ),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          value,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            fontSize: 11.5,
-            fontWeight: isBold ? FontWeight.w800 : FontWeight.w600,
-            color: valueColor,
-          ),
-        ),
-      ],
-    );
-  }
+  // ---------- STATUS BADGE ----------
+  Widget _statusBadge(String status) {
+    Color bg = const Color(0xffFEF3C7);
+    Color text = const Color(0xffD97706);
 
-  Widget _statusBadge(String status, Color baseColor) {
+    if (status == "ACCEPTED" || status == "APPROVED") {
+      bg = const Color(0xffDCFCE7);
+      text = const Color(0xff16A34A);
+    } else if (status == "REJECTED") {
+      bg = const Color(0xffFEE2E2);
+      text = const Color(0xffDC2626);
+    }
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: baseColor.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(4),
-        border: Border.all(color: baseColor.withOpacity(0.2)),
+        color: bg,
+        borderRadius: BorderRadius.circular(10),
       ),
       child: Text(
-        status,
-        style: TextStyle(
-          color: baseColor,
-          fontSize: 8.5,
-          fontWeight: FontWeight.w800,
-          letterSpacing: 0.3,
-        ),
+        status == "ACCEPTED" ? "Approved" : (status == "PENDING" ? "Pending" : status),
+        style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: text),
       ),
     );
   }
 
-  String _formatDate(String? dateStr) {
-    if (dateStr == null || dateStr.isEmpty || dateStr == "null") return "-";
+  String _formatFullDate(dynamic dateStr) {
+    if (dateStr == null || dateStr.toString().isEmpty) return "-";
     try {
-      DateTime dt = DateTime.parse(dateStr);
-      return DateFormat('dd MMM yyyy, hh:mm a').format(dt);
+      DateTime dt = DateTime.parse(dateStr.toString());
+      return DateFormat('yyyy-MM-dd HH:mm').format(dt);
     } catch (e) {
-      return dateStr;
+      return dateStr.toString();
     }
   }
 
@@ -490,11 +584,11 @@ class _OrderRequestListScreenState
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: const [
-          Icon(Icons.search_off_rounded, size: 38, color: Colors.grey),
-          SizedBox(height: 8),
+          Icon(Icons.search_off_rounded, size: 40, color: Colors.grey),
+          SizedBox(height: 10),
           Text(
             "No matching requests found",
-            style: TextStyle(color: Colors.grey, fontSize: 12),
+            style: TextStyle(color: Colors.grey, fontSize: 13, fontWeight: FontWeight.w500),
           ),
         ],
       ),
