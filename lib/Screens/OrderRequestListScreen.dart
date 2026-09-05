@@ -313,10 +313,11 @@ class _OrderRequestListScreenState extends ConsumerState<OrderRequestListScreen>
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.folder_open_rounded, size: 16, color: Color(0xff2563EB)),
-                      const SizedBox(width: 6),
+                      // const Icon(Icons.folder_open_rounded, size: 16, color: Color(0xff2563EB)),
+                      // const SizedBox(width: 6),
                       Text(
-                        "Group: ${groupHeader.requestGroup ?? '-'}",
+                        // "Group: ${groupHeader.requestGroup ?? '-'}",
+                        "Request: ",
                         style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w800,
@@ -432,10 +433,10 @@ class _OrderRequestListScreenState extends ConsumerState<OrderRequestListScreen>
                       style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: primaryNavy)),
                   Row(
                     children: [
-                      Text("Sup: ${item.suppliedQuantity ?? 0}",
+                      Text("Supplied qty: ${item.suppliedQuantity ?? 0}",
                           style: TextStyle(fontSize: 10, color: Colors.teal.shade700, fontWeight: FontWeight.w700)),
                       const SizedBox(width: 8),
-                      Text("Pen: ${item.pendingQuantity ?? 0}",
+                      Text("Pending qty: ${item.pendingQuantity ?? 0}",
                           style: TextStyle(fontSize: 10, color: Colors.orange.shade800, fontWeight: FontWeight.w700)),
                     ],
                   ),
@@ -573,7 +574,8 @@ class _OrderRequestListScreenState extends ConsumerState<OrderRequestListScreen>
     if (dateStr == null || dateStr.toString().isEmpty) return "-";
     try {
       DateTime dt = DateTime.parse(dateStr.toString());
-      return DateFormat('yyyy-MM-dd HH:mm').format(dt);
+      // return DateFormat('yyyy-MM-dd HH:mm').format(dt);
+      return DateFormat('dd-MM-yyyy hh:mm a').format(dt);
     } catch (e) {
       return dateStr.toString();
     }

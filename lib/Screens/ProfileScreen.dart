@@ -77,7 +77,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final size = MediaQuery.of(context).size;
     final bool isDesktop = size.width > 900;
 
-    if (provider.loading) return Scaffold(body: buildShimmerEffect(context: context));
+    if (provider.loading) return Scaffold(backgroundColor: Colors.white, body: buildShimmerEffect(context: context));
     if (user == null) return const Scaffold(body: Center(child: Text("Profile data not found")));
 
     return Scaffold(

@@ -3,12 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:js_order_website/Screens/LoginUserDetails.dart';
-import '../constants/static.dart';
-import '../models/FetchShopModel.dart';
-import '../provider/provider.dart';
-import '../controllers/api_controller.dart';
-import '../widgets/CustomDropDownSearch.dart';
-import '../widgets/TextInputField.dart';
+
+import '../../constants/static.dart';
+import '../../controllers/api_controller.dart';
+import '../../models/FetchShopModel.dart';
+import '../../provider/provider.dart';
+import '../../widgets/CustomDropDownSearch.dart';
+import '../../widgets/TextInputField.dart';
+
 
 class AddCounterScreen extends ConsumerStatefulWidget {
   const AddCounterScreen({super.key});
@@ -57,14 +59,10 @@ class _AddCounterScreenState extends ConsumerState<AddCounterScreen> {
     // print("DEBUG: Role is Admin? ${LoginUserDetails.isAdmin}");
     // print("DEBUG: Effective Shop ID to be used: $effectiveShopId");
 
-    if (controllers['phone']!.text.trim().length != 10) {
-      showToast(context: context,msg: "Phone number must be exactly 10 digits!",color: Colors.redAccent);
-      return;
-    }
 
     bool isFormInvalid = effectiveShopId == null ||
         controllers['counter_name']!.text.trim().isEmpty ||
-        controllers['location']!.text.trim().isEmpty ||
+        // controllers['location']!.text.trim().isEmpty ||
         controllers['staff_name']!.text.trim().isEmpty ||
         controllers['email']!.text.trim().isEmpty ||
         controllers['phone']!.text.trim().length < 10 ||
@@ -73,6 +71,11 @@ class _AddCounterScreenState extends ConsumerState<AddCounterScreen> {
     if (isFormInvalid) {
       setState(() => showErrors = true);
       Timer(const Duration(seconds: 3), () => setState(() => showErrors = false));
+      return;
+    }
+
+    if (controllers['phone']!.text.trim().length != 10) {
+      showToast(context: context,msg: "Phone number must be exactly 10 digits!",color: Colors.redAccent);
       return;
     }
 
@@ -167,7 +170,7 @@ class _AddCounterScreenState extends ConsumerState<AddCounterScreen> {
     return Row(
       children: [
         const Text("Counter Master",
-            style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: primaryDark)),
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: primaryDark)),
         const SizedBox(width: 12),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -208,13 +211,13 @@ class _AddCounterScreenState extends ConsumerState<AddCounterScreen> {
                 ),
                 children: [
                   if(LoginUserDetails.role == 'ADMIN')
-                  _dropdownBox("SELECT SHOP", shops),
-                  _box("COUNTER NAME", controllers['counter_name']!),
+                  _dropdownBox("SELECT SHOP *", shops),
+                  _box("COUNTER NAME *", controllers['counter_name']!),
                   _box("LOCATION", controllers['location']!),
-                  _box("STAFF NAME", controllers['staff_name']!),
-                  _box("EMAIL", controllers['email']!),
-                  _box("PHONE", controllers['phone']!, isPhone: true),
-                  _box("PASSWORD", controllers['password']!, isPass: true),
+                  _box("STAFF NAME *", controllers['staff_name']!),
+                  _box("EMAIL *", controllers['email']!),
+                  _box("PHONE *", controllers['phone']!, isPhone: true),
+                  _box("PASSWORD *", controllers['password']!, isPass: true),
 
                   // Save Button ko Grid ke last cell mein set kiya
                   Align(

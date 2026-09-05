@@ -106,7 +106,7 @@ class ApiController {
   static fetchShop({context,params})async{
     var token = await getloggedinUserToken();
     var res = await ApiService().fetchShop(param: params,token: token);
-    //print("fetchShop response:-----$res");
+    print("fetchShop response:-----$res");
 
     List<FetchShopModel> shopData = [];
     if (res != null && res['status'] == 0) {
@@ -139,7 +139,7 @@ class ApiController {
   static fetchCounter({context,params})async{
     var token = await getloggedinUserToken();
     var res = await ApiService().fetchCounters(param: params,token: token);
-    //print("fetchCounters response:-----$res");
+    print("fetchCounters response:-----$res");
 
     List<FetchCounterModel> counterDataList = [];
     if (res != null && res['status'] == 0) {
@@ -172,7 +172,7 @@ class ApiController {
   static fetchSupplier({context,params})async{
     var token = await getloggedinUserToken();
     var res = await ApiService().fetchSupplier(param: params,token: token);
-    //print("fetchSupplier response:-----$res");
+    print("fetchSupplier response:-----$res");
     List<FetchSupplierModel> supplierDataList = [];
     if (res != null && res['status'] == 0) {
       for (var i = 0; i < res['data'].length; i++) {
@@ -236,7 +236,7 @@ class ApiController {
   static fetchCategory({context,params})async{
     var token = await getloggedinUserToken();
     var res = await ApiService().fetchCategory(param: params,token: token);
-    //print("fetchCategory response:-----$res");
+    print("fetchCategory response:-----$res");
     List<FetchCategoryModel> data = [];
     if (res != null && res['status'] == 0) {
       for (var i = 0; i < res['data'].length; i++) {
@@ -391,7 +391,7 @@ class ApiController {
     var token = await getloggedinUserToken();
     var res = await ApiService().fetchMyOrderSupplier(param: params, token: token);
 
-    //print("fetchMyOrderSupplier response:-----$res");
+    print("fetchMyOrderSupplier response:-----$res");
 
     List<SupplierOrder> data = [];
 
@@ -432,7 +432,7 @@ class ApiController {
   static fetchStockHistory({context,params})async{
     var token = await getloggedinUserToken();
     var res = await ApiService().fetchStockHistory(param: params,token: token);
-    //print("fetchStockHistory response:-----$res");
+    print("fetchStockHistory response:-----$res");
     List<StockHistoryModel> data = [];
     if (res != null && res['status'] == 0) {
       for (var i = 0; i < res['data'].length; i++) {
@@ -483,7 +483,7 @@ class ApiController {
   static fetchChallan({context,params})async{
     var token = await getloggedinUserToken();
     var res = await ApiService().fetchChallan(param: params,token: token);
-    //print("fetchChallan response:-----$res");
+    print("fetchChallan response:-----$res");
     List<ChalanDataModel> data = [];
     if (res != null && res['status'] == 0) {
       for (var i = 0; i < res['data'].length; i++) {

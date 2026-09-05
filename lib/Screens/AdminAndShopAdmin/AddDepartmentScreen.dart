@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:js_order_website/models/FetchDepartmentModel.dart';
-import '../constants/static.dart';
-import '../controllers/api_controller.dart';
-import '../models/FetchShopModel.dart';
-import '../provider/provider.dart';
-import '../widgets/CustomDropDownSearch.dart';
-import 'LoginUserDetails.dart';
+
+import '../../constants/static.dart';
+import '../../controllers/api_controller.dart';
+import '../../models/FetchShopModel.dart';
+import '../../provider/provider.dart';
+import '../../widgets/CustomDropDownSearch.dart';
+import '../LoginUserDetails.dart';
+
 
 class AddDepartmentScreen extends ConsumerStatefulWidget {
   const AddDepartmentScreen({super.key});
@@ -220,18 +222,22 @@ class _AddDepartmentScreenState extends ConsumerState<AddDepartmentScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text("Department Master",
-              style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: primaryDark)),
-          const SizedBox(height: 20),
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Color(0xff1A2B4C),
+              )),
+          const SizedBox(height: 30),
 
           // Form and Button Section
           Row(
-            mainAxisAlignment: MainAxisAlignment.end,
+            mainAxisAlignment: MainAxisAlignment.start,
             children: [
               Expanded(
                 child: isMobile
                     ? _buildQuickAddForm(isMobile,shops)
                     : Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
+                  mainAxisAlignment: MainAxisAlignment.start,
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [_buildQuickAddForm(isMobile,shops)],
                 ),
@@ -249,12 +255,13 @@ class _AddDepartmentScreenState extends ConsumerState<AddDepartmentScreen> {
       child: Wrap(
         spacing: 12,
         runSpacing: 12,
-        alignment: isMobile ? WrapAlignment.start : WrapAlignment.end, // Push to right on Desktop
+        // alignment: isMobile ? WrapAlignment.start : WrapAlignment.end, // Push to right on Desktop
+        alignment: WrapAlignment.start, // Push to right on Desktop
         crossAxisAlignment: WrapCrossAlignment.end,
         children: [
           if(LoginUserDetails.isAdmin)
           _dropdownBoxFoShop("SELECT SHOP *", shops, isMobile ? double.infinity : 270),
-          _compactField("NAME", nameController, "Department Name", 200),
+          _compactField("NAME *", nameController, "Department Name", 200),
           _compactField("DESCRIPTION", descController, "Short description...", 350),
 
           // Save Button
@@ -290,7 +297,7 @@ class _AddDepartmentScreenState extends ConsumerState<AddDepartmentScreen> {
           width: width,
           child: TextFormField(
             controller: ctrl,
-            validator: (v) => v!.isEmpty ? "*" : null,
+            // validator: (v) => v!.isEmpty ? "*" : null,
             // Precaution: Block leading space
             inputFormatters: [
               FilteringTextInputFormatter.deny(RegExp(r'^\s+')),
@@ -339,7 +346,7 @@ class _AddDepartmentScreenState extends ConsumerState<AddDepartmentScreen> {
           SizedBox(width: 40, child: Text(index.toString().padLeft(2, '0'), style: const TextStyle(color: Colors.grey, fontSize: 13))),
           Expanded(flex: 3, child: Text(dept.shop_name ?? "-", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: primaryDark))),
           Expanded(flex: 3, child: Text(dept.department_name ?? "-", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: primaryDark))),
-          Expanded(flex: 4, child: Text(dept.description ?? "N/A", style: TextStyle(fontSize: 13, color: Colors.grey[700]), maxLines: 1, overflow: TextOverflow.ellipsis)),
+        Expanded(flex: 4, child: Text((dept.description != null && dept.description.toString().trim().isNotEmpty) ? dept.description : "-", style: TextStyle(fontSize: 13, color: Colors.grey[700]), maxLines: 1, overflow: TextOverflow.ellipsis)),
           Expanded(flex: 2, child: Text(formatDate(dept.cr_on.toString()), style: const TextStyle(fontSize: 13, color: Colors.black87))),
 
           // if(LoginUserDetails.isAdmin)

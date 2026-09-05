@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:js_order_website/controllers/api_controller.dart';
-import '../provider/provider.dart';
-import '../widgets/TextInputField.dart';
+
+import '../../provider/provider.dart';
+import '../../widgets/TextInputField.dart';
+
 
 class AddShopScreen extends ConsumerStatefulWidget {
   const AddShopScreen({super.key});
@@ -271,12 +273,16 @@ class _AddShopScreenState extends ConsumerState<AddShopScreen> {
   Widget _buildHeader(int count) {
     return Row(
       children: [
-        const Text("Shop Master", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: primaryDark)),
-        const SizedBox(width: 12),
+        const Text("Shop Master",style: TextStyle(
+          fontSize: 24,
+          fontWeight: FontWeight.bold,
+          color: Color(0xff1A2B4C),
+        )),
+        const SizedBox(width: 8),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-          decoration: BoxDecoration(color: Colors.blue.withOpacity(0.1), borderRadius: BorderRadius.circular(20)),
-          child: Text("$count Total", style: const TextStyle(fontSize: 11, color: Colors.blue, fontWeight: FontWeight.bold)),
+          decoration: BoxDecoration(color: Colors.blue.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+          child: Text("$count Total", style: const TextStyle(fontSize: 10, color: Colors.blue, fontWeight: FontWeight.bold)),
         ),
       ],
     );

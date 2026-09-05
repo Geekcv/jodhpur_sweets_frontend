@@ -2,9 +2,11 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../controllers/api_controller.dart';
-import '../provider/provider.dart';
-import '../widgets/TextInputField.dart';
+
+import '../../controllers/api_controller.dart';
+import '../../provider/provider.dart';
+import '../../widgets/TextInputField.dart';
+
 
 class AddSupplierScreen extends ConsumerStatefulWidget {
   const AddSupplierScreen({super.key});
@@ -99,10 +101,11 @@ class _AddSupplierScreenState extends ConsumerState<AddSupplierScreen> {
             _buildQuickAddForm(),
 
             if (showErrors)
+            if (showErrors)
               const Padding(
                 padding: EdgeInsets.only(top: 8, left: 5),
                 child: Text("* All fields are mandatory with valid 10-digit phone",
-                    style: TextStyle(color: Colors.red, fontSize: 11, fontWeight: FontWeight.bold)),
+                    style: TextStyle(color: Colors.red, fontSize: 11,)),
               ),
 
             const SizedBox(height: 25),
@@ -229,7 +232,7 @@ class _AddSupplierScreenState extends ConsumerState<AddSupplierScreen> {
   Widget _buildHeader(int count) {
     return Row(
       children: [
-        const Text("Supplier Master", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: primaryDark)),
+        const Text("Supplier Master", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: primaryDark)),
         const SizedBox(width: 12),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -270,7 +273,7 @@ class _AddSupplierScreenState extends ConsumerState<AddSupplierScreen> {
             ],
           )),
           Expanded(flex: 2, child: Text(s.phone ?? "-", style: const TextStyle(fontSize: 13, color: Colors.black87, fontWeight: FontWeight.w500))),
-          Expanded(flex: 4, child: Text(s.address ?? "-", style: const TextStyle(fontSize: 12, color: Colors.black54), maxLines: 1, overflow: TextOverflow.ellipsis)),
+          Expanded(flex: 4, child: Text(s.address ?? "-", style: const TextStyle(fontSize: 13, color: Colors.black87, fontWeight: FontWeight.w500), maxLines: 1, overflow: TextOverflow.ellipsis)),
           // SizedBox(
           //   width: 80,
           //   child: Row(

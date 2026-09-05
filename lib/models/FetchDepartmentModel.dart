@@ -15,7 +15,7 @@ class FetchDepartmentModel{
       row_id: json['row_id'] ?? "",
       department_name: json['department_name'] ?? " ",
       cr_on: json['cr_on'],
-      description: json['description'],
+      description: json['description'] ?? '-',
       shop_name: json['shop_name'],
       shop_id: json['shop_id'],
     );

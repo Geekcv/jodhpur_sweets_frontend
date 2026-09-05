@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import '../constants/static.dart';
-import '../models/FetchShopModel.dart';
-import '../models/TrackOwnOrdersByShopAdminModel.dart';
-import '../provider/provider.dart';
-import 'LoginUserDetails.dart';
+import '../../constants/static.dart';
+import '../../models/FetchShopModel.dart';
+import '../../models/TrackOwnOrdersByShopAdminModel.dart';
+import '../../provider/provider.dart';
+import '../../widgets/CustomDropDownSearch.dart';
+import '../../widgets/TextInputField.dart';
+import '../LoginUserDetails.dart';
+
 
 class TrackOwnOrdersShopAdminScreen extends ConsumerStatefulWidget {
   const TrackOwnOrdersShopAdminScreen({super.key});
@@ -86,12 +89,8 @@ class _TrackOwnOrdersShopAdminScreenState extends ConsumerState<TrackOwnOrdersSh
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // --- HEADER & SEARCH ---
-                _buildHeaderWithSearch(isMobile, shops),
-                const SizedBox(height: 16),
-
-                // --- SEGMENTED TABS ---
-                _buildSegmentedTabs(rawOrders),
+                // --- HEADER WITH TITLE, SUBTITLE, FILTERS & SEARCH ---
+                _buildHeaderWithSearch(isMobile, shops, rawOrders),
                 const SizedBox(height: 20),
 
                 // --- GRID VIEW CARDS ---
@@ -102,22 +101,19 @@ class _TrackOwnOrdersShopAdminScreenState extends ConsumerState<TrackOwnOrdersSh
                     behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
                     child: GridView.builder(
                       physics: const BouncingScrollPhysics(),
-                      gridDelegate:
-                      SliverGridDelegateWithFixedCrossAxisCount(
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: crossAxisCount,
                         crossAxisSpacing: 16,
                         mainAxisSpacing: 16,
-                        mainAxisExtent: 345, // Fixed height for exact card structure
+                        mainAxisExtent: 345,
                       ),
                       itemCount: filteredOrders.length,
                       itemBuilder: (context, index) {
                         final order = filteredOrders[index];
                         return OrderCard(
                           order: order,
-                          formattedDate: formatDate(
-                              order.orderDate.toString()),
-                          onTap: () => _showOrderDetailsDialog(
-                              context, order),
+                          formattedDate: formatDate(order.orderDate.toString()),
+                          onTap: () => _showOrderDetailsDialog(context, order),
                         );
                       },
                     ),
@@ -131,80 +127,87 @@ class _TrackOwnOrdersShopAdminScreenState extends ConsumerState<TrackOwnOrdersSh
     );
   }
 
-  Widget _buildHeaderWithSearch(bool isMobile, List<FetchShopModel> shops) {
-    Widget title = const Text(
-      "Order Tracking History",
-      style: TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.bold,
-          color: Color(0xff1A2B4C)),
-    );
-
-    Widget searchBar = SizedBox(
-      width: isMobile ? double.infinity : 340,
-      height: 38,
-      child: TextField(
-        controller: _searchController,
-        onChanged: (val) => setState(() => searchQuery = val),
-        style: const TextStyle(fontSize: 12),
-        decoration: InputDecoration(
-          isDense: true,
-          hintText: "Search ID, shop, item...",
-          hintStyle: const TextStyle(fontSize: 12, color: Colors.grey),
-          prefixIcon: const Icon(Icons.search, size: 16, color: Colors.grey),
-          suffixIcon: searchQuery.isNotEmpty
-              ? InkWell(
-            onTap: () {
-              _searchController.clear();
-              setState(() => searchQuery = "");
-            },
-            child: const Icon(Icons.clear, size: 14, color: Colors.grey),
-          )
-              : null,
-          filled: true,
-          fillColor: Colors.white,
-          contentPadding: const EdgeInsets.symmetric(vertical: 0),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide: BorderSide(color: Colors.grey[300]!),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide: BorderSide(color: Colors.grey[300]!),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(6),
-            borderSide: const BorderSide(color: Color(0xff1A2B4C)),
+  Widget _buildHeaderWithSearch(bool isMobile, List<FetchShopModel> shops, List<dynamic> rawOrders) {
+    // Title & Subtitle Section
+    Widget headerTitleSection = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: const [
+        Text(
+          "Order Tracking History",
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Color(0xff1A2B4C),
           ),
         ),
+        SizedBox(height: 4),
+        Text(
+          "View and manage supplier orders.",
+          style: TextStyle(
+            fontSize: 12,
+            color: Color(0xff64748B),
+            fontWeight: FontWeight.w400,
+          ),
+        ),
+      ],
+    );
+
+    // Search Bar
+    Widget searchBar = SizedBox(
+      width: isMobile ? double.infinity : 250,
+      height: 38,
+      child: CustomTextInput(
+        hintText: "Search ID, shop, item...",
+        controller: _searchController,
+        maxLines: 1,
+        keyboardType: TextInputType.text,
+        onChanged: (val) => setState(() => searchQuery = val),
+        prefixicon: const Icon(Icons.search, size: 16, color: Colors.grey),
+        suffixicon: searchQuery.isNotEmpty
+            ? InkWell(
+          onTap: () {
+            _searchController.clear();
+            setState(() => searchQuery = "");
+          },
+          child: const Icon(Icons.clear, size: 14, color: Colors.grey),
+        )
+            : null,
       ),
     );
 
+    // Mobile Layout
     if (isMobile) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          title,
-          const SizedBox(height: 12),
+          headerTitleSection,
+          const SizedBox(height: 14),
           if (LoginUserDetails.isAdmin) ...[
             _dropdownBoxFoShop(shops, double.infinity),
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
           ],
+          _buildOrderFilterDropdown(rawOrders, double.infinity),
+          const SizedBox(height: 10),
           searchBar,
         ],
       );
     }
 
+    // Desktop/Tablet Layout (Single Line Bar)
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        title,
+        headerTitleSection,
         Row(
           children: [
             if (LoginUserDetails.isAdmin) ...[
-              _dropdownBoxFoShop(shops, 220),
-              const SizedBox(width: 12),
+              _dropdownBoxFoShop(shops, 180),
+              const SizedBox(width: 10),
             ],
+            _buildOrderFilterDropdown(rawOrders, 180),
+            const SizedBox(width: 10),
             searchBar,
           ],
         ),
@@ -212,7 +215,8 @@ class _TrackOwnOrdersShopAdminScreenState extends ConsumerState<TrackOwnOrdersSh
     );
   }
 
-  Widget _buildSegmentedTabs(List<dynamic> allOrders) {
+
+  Widget _buildOrderFilterDropdown(List<dynamic> allOrders, double dropdownWidth) {
     int getCount(String tabStatus) {
       if (tabStatus == "ALL") return allOrders.length;
       return allOrders.where((o) {
@@ -220,81 +224,45 @@ class _TrackOwnOrdersShopAdminScreenState extends ConsumerState<TrackOwnOrdersSh
       }).length;
     }
 
-    final tabs = [
-      {'key': 'ALL', 'label': 'All Orders', 'color': const Color(0xff1A2B4C)},
-      {'key': 'PENDING', 'label': 'Pending', 'color': Colors.orange},
-      {'key': 'ACCEPTED', 'label': 'Accepted', 'color': Colors.blue},
-      {'key': 'DISPATCHED', 'label': 'Dispatched', 'color': Colors.green},
+    final filterItems = [
+      {'key': 'ALL', 'label': 'All Orders'},
+      {'key': 'PENDING', 'label': 'Pending'},
+      {'key': 'ACCEPTED', 'label': 'Accepted'},
+      {'key': 'DISPATCHED', 'label': 'Dispatched'},
     ];
 
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      physics: const BouncingScrollPhysics(),
-      child: Row(
-        children: tabs.map((tab) {
-          String key = tab['key'] as String;
-          String label = tab['label'] as String;
-          Color themeColor = tab['color'] as Color;
-          bool isSelected = selectedTab == key;
-          int count = getCount(key);
-
-          return Padding(
-            padding: const EdgeInsets.only(right: 8.0),
-            child: InkWell(
-              borderRadius: BorderRadius.circular(8),
-              onTap: () => setState(() => selectedTab = key),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                decoration: BoxDecoration(
-                  color: isSelected ? themeColor : Colors.white,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: isSelected ? themeColor : Colors.grey[300]!,),
-                ),
-                child: Row(
-                  children: [
-                    Text(
-                      label,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                        color: isSelected ? Colors.white : Colors.black,
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 6, vertical: 1.5),
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? Colors.white.withOpacity(0.2)
-                            : Colors.grey[200],
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Text(
-                        "$count",
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                          color: isSelected ? Colors.white : Colors.grey[800],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
-        }).toList(),
+    return SizedBox(
+      width: dropdownWidth,
+      height: 38,
+      child: CustomDropdownSearch<Map<String, String>>(
+        items: filterItems,
+        showSearchBox: false,
+        itemLabelBuilder: (item) {
+          int count = getCount(item['key']!);
+          return "${item['label']}";
+        },
+        compareFn: (a, b) => a['key'] == b['key'],
+        selectedItem: filterItems.firstWhere(
+              (item) => item['key'] == selectedTab,
+          orElse: () => filterItems.first,
+        ),
+        onChanged: (val) {
+          if (val != null) {
+            setState(() {
+              selectedTab = val['key']!;
+            });
+          }
+        },
+        hintText: "Select Status",
       ),
     );
   }
 
+
   Widget _dropdownBoxFoShop(List<FetchShopModel> shop, double width) {
     FetchShopModel? currentSelected;
     if (shop_id != null && shop.any((s) => s.row_id.toString() == shop_id)) {
-      currentSelected =
-          shop.firstWhere((d) => d.row_id.toString() == shop_id);
+      currentSelected = shop.firstWhere((d) => d.row_id.toString() == shop_id);
     }
 
     return Container(
@@ -310,11 +278,14 @@ class _TrackOwnOrdersShopAdminScreenState extends ConsumerState<TrackOwnOrdersSh
         child: DropdownButton<FetchShopModel>(
           value: currentSelected,
           isExpanded: true,
-          icon: const Icon(Icons.arrow_drop_down,
-              size: 20, color: Colors.grey),
+          icon: const Icon(Icons.arrow_drop_down, size: 25, color: Colors.black87),
           dropdownColor: Colors.white,
           hint: const Text("Filter by Shop",
-              style: TextStyle(fontSize: 12, color: Colors.grey)),
+              style: const TextStyle(
+                fontSize: 12.8,
+                letterSpacing: 0.9,
+                color: Colors.black87,
+              )),
           items: shop.map((FetchShopModel item) {
             return DropdownMenuItem<FetchShopModel>(
               value: item,
@@ -349,7 +320,7 @@ class _TrackOwnOrdersShopAdminScreenState extends ConsumerState<TrackOwnOrdersSh
           Icon(Icons.inventory_2_outlined,
               size: 50, color: Colors.grey.shade400),
           const SizedBox(height: 12),
-          const Text("No matching orders found",
+          const Text("No orders found",
               style: TextStyle(
                   color: Colors.grey,
                   fontSize: 14,
@@ -649,71 +620,75 @@ class _TrackOwnOrdersShopAdminScreenState extends ConsumerState<TrackOwnOrdersSh
                                 const Divider(height: 1, color: Color(0xffE2E8F0)),
 
                                 // Scrollable Item List Body
-                                Expanded(
-                                  child: Scrollbar(
-                                    thumbVisibility: true,
-                                    child: ListView.builder(
-                                      shrinkWrap: true,
-                                      itemCount: order.items?.length ?? 0,
-                                      itemBuilder: (context, idx) {
-                                        final item = order.items![idx];
-                                        bool isEven = idx % 2 == 0;
+// Scrollable Item List Body
+                          Expanded(
+                            child: Builder(
+                              builder: (context) {
+                                // Create a local ScrollController for the Scrollbar
+                                final ScrollController itemScrollController = ScrollController();
 
-                                        return Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                                          color: isEven ? Colors.white : const Color(0xffF8FAFC),
-                                          child: Row(
-                                            children: [
-                                              SizedBox(
-                                                width: 30,
-                                                child: Text(
-                                                  "${idx + 1}",
-                                                  style: const TextStyle(
-                                                    fontSize: 11,
-                                                    fontWeight: FontWeight.bold,
-                                                    color: Colors.grey,
-                                                  ),
+                                return Scrollbar(
+                                  controller: itemScrollController, // 1. Controller here
+                                  thumbVisibility: true,
+                                  child: ListView.builder(
+                                    controller: itemScrollController, // 2. Same controller here
+                                    shrinkWrap: true,
+                                    itemCount: order.items?.length ?? 0,
+                                    itemBuilder: (context, idx) {
+                                      final item = order.items![idx];
+                                      bool isEven = idx % 2 == 0;
+
+                                      return Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                                        color: isEven ? Colors.white : const Color(0xffF8FAFC),
+                                        child: Row(
+                                          children: [
+                                            SizedBox(
+                                              width: 30,
+                                              child: Text(
+                                                "${idx + 1}",
+                                                style: const TextStyle(
+                                                  fontSize: 11,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Colors.grey,
                                                 ),
                                               ),
-                                              Expanded(
-                                                child: Text(
-                                                  item.sweetName ?? "-",
-                                                  style: const TextStyle(
-                                                    fontSize: 12,
-                                                    fontWeight: FontWeight.w600,
-                                                    color: Color(0xff0F172A),
-                                                  ),
+                                            ),
+                                            Expanded(
+                                              child: Text(
+                                                item.sweetName ?? "-",
+                                                style: const TextStyle(
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: Color(0xff0F172A),
                                                 ),
                                               ),
-                                              Container(
-                                                padding:
-                                                const EdgeInsets.symmetric(
-                                                    horizontal: 8,
-                                                    vertical: 3),
-                                                decoration: BoxDecoration(
-                                                  color: Colors.white,
-                                                  borderRadius:
-                                                  BorderRadius.circular(6),
-                                                  border: Border.all(
-                                                      color: const Color(
-                                                          0xffCBD5E1)),
-                                                ),
-                                                child: Text(
-                                                  "${item.quantity} ${item.unit}",
-                                                  style: const TextStyle(
-                                                    fontSize: 11,
-                                                    fontWeight: FontWeight.w800,
-                                                    color: Color(0xff0F172A),
-                                                  ),
+                                            ),
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                              decoration: BoxDecoration(
+                                                color: Colors.white,
+                                                borderRadius: BorderRadius.circular(6),
+                                                border: Border.all(color: const Color(0xffE2E8F0)),
+                                              ),
+                                              child: Text(
+                                                "${item.quantity ?? 0} ${item.unit ?? ''}",
+                                                style: const TextStyle(
+                                                  fontSize: 11,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Color(0xff0284C7),
                                                 ),
                                               ),
-                                            ],
-                                          ),
-                                        );
-                                      },
-                                    ),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    },
                                   ),
-                                ),
+                                );
+                              },
+                            ),
+                          ),
                               ],
                             ),
                           ),

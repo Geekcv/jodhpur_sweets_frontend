@@ -1,28 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:js_order_website/Screens/AddCategoryScreen.dart';
-import 'package:js_order_website/Screens/AddCounterScreen.dart';
-import 'package:js_order_website/Screens/AddDepartmentScreen.dart';
 import 'package:js_order_website/Screens/AddInventoryScreen.dart';
-import 'package:js_order_website/Screens/AddShopScreen.dart';
-import 'package:js_order_website/Screens/AddSupplierScreen.dart';
 import 'package:js_order_website/Screens/ExpireItemsScreen.dart';
 import 'package:js_order_website/Screens/LoginUserDetails.dart';
 import 'package:js_order_website/Screens/OrderRequestListScreen.dart';
 import 'package:js_order_website/controllers/api_controller.dart';
 import '../provider/provider.dart';
-import 'ChalanListScreen.dart';
+import 'Admin/AddShopScreen.dart';
+import 'Admin/AddSupplierScreen.dart';
+import 'AdminAndShopAdmin/AddCategoryScreen.dart';
+import 'AdminAndShopAdmin/AddCounterScreen.dart';
+import 'AdminAndShopAdmin/AddDepartmentScreen.dart';
+import 'AdminAndShopAdmin/ChalanListScreen.dart';
+import 'AdminAndShopAdmin/StockHistoryScreen.dart';
+import 'AdminAndShopAdmin/TrackOwnOrdersShopAdminScreen.dart';
 import 'CounterOrderRequestScreen.dart';
 import 'DashboardOverview.dart';
 import 'AddProductScreen.dart';
 import 'FinalizeOrderScreen.dart';
 import 'NotificationScreen.dart';
 import 'ProfileScreen.dart';
-import 'ShopAdminOrderRequestsScreen.dart';
-import 'StockHistoryScreen.dart';
+import 'ShopAdmin/ShopAdminOrderRequestsScreen.dart';
 import 'SupplierOrdersScreen.dart';
-import 'TrackOwnOrdersShopAdminScreen.dart';
 
 class MainDashboard extends ConsumerStatefulWidget {
   const MainDashboard({super.key});
@@ -617,6 +617,7 @@ class _MainDashboardState extends ConsumerState<MainDashboard> with TickerProvid
                   IconButton(
                     icon: const Icon(Icons.notifications_none_rounded, color: Color(0xff475569), size: 22),
                     onPressed: () {
+                      setState(() => _selectedIndex = 18);
                       // _showNotificationMenu(context);
                     },
                   ),

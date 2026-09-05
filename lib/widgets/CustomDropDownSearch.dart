@@ -9,6 +9,7 @@ class CustomDropdownSearch<T> extends StatelessWidget {
   final Function(T?) onChanged;
   final String hintText;
   var enabled;
+  var showSearchBox;
 
   CustomDropdownSearch({
     super.key,
@@ -19,6 +20,7 @@ class CustomDropdownSearch<T> extends StatelessWidget {
     required this.onChanged,
     this.hintText = "Select Option",
     this.enabled,
+    this.showSearchBox,
   });
 
   @override
@@ -49,7 +51,7 @@ class CustomDropdownSearch<T> extends StatelessWidget {
         ),
       ),
       popupProps: PopupProps.menu(
-        showSearchBox: true,
+        showSearchBox: showSearchBox ?? true,
         fit: FlexFit.loose,
         // 1. Popup ka background white karne ke liye
         containerBuilder: (context, popupWidget) {

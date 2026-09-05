@@ -5,11 +5,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:js_order_website/models/FetchDepartmentModel.dart';
 import 'package:js_order_website/models/FetchShopModel.dart';
-import '../controllers/api_controller.dart';
-import '../provider/provider.dart';
-import '../widgets/CustomDropDownSearch.dart';
-import '../widgets/TextInputField.dart';
-import 'LoginUserDetails.dart';
+
+import '../../controllers/api_controller.dart';
+import '../../provider/provider.dart';
+import '../../widgets/CustomDropDownSearch.dart';
+import '../../widgets/TextInputField.dart';
+import '../LoginUserDetails.dart';
+
 
 class AddCategoryScreen extends ConsumerStatefulWidget {
   const AddCategoryScreen({super.key});
@@ -46,6 +48,15 @@ class _AddCategoryScreenState extends ConsumerState<AddCategoryScreen> {
   }
 
 
+  String formatDate(String? dateStr) {
+    if (dateStr == null || dateStr.isEmpty) return "-";
+    try {
+      DateTime dt = DateTime.parse(dateStr);
+      return "${dt.day.toString().padLeft(2, '0')}-${dt.month.toString().padLeft(2, '0')}-${dt.year}";
+    } catch (e) {
+      return dateStr.split('T')[0];
+    }
+  }
 
 
   Future<void> _submitCategory() async {
@@ -102,7 +113,7 @@ class _AddCategoryScreenState extends ConsumerState<AddCategoryScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildHeader(allCats.length),
-            const SizedBox(height: 20),
+            const SizedBox(height: 30),
 
             // --- 1. QUICK ADD FORM ---
             _buildQuickAddForm(departments,shops),
@@ -150,12 +161,12 @@ class _AddCategoryScreenState extends ConsumerState<AddCategoryScreen> {
   Widget _buildQuickAddForm(List<FetchDepartmentModel> departments, List<FetchShopModel> shops) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: borderCol),
-      ),
+      // padding: const EdgeInsets.all(16),
+      // decoration: BoxDecoration(
+      //   color: Colors.white,
+      //   borderRadius: BorderRadius.circular(10),
+      //   border: Border.all(color: borderCol),
+      // ),
       child: LayoutBuilder(
         builder: (context, constraints) {
           bool isWide = constraints.maxWidth > 800;
@@ -167,12 +178,12 @@ class _AddCategoryScreenState extends ConsumerState<AddCategoryScreen> {
             children: [
               // 1. Department Dropdown
               if(LoginUserDetails.isAdmin)
-                _dropdownBoxFoShop("SELECT SHOP", shops, isWide ? 250 : double.infinity),
+                _dropdownBoxFoShop("SELECT SHOP *", shops, isWide ? 250 : double.infinity),
 
-              _dropdownBox("SELECT DEPARTMENT", departments, isWide ? 250 : double.infinity),
+              _dropdownBox("SELECT DEPARTMENT *", departments, isWide ? 250 : double.infinity),
 
               // 2. Category Name (Using CustomTextInput)
-              _box(isWide ? 250 : double.infinity, "CATEGORY NAME", catNameController),
+              _box(isWide ? 250 : double.infinity, "CATEGORY NAME *", catNameController),
 
               // 3. Save Button
               Padding(
@@ -191,7 +202,7 @@ class _AddCategoryScreenState extends ConsumerState<AddCategoryScreen> {
                     icon: isLoading
                         ? const SizedBox(width: 15, height: 15, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                         : const Icon(Icons.save, size: 16),
-                    label: const Text("SAVE CATEGORY", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                    label: const Text("SAVE", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
                   ),
                 ),
               ),
@@ -307,8 +318,9 @@ class _AddCategoryScreenState extends ConsumerState<AddCategoryScreen> {
         children: [
           const SizedBox(width: 50, child: Text("S.N.", style: _hStyle)),
           const Expanded(flex: 3, child: Text("SHOP NAME", style: _hStyle)),
-          const Expanded(flex: 3, child: Text("CATEGORY NAME", style: _hStyle)),
           const Expanded(flex: 2, child: Text("DEPARTMENT", style: _hStyle)),
+          const Expanded(flex: 3, child: Text("CATEGORY NAME", style: _hStyle)),
+          const Expanded(flex: 2, child: Text("CREATED DATE", style: _hStyle)),
           // if(LoginUserDetails.isAdmin)
           // const SizedBox(width: 80, child: Text("ACTIONS", textAlign: TextAlign.right, style: _hStyle)),
         ],
@@ -323,8 +335,9 @@ class _AddCategoryScreenState extends ConsumerState<AddCategoryScreen> {
         children: [
           SizedBox(width: 50, child: Text(index.toString().padLeft(2, '0'), style: const TextStyle(color: Colors.grey, fontSize: 13))),
           Expanded(flex: 3, child: Text(cat.shop_name ?? "-", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: primaryDark))),
+          Expanded(flex: 2, child: Text(cat.department_name ?? "-", style: const TextStyle(fontSize: 14,fontWeight: FontWeight.bold, color: primaryDark))),
           Expanded(flex: 3, child: Text(cat.category_name ?? "-", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: primaryDark))),
-          Expanded(flex: 2, child: Text(cat.department_name ?? "-", style: const TextStyle(fontSize: 13, color: Colors.black54))),
+          Expanded(flex: 2, child: Text(formatDate(cat.cr_on?.toString()),style: const TextStyle(fontSize: 13, color: Colors.black87))),
           // if(LoginUserDetails.isAdmin)
           // SizedBox(
           //   width: 80,

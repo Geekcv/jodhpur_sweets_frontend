@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import '../constants/static.dart';
-import '../controllers/api_controller.dart';
-import '../models/ShopAdminOrderRequestModel.dart';
-import '../provider/provider.dart';
-import '../widgets/CustomDropDownSearch.dart';
+
+import '../../constants/static.dart';
+import '../../controllers/api_controller.dart';
+import '../../models/ShopAdminOrderRequestModel.dart';
+import '../../provider/provider.dart';
+import '../../widgets/CustomDropDownSearch.dart';
+
 
 class ShopAdminOrderRequestsScreen extends ConsumerStatefulWidget {
   const ShopAdminOrderRequestsScreen({super.key});
@@ -53,10 +55,7 @@ class _ShopAdminOrderRequestsScreenState
   }
 
   void _toggleGroupSelection(ShopAdminOrderGroupModel group) {
-    final pendingItems = (group.requests ?? [])
-        .where((e) => (e.status == null || e.status.toString().toUpperCase() == "PENDING"))
-        .map((e) => e.rowId.toString())
-        .toList();
+    final pendingItems = (group.requests ?? []).where((e) => (e.status == null || e.status.toString().toUpperCase() == "PENDING")).map((e) => e.rowId.toString()).toList();
 
     if (pendingItems.isEmpty) return;
 
@@ -79,11 +78,10 @@ class _ShopAdminOrderRequestsScreenState
     if (rawDate == null || rawDate.isEmpty) return "N/A";
     DateTime? dt = DateTime.tryParse(rawDate);
     if (dt == null) return rawDate;
-    return DateFormat('yyyy-MM-dd HH:mm').format(dt);
+    return DateFormat('dd-MM-yyyy hh:mm a').format(dt);
   }
 
-  List<ShopAdminOrderGroupModel> _getFilteredGroups(
-      List<ShopAdminOrderGroupModel> groups) {
+  List<ShopAdminOrderGroupModel> _getFilteredGroups(List<ShopAdminOrderGroupModel> groups) {
     if (searchQuery.trim().isEmpty) return groups;
 
     final q = searchQuery.toLowerCase().trim();
@@ -315,16 +313,12 @@ class _ShopAdminOrderRequestsScreenState
       ),
     );
   }
-  // --- ACCORDION GROUP CARD ---
-  Widget _buildGroupAccordion(
-      ShopAdminOrderGroupModel group, double screenWidth, bool isMobile) {
-    final requests = group.requests ?? [];
-    final pendingRequests = requests
-        .where((e) => (e.status == null || e.status.toString().toUpperCase() == "PENDING"))
-        .toList();
 
-    bool isFullySelected = pendingRequests.isNotEmpty &&
-        pendingRequests.every((e) => selectedIds.contains(e.rowId.toString()));
+  // --- ACCORDION GROUP CARD ---
+  Widget _buildGroupAccordion(ShopAdminOrderGroupModel group, double screenWidth, bool isMobile) {
+    final requests = group.requests ?? [];
+    final pendingRequests = requests.where((e) => (e.status == null || e.status.toString().toUpperCase() == "PENDING")).toList();
+    bool isFullySelected = pendingRequests.isNotEmpty && pendingRequests.every((e) => selectedIds.contains(e.rowId.toString()));
 
     return Container(
       clipBehavior: Clip.antiAlias,
@@ -344,7 +338,7 @@ class _ShopAdminOrderRequestsScreenState
         data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
         child: ExpansionTile(
           initiallyExpanded: true,
-          tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          tilePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 2),
           childrenPadding: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
           title: Wrap(
             alignment: WrapAlignment.spaceBetween,
@@ -355,16 +349,17 @@ class _ShopAdminOrderRequestsScreenState
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "Request Group: ${group.requestGroup ?? _formatDateTime(group.crOn?.toString())}",
+                    // "Counter Request Batch: ${_formatDateTime(group.requestGroup ?? group.crOn?.toString())}",
+                    "Counter Request",
                     style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w800,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
                       color: primaryNavy,
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    _formatDateTime(group.crOn?.toString()),
+                    _formatDateTime(group.crOn?.toString() ?? group.requestGroup),
                     style: const TextStyle(fontSize: 11, color: slateSub),
                   ),
                 ],
@@ -376,8 +371,7 @@ class _ShopAdminOrderRequestsScreenState
                   const SizedBox(width: 12),
                   _metaText("Total Requested Qty:", "${group.totalRequestedQuantity ?? 0}"),
                   const SizedBox(width: 12),
-                  _metaText("Total Pending Qty:", "${group.totalPendingQuantity ?? 0}",
-                      color: Colors.orange.shade800),
+                  _metaText("Total Pending Qty:", "${group.totalPendingQuantity ?? 0}", color: Colors.orange.shade800),
                 ],
               ),
             ],
@@ -400,9 +394,7 @@ class _ShopAdminOrderRequestsScreenState
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 4),
                     child: Text(
-                      isFullySelected
-                          ? "✓ Select All (selected)"
-                          : "Select All Pending",
+                      isFullySelected ? "✓ Select All (selected)" : "Select All Pending",
                       style: const TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
@@ -435,8 +427,7 @@ class _ShopAdminOrderRequestsScreenState
   }
 
   // --- GRID CARDS VIEW ---
-  Widget _buildGridCardLayout(
-      List<ShopAdminOrderRequestModel> items, double screenWidth) {
+  Widget _buildGridCardLayout(List<ShopAdminOrderRequestModel> items, double screenWidth) {
     int crossAxisCount = 1;
     if (screenWidth >= 1200) {
       crossAxisCount = 3;
@@ -457,8 +448,7 @@ class _ShopAdminOrderRequestsScreenState
       itemBuilder: (context, index) {
         final item = items[index];
         bool isSelected = selectedIds.contains(item.rowId.toString());
-        bool isPending =
-        (item.status == null || item.status.toString().toUpperCase() == "PENDING");
+        bool isPending = (item.status == null || item.status.toString().toUpperCase() == "PENDING");
 
         return InkWell(
           onTap: isPending ? () => _toggleSelection(item.rowId.toString()) : null,
@@ -600,22 +590,28 @@ class _ShopAdminOrderRequestsScreenState
   }
 
   Widget _buildCheckbox(bool isPending, bool isSelected) {
+    // Completed / Processed Status
     if (!isPending) {
-      return const Icon(Icons.check_circle_rounded,
-          color: Color(0xff10B981), size: 18);
+      return const Icon(
+        Icons.verified_rounded, // Pure solid badge icon
+        color: Color(0xFF10B981),
+        size: 18,
+      );
     }
+
+    // Pending Selection Status
     return Icon(
-      isSelected ? Icons.check_box_rounded : Icons.check_box_outline_blank_rounded,
-      color: isSelected ? accentBlue : const Color(0xffCBD5E1),
+      isSelected
+          ? Icons.task_alt_rounded // Clean round-check for selection
+          : Icons.radio_button_off_rounded, // Smooth border ring for unselected
+      color: isSelected ? accentBlue : const Color(0xFFCBD5E1),
       size: 20,
     );
   }
 
   // --- STATUS BADGE ---
   Widget _statusBadge(dynamic statusVal, dynamic pendingQty) {
-    String text = (statusVal == null || statusVal.toString().isEmpty)
-        ? "Pending"
-        : statusVal.toString();
+    String text = (statusVal == null || statusVal.toString().isEmpty) ? "Pending" : statusVal.toString();
 
     Color bg = const Color(0xffFEF3C7);
     Color textCol = const Color(0xffD97706);
@@ -637,7 +633,8 @@ class _ShopAdminOrderRequestsScreenState
         borderRadius: BorderRadius.circular(12),
       ),
       child: Text(
-        pendingQty != null ? "$text  P: $pendingQty" : text,
+        // pendingQty != null ? "$text  P: $pendingQty" : text,
+        text,
         style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: textCol),
       ),
     );
