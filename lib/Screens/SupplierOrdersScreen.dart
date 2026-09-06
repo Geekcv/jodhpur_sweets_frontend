@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:js_order_website/controllers/api_controller.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../constants/static.dart';
 import '../models/SupplierOrder.dart';
 import 'package:http/http.dart' as http;
 import 'dart:html' as html;
+
+import '../widgets/CustomPdfViewerScreen.dart';
+import '../widgets/TextInputField.dart';
 
 
 class SupplierOrdersScreen extends StatefulWidget {
@@ -179,20 +183,14 @@ class _SupplierOrdersScreenState extends State<SupplierOrdersScreen> {
                       children: [
                         const Text("VEHICLE DETAILS", style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Color(0xff94A3B8), letterSpacing: 0.5)),
                         const SizedBox(height: 6),
-                        TextField(
+                        CustomTextInput(
+                          height: 40,
                           controller: transportController,
-                          style: const TextStyle(fontSize: 12),
+                          validator: true,
+                          hintText: "Enter Vehicle Number",
                           onChanged: (value) {
                             if (vehicleError != null) setDialogState(() => vehicleError = null);
                           },
-                          decoration: InputDecoration(
-                            hintText: "Enter Vehicle Number",
-                            isDense: true,
-                            errorText: vehicleError, // Yahan error dikhega
-                            errorStyle: const TextStyle(fontSize: 10),
-                            prefixIcon: const Icon(Icons.local_shipping, size: 14),
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(6), borderSide: const BorderSide(color: Color(0xffE2E8F0))),
-                          ),
                         ),
                       ],
                     ),
@@ -256,12 +254,32 @@ class _SupplierOrdersScreenState extends State<SupplierOrdersScreen> {
                             _showSnackBar("Something went wrong: ${e.toString()}", Colors.red);
                           }
                         },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-                          elevation: 0,
-                        ),
+                          style: ElevatedButton.styleFrom(
+                            // Professional Modern Blue (Slate / Indigo Accent mix look)
+                            backgroundColor: const Color(0xFF2563EB),
+                            foregroundColor: Colors.white,
+
+                            // Clean padding & size consistency
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                            minimumSize: const Size(double.infinity, 48), // Sleek full-width height
+
+                            // Smooth subtle elevation
+                            elevation: 0.5,
+                            shadowColor: const Color(0xFF2563EB).withOpacity(0.3),
+
+                            // Rounded subtle borders with subtle outer stroke
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              side: const BorderSide(color: Color(0xFF1D4ED8), width: 0.5),
+                            ),
+
+                            // Text styling for clear typography
+                            textStyle: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: 0.3,
+                            ),
+                          ),
                         child: Text("DISPATCH $activeCount ${activeCount > 1 ? 'ITEMS' : 'ITEM'}", style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white)),
                       ),
                     ),
@@ -322,35 +340,577 @@ class _SupplierOrdersScreenState extends State<SupplierOrdersScreen> {
 
 
 
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
+  bool isGridView = true;
+  String searchQuery = "";
+  final TextEditingController _searchController = TextEditingController();
 
+  List<SupplierOrder> get filteredOrders {
+    if (searchQuery.trim().isEmpty) return supplierOrders;
+    String query = searchQuery.toLowerCase();
+    return supplierOrders.where((order) {
+      String orderId = order.orderId.toString().toLowerCase();
+      String shopName = order.shop?.shopName?.toLowerCase() ?? "";
+      bool hasMatchingSweet = order.items?.any((item) =>
+          (item.sweetName ?? "").toLowerCase().contains(query)) ?? false;
 
-
-
+      return orderId.contains(query) || shopName.contains(query) || hasMatchingSweet;
+    }).toList();
+  }
 
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: Colors.white,
+      endDrawer: Drawer(
+        width: screenWidth > 1200 ? 450 : screenWidth * 0.45,
+        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+        child: _buildRightDetailsPanel(),
+      ),
+      onEndDrawerChanged: (isOpen) {
+        if (!isOpen) {
+          setState(() => showDetails = false);
+        }
+      },
       body: isLoading
-          // ?  const Center(child: CircularProgressIndicator(color: Colors.blue))
-        ? buildShimmerEffect(context: context)
-          : Row(
+          ? buildShimmerEffect(context: context)
+          : Column(
         children: [
-          Expanded(child: _buildTableSection()),
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.fastOutSlowIn,
-            width: showDetails ? (screenWidth > 1200 ? 400 : screenWidth * 0.4) : 0,
-            // overflow fix using LayoutBuilder
-            child: showDetails ? _buildRightDetailsPanel() : const SizedBox.shrink(),
+          _buildHeaderAndSearchBar(),
+          Expanded(
+            child: filteredOrders.isEmpty
+                ? _buildNoDataFound()
+                : (isGridView ? _buildCardSection() : _buildTableSection()),
           ),
         ],
       ),
     );
   }
+
+
+
+  // @override
+  // Widget build(BuildContext context) {
+  //   double screenWidth = MediaQuery.of(context).size.width;
+  //
+  //   return Scaffold(
+  //     backgroundColor: Colors.white,
+  //     body: isLoading
+  //         // ?  const Center(child: CircularProgressIndicator(color: Colors.blue))
+  //       ? buildShimmerEffect(context: context)
+  //         : Row(
+  //       children: [
+  //         Expanded(child: _buildTableSection()),
+  //         AnimatedContainer(
+  //           duration: const Duration(milliseconds: 300),
+  //           curve: Curves.fastOutSlowIn,
+  //           width: showDetails ? (screenWidth > 1200 ? 400 : screenWidth * 0.4) : 0,
+  //           // overflow fix using LayoutBuilder
+  //           child: showDetails ? _buildRightDetailsPanel() : const SizedBox.shrink(),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
+
+
+
+
+
+  Widget _buildHeaderAndSearchBar() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // Left Side: Title & Subtitle
+          Expanded(
+            flex: 2,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: const [
+                Text(
+                  "Supplier Orders",
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xff0F172A)),
+                ),
+                SizedBox(height: 2),
+                Text(
+                  "Review and manage incoming orders from shops",
+                  style: TextStyle(fontSize: 12, color: Color(0xff64748B)),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 16),
+
+          // Right Side: Search Bar + View Toggle Controls
+          Expanded(
+            flex: 1,
+            child: Row(
+              children: [
+                // Search Input Field
+                Expanded(
+                  child: Container(
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: const Color(0xffE2E8F0)),
+                    ),
+                    child: TextField(
+                      controller: _searchController,
+                      style: const TextStyle(fontSize: 13),
+                      decoration: const InputDecoration(
+                        hintText: "Search by sweet, order ID, shop...",
+                        hintStyle: TextStyle(fontSize: 12, color: Color(0xff94A3B8)),
+                        prefixIcon: Icon(Icons.search, size: 18, color: Color(0xff64748B)),
+                        border: InputBorder.none,
+                        contentPadding: EdgeInsets.symmetric(vertical: 8),
+                      ),
+                      onChanged: (val) {
+                        setState(() {
+                          searchQuery = val;
+                        });
+                      },
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+
+                // Grid / List View Toggle Buttons
+                Container(
+                  height: 40,
+                  padding: const EdgeInsets.all(3),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: const Color(0xffE2E8F0)),
+                  ),
+                  child: Row(
+                    children: [
+                      InkWell(
+                        onTap: () => setState(() => isGridView = true),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                          decoration: BoxDecoration(
+                            color: isGridView ? const Color(0xffEFF6FF) : Colors.transparent,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Icon(
+                            Icons.grid_view_rounded,
+                            size: 18,
+                            color: isGridView ? const Color(0xff2563EB) : const Color(0xff64748B),
+                          ),
+                        ),
+                      ),
+                      InkWell(
+                        onTap: () => setState(() => isGridView = false),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                          decoration: BoxDecoration(
+                            color: !isGridView ? const Color(0xffEFF6FF) : Colors.transparent,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Icon(
+                            Icons.view_list_rounded,
+                            size: 18,
+                            color: !isGridView ? const Color(0xff2563EB) : const Color(0xff64748B),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+
+
+
+  Widget _buildCardSection() {
+    List<SupplierOrder> list = filteredOrders;
+
+    return GridView.builder(
+      padding: const EdgeInsets.all(16),
+      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+        maxCrossAxisExtent: 440,
+        mainAxisExtent: 360,
+        crossAxisSpacing: 16,
+        mainAxisSpacing: 16,
+      ),
+      itemCount: list.length,
+      itemBuilder: (context, index) {
+        var item = list[index];
+        String status = item.orderStatus ?? "PENDING";
+        int itemsCount = item.items?.length ?? 0;
+        bool isSelected = selectedOrder?.orderId == item.orderId;
+
+        // Fix for undefined 'isDownloading' identifier
+        bool isDownloading = downloadingIds.contains(item.orderId.toString());
+
+        return InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: () {
+            setState(() {
+              selectedOrder = item;
+              showDetails = true;
+            });
+            _scaffoldKey.currentState?.openEndDrawer();
+          },
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            decoration: BoxDecoration(
+              color: isSelected ? const Color(0xffF0F7FF) : Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: isSelected ? const Color(0xff2563EB) : const Color(0xffE2E8F0),
+                width: isSelected ? 1.5 : 1.0,
+              ),
+              boxShadow: [
+                if (isSelected)
+                  BoxShadow(
+                    color: const Color(0xff2563EB).withOpacity(0.08),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  )
+                else
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.02),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  )
+              ],
+            ),
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 1. Clean Header: Order ID, Status, View PDF & Download Actions
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: isSelected ? const Color(0xffDBEAFE) : const Color(0xffF1F5F9),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(
+                        Icons.receipt_long_outlined,
+                        size: 18,
+                        color: Color(0xff2563EB),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      "#${getShortId(item.orderId)}",
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        color: Color(0xff0F172A),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    _statusBadge(status),
+                    const Spacer(),
+
+                    // Action Button 1: View PDF
+                    Container(
+                      height: 32,
+                      width: 32,
+                      decoration: BoxDecoration(
+                        color: const Color(0xffEFF6FF),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: IconButton(
+                        tooltip: "View PDF",
+                        padding: EdgeInsets.zero,
+                        icon: const Icon(Icons.visibility_outlined, color: Color(0xff2563EB), size: 16),
+                        onPressed: () async {
+                          final String currentOrderId = item.orderId.toString();
+                          var res = await ApiController.downloadOrderRequestSupplierSide(
+                            context: context,
+                            params: {'order_id': currentOrderId},
+                          );
+
+                          if (res != null && res['status'] == 0 && res['filePath'] != null) {
+                            // if (context.mounted) {
+                            //   Navigator.push(
+                            //     context,
+                            //     MaterialPageRoute(
+                            //       builder: (context) => CustomPdfViewerScreen(
+                            //         pdfUrl: res['filePath'],
+                            //         title: "Order #${getShortId(currentOrderId)}",
+                            //         fileName: "Order_${currentOrderId.split('_').last}.pdf",
+                            //       ),
+                            //     ),
+                            //   );
+                            // }
+                            final Uri url = Uri.parse(res['filePath']);
+
+                            // New Tab me open karne ke liye launchUrl with externalApplication
+                            if (await canLaunchUrl(url)) {
+                              await launchUrl(
+                                url,
+                                webOnlyWindowName: '_blank', // Web par new tab kholne ke liye
+                                mode: LaunchMode.externalApplication,
+                              );
+                            } else {
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text("Could not open PDF link")),
+                                );
+                              }
+                            }
+                          } else {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text(res?['msg'] ?? "Unable to fetch PDF URL")),
+                              );
+                            }
+                          }
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+
+                    // Action Button 2: Download / Print
+                    Container(
+                      height: 32,
+                      width: 32,
+                      decoration: BoxDecoration(
+                        color: const Color(0xffF1F5F9),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: isDownloading
+                          ? const Padding(
+                        padding: EdgeInsets.all(8.0),
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                          : IconButton(
+                        tooltip: "Download Order Copy",
+                        padding: EdgeInsets.zero,
+                        icon: const Icon(Icons.print_outlined, size: 16, color: Color(0xff475569)),
+                        onPressed: () => _handleDownload(item, setState),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+
+                Divider(thickness: 0.3),
+                // 2. Info Grid: Destination & Total Items Count
+                Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            "SHOP",
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xff94A3B8),
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            item.shop?.shopName ?? "-",
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xff1E293B),
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          Text(
+                            "${item.shop?.city ?? ''}${item.shop?.city != null && item.shop?.state != null ? ', ' : ''}${item.shop?.state ?? ''}",
+                            style: const TextStyle(fontSize: 11, color: Color(0xff64748B)),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      height: 32,
+                      width: 1,
+                      color: const Color(0xffE2E8F0),
+                      margin: const EdgeInsets.symmetric(horizontal: 12),
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "TOTAL ITEMS",
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xff94A3B8),
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          "$itemsCount Items",
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xff2563EB),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+
+                // 3. Items Summary List Section
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: isSelected ? Colors.white : const Color(0xffF8FAFC),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: isSelected ? const Color(0xffBFDBFE) : const Color(0xffF1F5F9),
+                      ),
+                    ),
+                    child: Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              "ORDER ITEMS",
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xff64748B),
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                            Text(
+                              "$itemsCount Total",
+                              style: const TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xff64748B),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        const Divider(height: 1, thickness: 1, color: Color(0xffE2E8F0)),
+                        const SizedBox(height: 8),
+                        Expanded(
+                          child: ListView.separated(
+                            physics: const BouncingScrollPhysics(),
+                            itemCount: item.items?.length ?? 0,
+                            separatorBuilder: (c, i) => const SizedBox(height: 8),
+                            itemBuilder: (c, idx) {
+                              var sweet = item.items![idx];
+                              return Row(
+                                children: [
+                                  Container(
+                                    height: 20,
+                                    width: 20,
+                                    alignment: Alignment.center,
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xffEFF6FF),
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: Text(
+                                      "${idx + 1}",
+                                      style: const TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                        color: Color(0xff2563EB),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: Text(
+                                      sweet.sweetName ?? "-",
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w500,
+                                        color: Color(0xff334155),
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(4),
+                                      border: Border.all(color: const Color(0xffCBD5E1)),
+                                    ),
+                                    child: Text(
+                                      "${sweet.quantity} ${sweet.unit}",
+                                      style: const TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold,
+                                        color: Color(0xff0F172A),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+
+
+// 5. No Data Found Empty State View:
+  Widget _buildNoDataFound() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.search_off_rounded, size: 48, color: Color(0xff94A3B8)),
+          const SizedBox(height: 12),
+          const Text(
+            "No Orders Found",
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xff475569)),
+          ),
+          // const SizedBox(height: 4),
+          // Text(
+          //   searchQuery.isNotEmpty ? "No orders matched '$searchQuery'" : "There are currently no orders available.",
+          //   style: const TextStyle(fontSize: 12, color: Color(0xff94A3B8)),
+          // ),
+        ],
+      ),
+    );
+  }
+
+
 
   Widget _buildTableSection() {
     return Container(
@@ -377,7 +937,7 @@ class _SupplierOrdersScreenState extends State<SupplierOrdersScreen> {
                 Expanded(flex: 2, child: Text("QTY", style: _headerStyle)),
                 Expanded(flex: 1, child: Text("TOTAL ITEMS", style: _headerStyle)), // Naya Column
                 Expanded(flex: 1, child: Text("STATUS", style: _headerStyle,)),
-                Expanded(flex: 1, child: Text("ACTION", style: _headerStyle, textAlign: TextAlign.center)),
+                Expanded(flex: 2, child: Text("ACTION", style: _headerStyle, textAlign: TextAlign.center)),
               ],
             ),
           ),
@@ -400,17 +960,25 @@ class _SupplierOrdersScreenState extends State<SupplierOrdersScreen> {
 
                 return InkWell(
                   // onTap: () => setState(() { selectedOrder = item; showDetails = true; }),
+                  // onTap: () {
+                  //   setState(() {
+                  //     if (selectedOrder?.orderId == item.orderId) {
+                  //       // Agar wahi item hai, toh band kar do (toggle)
+                  //       showDetails = !showDetails;
+                  //     } else {
+                  //       // Agar naya item hai, toh select karo aur panel khol do
+                  //       selectedOrder = item;
+                  //       showDetails = true;
+                  //     }
+                  //   });
+                  // },
                   onTap: () {
                     setState(() {
-                      if (selectedOrder?.orderId == item.orderId) {
-                        // Agar wahi item hai, toh band kar do (toggle)
-                        showDetails = !showDetails;
-                      } else {
-                        // Agar naya item hai, toh select karo aur panel khol do
-                        selectedOrder = item;
-                        showDetails = true;
-                      }
+                      selectedOrder = item;
+                      showDetails = true;
                     });
+                    // EndDrawer kholne ke liye yeh line required hai:
+                    _scaffoldKey.currentState?.openEndDrawer();
                   },
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
@@ -481,20 +1049,111 @@ class _SupplierOrdersScreenState extends State<SupplierOrdersScreen> {
 
                         // 6. Status
                         Expanded(flex: 1, child: Align(alignment: Alignment.centerLeft, child: _statusBadge(item.orderStatus))),
+
+                        // 7. Actions
+
                         Expanded(
-                          flex: 1,
-                          child: Center(
-                            child: isDownloading ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                            : SizedBox(
-                              // width: 32,// height: 32,
-                              child: IconButton(padding: EdgeInsets.zero, constraints: const BoxConstraints(),
-                                icon: const Icon(Icons.print, size: 16, color: Colors.blue),
-                                tooltip: "Download Order Copy",
-                                onPressed: () => _handleDownload(item, setState)
+                          flex: 2,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              // View PDF Button
+                              Container(
+                                height: 32,
+                                width: 32,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xffEFF6FF),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: IconButton(
+                                  tooltip: "View PDF",
+                                  padding: EdgeInsets.zero,
+                                  icon: const Icon(Icons.visibility_outlined, color: Color(0xff2563EB), size: 16),
+                                  onPressed: () async {
+                                    final String currentOrderId = item.orderId.toString();
+                                    var res = await ApiController.downloadOrderRequestSupplierSide(
+                                      context: context,
+                                      params: {'order_id': currentOrderId},
+                                    );
+
+                                    if (res != null && res['status'] == 0 && res['filePath'] != null) {
+                                      // if (context.mounted) {
+                                      //   Navigator.push(
+                                      //     context,
+                                      //     MaterialPageRoute(
+                                      //       builder: (context) => CustomPdfViewerScreen(
+                                      //         pdfUrl: res['filePath'],
+                                      //         title: "Order #${getShortId(currentOrderId)}",
+                                      //         fileName: "Order_${currentOrderId.split('_').last}.pdf",
+                                      //       ),
+                                      //     ),
+                                      //   );
+                                      // }
+                                      final Uri url = Uri.parse(res['filePath']);
+
+                                      // New Tab me open karne ke liye launchUrl with externalApplication
+                                      if (await canLaunchUrl(url)) {
+                                        await launchUrl(
+                                          url,
+                                          webOnlyWindowName: '_blank', // Web par new tab kholne ke liye
+                                          mode: LaunchMode.externalApplication,
+                                        );
+                                      } else {
+                                        if (context.mounted) {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            const SnackBar(content: Text("Could not open PDF link")),
+                                          );
+                                        }
+                                      }
+                                    } else {
+                                      if (context.mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(content: Text(res?['msg'] ?? "Unable to fetch PDF URL")),
+                                        );
+                                      }
+                                    }
+                                  },
+                                ),
                               ),
-                            ),
+                              const SizedBox(width: 8),
+
+                              // Print / Download Button
+                              Container(
+                                height: 32,
+                                width: 32,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xffF1F5F9),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: isDownloading
+                                    ? const Padding(
+                                  padding: EdgeInsets.all(8.0),
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                )
+                                    : IconButton(
+                                  tooltip: "Download Order Copy",
+                                  padding: EdgeInsets.zero,
+                                  icon: const Icon(Icons.print_outlined, size: 16, color: Color(0xff475569)),
+                                  onPressed: () => _handleDownload(item, setState),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
+                        // Expanded(
+                        //   flex: 1,
+                        //   child: Center(
+                        //     child: isDownloading ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                        //     : SizedBox(
+                        //       // width: 32,// height: 32,
+                        //       child: IconButton(padding: EdgeInsets.zero, constraints: const BoxConstraints(),
+                        //         icon: const Icon(Icons.print, size: 16, color: Colors.blue),
+                        //         tooltip: "Download Order Copy",
+                        //         onPressed: () => _handleDownload(item, setState)
+                        //       ),
+                        //     ),
+                        //   ),
+                        // ),
                       ],
                     ),
                   ),
@@ -524,7 +1183,13 @@ class _SupplierOrdersScreenState extends State<SupplierOrdersScreen> {
                 const Spacer(),
                 _statusBadge(status, isSmall: false),
                 const SizedBox(width: 8),
-                IconButton(onPressed: () => setState(() => showDetails = false), icon: const Icon(Icons.close, size: 18, color: Colors.grey)),
+                IconButton(
+                  onPressed: () {
+                    setState(() => showDetails = false);
+                    Navigator.of(context).pop(); // <-- Drawer ko close/pop karega
+                  },
+                  icon: const Icon(Icons.close, size: 18, color: Colors.grey),
+                ),
               ],
             ),
           ),

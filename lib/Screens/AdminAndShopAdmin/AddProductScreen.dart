@@ -4,12 +4,14 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:js_order_website/Screens/LoginUserDetails.dart';
 import 'package:js_order_website/config/config.dart';
-import '../models/FetchShopModel.dart';
-import '../provider/provider.dart';
-import '../utilities/functions.dart';
-import '../controllers/api_controller.dart';
-import '../widgets/CustomDropDownSearch.dart';
-import '../widgets/TextInputField.dart';
+
+import '../../controllers/api_controller.dart';
+import '../../models/FetchShopModel.dart';
+import '../../provider/provider.dart';
+import '../../utilities/functions.dart';
+import '../../widgets/CustomDropDownSearch.dart';
+import '../../widgets/TextInputField.dart';
+
 
 class AddProductScreen extends ConsumerStatefulWidget {
   const AddProductScreen({super.key});

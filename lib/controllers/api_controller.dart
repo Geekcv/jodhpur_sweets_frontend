@@ -501,7 +501,7 @@ class ApiController {
   static downLoadChalan({context,params})async{
     var token = await getloggedinUserToken();
     var res = await ApiService().downloadChalan(param: params,token: token);
-    //print("downloadChalan response:-----$res");
+    print("downloadChalan response:-----$res");
 
     if (res != null && res['status'] == 0) {
       return res;

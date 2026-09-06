@@ -4,8 +4,9 @@ class FetchSupplierModel{
   var phone;
   var email;
   var address;
+  var password;
 
-  FetchSupplierModel({this.row_id,this.supplier_name,this.email,this.phone,this.address});
+  FetchSupplierModel({this.row_id,this.supplier_name,this.email,this.phone,this.address,this.password});
 
   factory FetchSupplierModel.fromJson(Map<String, dynamic> json) {
     return FetchSupplierModel(
@@ -14,6 +15,7 @@ class FetchSupplierModel{
       email: json['email'],
       phone: json['phone'],
       address: json['address'],
+      password: json['password'],
     );
   }
 
@@ -24,6 +26,7 @@ class FetchSupplierModel{
       'email': email,
       'phone': phone,
       'address': address,
+      'password': password,
     };
   }
 }

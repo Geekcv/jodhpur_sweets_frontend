@@ -4,10 +4,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:js_order_website/Screens/LoginUserDetails.dart';
 import 'package:js_order_website/config/config.dart';
-import '../controllers/api_controller.dart';
-import '../provider/provider.dart';
-import '../widgets/CustomDropDownSearch.dart';
-import '../widgets/TextInputField.dart';
+
+import '../../controllers/api_controller.dart';
+import '../../provider/provider.dart';
+import '../../widgets/CustomDropDownSearch.dart';
+import '../../widgets/TextInputField.dart';
+
 
 class CounterOrderRequestScreen extends ConsumerStatefulWidget {
   const CounterOrderRequestScreen({super.key});
@@ -907,20 +909,32 @@ class _CounterOrderRequestScreenState extends ConsumerState<CounterOrderRequestS
   Widget _emptyState() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
       decoration: BoxDecoration(
         color: cardBg,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: borderCol),
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: const [
-          Icon(Icons.search_off_rounded, size: 24, color: Colors.grey),
-          SizedBox(height: 4),
-          Text("No items found",
-              style: TextStyle(color: Colors.grey, fontSize: 12)),
-        ],
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Soft rounded icon background
+            Container(
+              padding: const EdgeInsets.all(12),
+              child: const Icon(
+                Icons.search_off_rounded,
+                size: 28,
+                color: Color(0xff64748B),
+              ),
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              "No Items Found",
+              style: TextStyle(color: Colors.grey, fontSize: 13, fontWeight: FontWeight.w500),
+            ),
+          ],
+        ),
       ),
     );
   }

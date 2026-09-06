@@ -4,9 +4,10 @@ class FetchCounterModel {
   var location;
   var shop_id;
   var shop_name;
-  var mobile_number;
+  var user_phone;
+  var password;
 
-  FetchCounterModel({this.row_id,this.counter_name,this.location,this.shop_id,this.shop_name,this.mobile_number});
+  FetchCounterModel({this.row_id,this.counter_name,this.location,this.shop_id,this.shop_name,this.user_phone,this.password});
 
   factory FetchCounterModel.fromJson(Map<String, dynamic> json) {
     return FetchCounterModel(
@@ -15,7 +16,8 @@ class FetchCounterModel {
       counter_name: json['counter_name'],
       location: json['location'],
       shop_id: json['shop_id'],
-      mobile_number: json['mobile_number'],
+      user_phone: json['user_phone'],
+      password: json['password'],
     );
   }
 
@@ -26,7 +28,8 @@ class FetchCounterModel {
       'counter_name': counter_name,
       'location': location,
       'shop_id': shop_id,
-      'mobile_number': mobile_number,
+      'user_phone': user_phone,
+      'password': password,
     };
   }
 }

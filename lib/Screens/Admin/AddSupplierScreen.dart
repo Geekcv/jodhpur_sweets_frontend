@@ -252,6 +252,7 @@ class _AddSupplierScreenState extends ConsumerState<AddSupplierScreen> {
           SizedBox(width: 50, child: Text("S.N.", style: _hStyle)),
           Expanded(flex: 3, child: Text("SUPPLIER NAME", style: _hStyle)),
           Expanded(flex: 2, child: Text("CONTACT", style: _hStyle)),
+          Expanded(flex: 2, child: Text("PASSWORD", style: _hStyle)),
           Expanded(flex: 4, child: Text("ADDRESS", style: _hStyle)),
           // SizedBox(width: 80, child: Text("ACTIONS", textAlign: TextAlign.right, style: _hStyle)),
         ],
@@ -273,6 +274,7 @@ class _AddSupplierScreenState extends ConsumerState<AddSupplierScreen> {
             ],
           )),
           Expanded(flex: 2, child: Text(s.phone ?? "-", style: const TextStyle(fontSize: 13, color: Colors.black87, fontWeight: FontWeight.w500))),
+          Expanded(flex: 2, child: Text(s.password ?? "-", style: const TextStyle(fontSize: 13, color: Colors.black87, fontWeight: FontWeight.w500))),
           Expanded(flex: 4, child: Text(s.address ?? "-", style: const TextStyle(fontSize: 13, color: Colors.black87, fontWeight: FontWeight.w500), maxLines: 1, overflow: TextOverflow.ellipsis)),
           // SizedBox(
           //   width: 80,

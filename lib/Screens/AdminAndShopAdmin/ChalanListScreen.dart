@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:js_order_website/controllers/api_controller.dart';
 
 import 'package:http/http.dart' as http;
+import 'package:url_launcher/url_launcher.dart';
 import 'dart:html' as html;
 
 import '../../constants/static.dart';
@@ -410,17 +411,31 @@ class _ChalanListScreenState extends ConsumerState<ChalanListScreen> {
                                     params: {'chalan_id': data.chalanId},
                                   );
                                   if (res != null && res['status'] == 0 && res['filePath'] != null) {
-                                    if (context.mounted) {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => CustomPdfViewerScreen(
-                                            pdfUrl: res['filePath'],
-                                            title: "Challan #$shortChalanId",
-                                            fileName: "Chalan_$shortChalanId.pdf",
-                                          ),
-                                        ),
+                                    // if (context.mounted) {
+                                    //   Navigator.push(
+                                    //     context,
+                                    //     MaterialPageRoute(
+                                    //       builder: (context) => CustomPdfViewerScreen(
+                                    //         pdfUrl: res['filePath'],
+                                    //         title: "Challan #$shortChalanId",
+                                    //         fileName: "Chalan_$shortChalanId.pdf",
+                                    //       ),
+                                    //     ),
+                                    //   );
+                                    // }
+                                    final Uri url = Uri.parse(res['filePath']);
+                                    if (await canLaunchUrl(url)) {
+                                      await launchUrl(
+                                        url,
+                                        webOnlyWindowName: '_blank', // Web par new tab mein open hoga
+                                        mode: LaunchMode.externalApplication,
                                       );
+                                    } else {
+                                      if (context.mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(content: Text("Could not open PDF link")),
+                                        );
+                                      }
                                     }
                                   } else {
                                     ScaffoldMessenger.of(context).showSnackBar(
@@ -664,7 +679,7 @@ class _ChalanListScreenState extends ConsumerState<ChalanListScreen> {
                                     children: [
                                       SizedBox(width: 30, child: Text("#", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xff475569)))),
                                       Expanded(flex: 3, child: Text("PRODUCT", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xff475569)))),
-                                      Expanded(flex: 1, child: Text("REQ. QTY", textAlign: TextAlign.center, style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xff475569)))),
+                                      // Expanded(flex: 1, child: Text("REQ. QTY", textAlign: TextAlign.center, style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xff475569)))),
                                       Expanded(flex: 1, child: Text("SUP. QTY", textAlign: TextAlign.center, style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xff475569)))),
                                     ],
                                   ),
@@ -699,14 +714,14 @@ class _ChalanListScreenState extends ConsumerState<ChalanListScreen> {
                                                   overflow: TextOverflow.ellipsis,
                                                 ),
                                               ),
-                                              Expanded(
-                                                flex: 1,
-                                                child: Text(
-                                                  "${item.quantity ?? '-'}",
-                                                  textAlign: TextAlign.center,
-                                                  style: const TextStyle(fontSize: 13, color: Color(0xff64748B)),
-                                                ),
-                                              ),
+                                              // Expanded(
+                                              //   flex: 1,
+                                              //   child: Text(
+                                              //     "${item.quantity ?? '-'}",
+                                              //     textAlign: TextAlign.center,
+                                              //     style: const TextStyle(fontSize: 13, color: Color(0xff64748B)),
+                                              //   ),
+                                              // ),
                                               Expanded(
                                                 flex: 1,
                                                 child: Text(

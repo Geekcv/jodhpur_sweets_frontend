@@ -145,7 +145,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
           _buildLoginButton(),
 
           const SizedBox(height: 40),
-          const Center(child: Text("Version 4.1.0", style: TextStyle(color: Colors.grey, fontSize: 12, letterSpacing: 1))),
+          const Center(child: Text("Version 4.2.0", style: TextStyle(color: Colors.grey, fontSize: 12, letterSpacing: 1))),
         ],
       ),
     );

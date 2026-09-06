@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:js_order_website/Screens/AddInventoryScreen.dart';
-import 'package:js_order_website/Screens/ExpireItemsScreen.dart';
 import 'package:js_order_website/Screens/LoginUserDetails.dart';
-import 'package:js_order_website/Screens/OrderRequestListScreen.dart';
 import 'package:js_order_website/controllers/api_controller.dart';
 import '../provider/provider.dart';
 import 'Admin/AddShopScreen.dart';
@@ -12,16 +9,18 @@ import 'Admin/AddSupplierScreen.dart';
 import 'AdminAndShopAdmin/AddCategoryScreen.dart';
 import 'AdminAndShopAdmin/AddCounterScreen.dart';
 import 'AdminAndShopAdmin/AddDepartmentScreen.dart';
+import 'AdminAndShopAdmin/AddProductScreen.dart';
 import 'AdminAndShopAdmin/ChalanListScreen.dart';
 import 'AdminAndShopAdmin/StockHistoryScreen.dart';
 import 'AdminAndShopAdmin/TrackOwnOrdersShopAdminScreen.dart';
-import 'CounterOrderRequestScreen.dart';
+import 'CounterUser/CounterOrderRequestScreen.dart';
+import 'CounterUser/OrderRequestListScreen.dart';
 import 'DashboardOverview.dart';
-import 'AddProductScreen.dart';
-import 'FinalizeOrderScreen.dart';
 import 'NotificationScreen.dart';
 import 'ProfileScreen.dart';
 import 'ShopAdmin/ShopAdminOrderRequestsScreen.dart';
+import 'ShopAdminAndCounterUser/AddInventoryScreen.dart';
+import 'ShopAdminAndCounterUser/ExpireItemsScreen.dart';
 import 'SupplierOrdersScreen.dart';
 
 class MainDashboard extends ConsumerStatefulWidget {

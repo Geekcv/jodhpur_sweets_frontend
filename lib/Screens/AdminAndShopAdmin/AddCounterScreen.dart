@@ -318,6 +318,7 @@ class _AddCounterScreenState extends ConsumerState<AddCounterScreen> {
           Expanded(flex: 3, child: Text("SHOP NAME", style: _hStyle)),
           Expanded(flex: 3, child: Text("COUNTER NAME", style: _hStyle)),
           Expanded(flex: 3, child: Text("COUNTER NUMBER", style: _hStyle)),
+          Expanded(flex: 3, child: Text("PASSWORD", style: _hStyle)),
           Expanded(flex: 2, child: Text("LOCATION", style: _hStyle)),
           // SizedBox(width: 80, child: Text("ACTIONS", textAlign: TextAlign.right, style: _hStyle)),
         ],
@@ -333,7 +334,8 @@ class _AddCounterScreenState extends ConsumerState<AddCounterScreen> {
           SizedBox(width: 40, child: Text(index.toString().padLeft(2, '0'), style: const TextStyle(color: Colors.grey, fontSize: 13))),
           Expanded(flex: 3, child: Text(counter.shop_name ?? "-", style: const TextStyle(fontSize: 13, color: Colors.black87))),
           Expanded(flex: 3, child: Text(counter.counter_name ?? "-", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: primaryDark))),
-          Expanded(flex: 3, child: Text(counter.mobile_number ?? "-", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.black54))),
+          Expanded(flex: 3, child: Text(counter.user_phone ?? "-", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.black54))),
+          Expanded(flex: 3, child: Text(counter.password ?? "-", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.black54))),
           Expanded(flex: 2, child: Text(counter.location ?? "N/A", style: const TextStyle(fontSize: 13, color: Colors.black54))),
 
           // SizedBox(

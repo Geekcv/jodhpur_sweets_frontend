@@ -1110,10 +1110,9 @@ class _DashboardOverviewState extends State<DashboardOverview> {
 
 
   Widget _buildStockMovementChartWrapper(List<ChartData> movementData) {
-    if (movementData.isEmpty) return const Center(child: Text("No Data Available"));
-
-    final double maxCount = movementData.map((e) => double.tryParse(e.count.toString()) ?? 0.0)
-        .fold(0.0, (a, b) => a > b ? a : b);
+    final double maxCount = movementData.isEmpty
+        ? 0.0
+        : movementData.map((e) => double.tryParse(e.count.toString()) ?? 0.0).fold(0.0, (a, b) => a > b ? a : b);
 
     // 1. MaxY ko thoda aur space dein taaki bar top se touch na ho
     final double maxYValue = (maxCount * 1.1).ceilToDouble();
@@ -1132,7 +1131,19 @@ class _DashboardOverviewState extends State<DashboardOverview> {
               style: TextStyle(fontWeight: FontWeight.w800, fontSize: 11, color: Colors.grey)),
           const SizedBox(height: 16),
           Expanded(
-            child: BarChart(
+            child: movementData.isEmpty
+                ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.bar_chart_rounded, size: 36, color: Colors.grey.withOpacity(0.4)),
+                  const SizedBox(height: 8),
+                  const Text("No Data Available",
+                      style: TextStyle(fontSize: 11, color: Colors.grey, fontWeight: FontWeight.w500)),
+                ],
+              ),
+            )
+                : BarChart(
               BarChartData(
                 maxY: maxYValue,
                 barTouchData: BarTouchData(
@@ -1150,6 +1161,9 @@ class _DashboardOverviewState extends State<DashboardOverview> {
                     sideTitles: SideTitles(
                       showTitles: true,
                       getTitlesWidget: (value, meta) {
+                        if (value.toInt() < 0 || value.toInt() >= movementData.length) {
+                          return const SizedBox.shrink();
+                        }
                         return Padding(
                           padding: const EdgeInsets.only(top: 8),
                           child: Text(movementData[value.toInt()].transaction_type,
