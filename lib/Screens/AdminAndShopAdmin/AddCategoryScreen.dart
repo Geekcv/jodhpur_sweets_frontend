@@ -60,7 +60,8 @@ class _AddCategoryScreenState extends ConsumerState<AddCategoryScreen> {
 
 
   Future<void> _submitCategory() async {
-    if ((shop_id == null && LoginUserDetails.isAdmin) || selectedDeptId == null || catNameController.text.trim().isEmpty) {
+    // if ((shop_id == null && LoginUserDetails.isAdmin) || selectedDeptId == null || catNameController.text.trim().isEmpty) {
+    if (selectedDeptId == null || catNameController.text.trim().isEmpty) {
       setState(() => showErrors = true);
       Timer(const Duration(seconds: 3), () => setState(() => showErrors = false));
       return;
@@ -178,7 +179,7 @@ class _AddCategoryScreenState extends ConsumerState<AddCategoryScreen> {
             children: [
               // 1. Department Dropdown
               if(LoginUserDetails.isAdmin)
-                _dropdownBoxFoShop("SELECT SHOP *", shops, isWide ? 250 : double.infinity),
+                // _dropdownBoxFoShop("SELECT SHOP *", shops, isWide ? 250 : double.infinity),
 
               _dropdownBox("SELECT DEPARTMENT *", departments, isWide ? 250 : double.infinity),
 
@@ -317,7 +318,7 @@ class _AddCategoryScreenState extends ConsumerState<AddCategoryScreen> {
       child: Row(
         children: [
           const SizedBox(width: 50, child: Text("S.N.", style: _hStyle)),
-          const Expanded(flex: 3, child: Text("SHOP NAME", style: _hStyle)),
+          // const Expanded(flex: 3, child: Text("SHOP NAME", style: _hStyle)),
           const Expanded(flex: 2, child: Text("DEPARTMENT", style: _hStyle)),
           const Expanded(flex: 3, child: Text("CATEGORY NAME", style: _hStyle)),
           const Expanded(flex: 2, child: Text("CREATED DATE", style: _hStyle)),
@@ -334,7 +335,7 @@ class _AddCategoryScreenState extends ConsumerState<AddCategoryScreen> {
       child: Row(
         children: [
           SizedBox(width: 50, child: Text(index.toString().padLeft(2, '0'), style: const TextStyle(color: Colors.grey, fontSize: 13))),
-          Expanded(flex: 3, child: Text(cat.shop_name ?? "-", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: primaryDark))),
+          // Expanded(flex: 3, child: Text(cat.shop_name ?? "-", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: primaryDark))),
           Expanded(flex: 2, child: Text(cat.department_name ?? "-", style: const TextStyle(fontSize: 14,fontWeight: FontWeight.bold, color: primaryDark))),
           Expanded(flex: 3, child: Text(cat.category_name ?? "-", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: primaryDark))),
           Expanded(flex: 2, child: Text(formatDate(cat.cr_on?.toString()),style: const TextStyle(fontSize: 13, color: Colors.black87))),

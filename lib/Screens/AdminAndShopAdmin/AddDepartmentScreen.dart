@@ -36,9 +36,9 @@ class _AddDepartmentScreenState extends ConsumerState<AddDepartmentScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(master_Provider).fetchDepartment();
       // ref.read(master_Provider).fetchShop();
-      if(LoginUserDetails.isAdmin) {
-        ref.read(master_Provider).fetchShop();
-      }
+      // if(LoginUserDetails.isAdmin) {
+      //   ref.read(master_Provider).fetchShop();
+      // }
     });
   }
 
@@ -89,10 +89,10 @@ class _AddDepartmentScreenState extends ConsumerState<AddDepartmentScreen> {
 
   Future<void> handleDepartmentSubmit() async {
     // 1. Validation Logic
-    if (LoginUserDetails.isAdmin && shop_id == null) {
-      showToast(context: context, msg: "Please Select a Shop!", color: Colors.orange);
-      return;
-    }
+    // if (LoginUserDetails.isAdmin && shop_id == null) {
+    //   showToast(context: context, msg: "Please Select a Shop!", color: Colors.orange);
+    //   return;
+    // }
 
     if (!_formKey.currentState!.validate()) return;
 
@@ -260,7 +260,7 @@ class _AddDepartmentScreenState extends ConsumerState<AddDepartmentScreen> {
         crossAxisAlignment: WrapCrossAlignment.end,
         children: [
           if(LoginUserDetails.isAdmin)
-          _dropdownBoxFoShop("SELECT SHOP *", shops, isMobile ? double.infinity : 270),
+          // _dropdownBoxFoShop("SELECT SHOP *", shops, isMobile ? double.infinity : 270),
           _compactField("NAME *", nameController, "Department Name", 200),
           _compactField("DESCRIPTION", descController, "Short description...", 350),
 
@@ -327,7 +327,7 @@ class _AddDepartmentScreenState extends ConsumerState<AddDepartmentScreen> {
       child: Row(
         children: [
           SizedBox(width: 40, child: Text("S.N.", style: _hStyle)),
-          Expanded(flex: 3, child: Text("SHOP NAME", style: _hStyle)),
+          // Expanded(flex: 3, child: Text("SHOP NAME", style: _hStyle)),
           Expanded(flex: 3, child: Text("DEPARTMENT NAME", style: _hStyle)),
           Expanded(flex: 4, child: Text("DESCRIPTION", style: _hStyle)),
           Expanded(flex: 2, child: Text("CREATED DATE", style: _hStyle)),
@@ -344,7 +344,7 @@ class _AddDepartmentScreenState extends ConsumerState<AddDepartmentScreen> {
       child: Row(
         children: [
           SizedBox(width: 40, child: Text(index.toString().padLeft(2, '0'), style: const TextStyle(color: Colors.grey, fontSize: 13))),
-          Expanded(flex: 3, child: Text(dept.shop_name ?? "-", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: primaryDark))),
+          // Expanded(flex: 3, child: Text(dept.shop_name ?? "-", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: primaryDark))),
           Expanded(flex: 3, child: Text(dept.department_name ?? "-", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: primaryDark))),
         Expanded(flex: 4, child: Text((dept.description != null && dept.description.toString().trim().isNotEmpty) ? dept.description : "-", style: TextStyle(fontSize: 13, color: Colors.grey[700]), maxLines: 1, overflow: TextOverflow.ellipsis)),
           Expanded(flex: 2, child: Text(formatDate(dept.cr_on.toString()), style: const TextStyle(fontSize: 13, color: Colors.black87))),

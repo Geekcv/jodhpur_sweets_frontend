@@ -17,6 +17,8 @@ class FetchSweetsModel {
   var shop_name;
   var counter_name;
   var counter_id;
+  var supplier_id;
+  var supplier_name;
 
   FetchSweetsModel({
     this.row_id,
@@ -37,6 +39,8 @@ class FetchSweetsModel {
     this.shop_name,
     this.counter_id,
     this.counter_name,
+    this.supplier_name,
+    this.supplier_id,
   });
 
   factory FetchSweetsModel.fromJson(Map<String, dynamic> json) {
@@ -59,6 +63,8 @@ class FetchSweetsModel {
       shop_id: json['shop_id'] ?? "",
       counter_name: json['counter_name'] ?? "",
       counter_id: json['counter_id'] ?? "",
+      supplier_name: json['supplier_name'] ?? "-",
+      supplier_id: json['supplier_id'] ?? "",
     );
   }
 
@@ -82,6 +88,8 @@ class FetchSweetsModel {
       'shop_id': shop_id,
       'counter_name': counter_name,
       'counter_id': counter_id,
+      'supplier_id': supplier_id,
+      'supplier_name': supplier_name,
     };
   }
 }

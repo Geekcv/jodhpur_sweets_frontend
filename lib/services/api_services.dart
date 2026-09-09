@@ -158,7 +158,7 @@ class ApiService extends ChangeNotifier {
       "data": {
         if (param['row_id'] != null)
         "row_id": param['row_id'],
-        "shop_id": param['shop_id'],
+        // "shop_id": param['shop_id'],
         "department_name": param['department_name'],
         "description": param['description'],
       }
@@ -218,7 +218,7 @@ class ApiService extends ChangeNotifier {
       "data": {
         if (param['row_id'] != null)
         "row_id": param['row_id'],
-        "shop_id": param['shop_id'],
+        // "shop_id": param['shop_id'],
         "department_id": param['department_id'],
         "category_name": param['category_name'],
       }
@@ -257,19 +257,21 @@ class ApiService extends ChangeNotifier {
       "se": "cr_sweets",
       "data": {
         "category_id": param['category_id'].toString(),
-        "shop_id": param['shop_id'].toString(),
+        "department_id": param['department_id'].toString(),
+        "supplier_id": param['supplier_id'].toString(),
+        // "shop_id": param['shop_id'].toString(),
         "sweet_name": param['sweet_name'].toString(),
         "unit": param['unit'].toString(),
         "price": param['price'].toString(),
         "shelf_life_days": param['shelf_life_days'].toString(),
         "description": param['description'].toString(),
         "image_url": param['image_url'],
-        "counter_id": param['counter_id'],
+        // "counter_id": param['counter_id'],
         "return_type": param['return_type'],
       }
     };
 
-    //print("data send addSweets:----------$data");
+    print("data send addSweets:----------$data");
     var encodedData = await Functions.encodeData(data);
     var res = await Functions.httpPostToken(data: encodedData,token: token);
     var decodedData = await Functions.decodeData(res);

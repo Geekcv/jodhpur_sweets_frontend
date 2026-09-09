@@ -28,6 +28,12 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
   String? selectedCounterId;
   String? selectedReturnType;
 
+  String? selectedDepartmentId;
+  String? selectedSupplierId;
+
+  String selectedUnit = "kg";
+  final List<String> unitList = ["kg", "gram", "pc", "box", "pkt", "litre"];
+
   final nameController = TextEditingController();
   final descController = TextEditingController();
   final priceController = TextEditingController();
@@ -46,6 +52,9 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(master_Provider).fetchCategory();
       ref.read(master_Provider).fetchSweets();
+      ref.read(master_Provider).fetchSuppliers();
+      ref.read(master_Provider).fetchDepartment();
+
       // ref.read(master_Provider).fetchShop();
       if(LoginUserDetails.isAdmin) {
         ref.read(master_Provider).fetchShop();
@@ -58,8 +67,10 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
   Future<void> _handleSave() async {
     if (nameController.text.trim().isEmpty) return _showToast("Sweet Name is required!", Colors.redAccent);
     if (selectedCatId == null) return _showToast("Select Category!", Colors.redAccent);
-    if (selectedShopId == null && LoginUserDetails.isAdmin) return _showToast("Select Shop!", Colors.redAccent);
-    if (selectedCounterId == null) return _showToast("Select Counter!", Colors.redAccent);
+    if (selectedDepartmentId == null) return _showToast("Select Department!", Colors.redAccent);
+    if (selectedSupplierId == null) return _showToast("Select Supplier!", Colors.redAccent);
+    // if (selectedShopId == null && LoginUserDetails.isAdmin) return _showToast("Select Shop!", Colors.redAccent);
+    // if (selectedCounterId == null) return _showToast("Select Counter!", Colors.redAccent);
 
     final priceStr = priceController.text.trim();
     if (priceStr.isEmpty || double.tryParse(priceStr) == null || double.parse(priceStr) <= 0) {
@@ -91,11 +102,14 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
         "sweet_name": nameController.text.trim(),
         "description": descController.text.trim(),
         "price": priceStr,
+        "department_id": selectedDepartmentId,
+        "supplier_id": selectedSupplierId,
         "category_id": selectedCatId,
         "shop_id": LoginUserDetails.isAdmin ? selectedShopId : LoginUserDetails.shopId,
         "counter_id": selectedCounterId,
         "shelf_life_days": shelfLifeController.text.trim().isEmpty ? "0" : shelfLifeController.text.trim(),
-        "unit": unitController.text.trim(),
+        // "unit": unitController.text.trim(),
+        "unit": selectedUnit,
         "return_type": selectedReturnType,
         "image_url": attachments_uploaded.isNotEmpty ? attachments_uploaded.first['foPa'] : "",
       };
@@ -122,6 +136,9 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
     unitController.text = "kg";
     attachments_uploaded.clear();
     selectedCatId = null;
+    selectedDepartmentId = null;
+    selectedSupplierId = null;
+    selectedUnit = "kg";
     selectedShopId = null;
     selectedCounterId = null;
     selectedReturnType = null;
@@ -194,33 +211,43 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
         _formGrid(isMobile, [
           _box("SWEET NAME *", nameController, hint: "Name"),
 
-          if(LoginUserDetails.isAdmin)
-          // _commonDropdown("SHOP *", masterProv.allShops ?? [], (v) => v.shop_name, (v) => selectedShopId = v.row_id.toString()),
-            _commonDropdown(
-              label: "SHOP *",
-              items: masterProv.allShops ?? [],
-              itemLabel: (v) => v.shop_name,
-              // is logic ko dhyan se dekhein
-              selectedItem: selectedShopId == null
-                  ? null
-                  : (masterProv.allShops ?? []).cast<FetchShopModel?>().firstWhere(
-                      (s) => s?.row_id.toString() == selectedShopId,
-                  orElse: () => null
-              ),
-              onSelected: (val) {
-                setState(() {
-                  selectedShopId = val?.row_id.toString();
-                  selectedCatId = null;
-                  selectedCounterId = null;
-                });
-
-                if (selectedShopId != null) {
-                  ref.read(master_Provider).fetchCategoryAndCounterAccoridngToShopIdWhenAddSweet(
-                      params: {'shop_id': selectedShopId}
-                  );
-                }
-              },
+          _commonDropdown(
+            label: "DEPARTMENT *",
+            items: masterProv.allDepartments ?? [],
+            itemLabel: (v) => v.department_name ?? "",
+            selectedItem: (masterProv.allDepartments ?? []).cast<dynamic>().firstWhere(
+                    (d) => d.row_id.toString() == selectedDepartmentId,
+                orElse: () => null
             ),
+            onSelected: (v) => setState(() => selectedDepartmentId = v?.row_id.toString()),
+          ),
+          // if(LoginUserDetails.isAdmin)
+          // // _commonDropdown("SHOP *", masterProv.allShops ?? [], (v) => v.shop_name, (v) => selectedShopId = v.row_id.toString()),
+          //   _commonDropdown(
+          //     label: "SHOP *",
+          //     items: masterProv.allShops ?? [],
+          //     itemLabel: (v) => v.shop_name,
+          //     // is logic ko dhyan se dekhein
+          //     selectedItem: selectedShopId == null
+          //         ? null
+          //         : (masterProv.allShops ?? []).cast<FetchShopModel?>().firstWhere(
+          //             (s) => s?.row_id.toString() == selectedShopId,
+          //         orElse: () => null
+          //     ),
+          //     onSelected: (val) {
+          //       setState(() {
+          //         selectedShopId = val?.row_id.toString();
+          //         selectedCatId = null;
+          //         selectedCounterId = null;
+          //       });
+          //
+          //       if (selectedShopId != null) {
+          //         ref.read(master_Provider).fetchCategoryAndCounterAccoridngToShopIdWhenAddSweet(
+          //             params: {'shop_id': selectedShopId}
+          //         );
+          //       }
+          //     },
+          //   ),
 
 
 
@@ -241,19 +268,30 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
         const SizedBox(height: 16),
         _formGrid(isMobile, [
           // _commonDropdown("COUNTER *", masterProv.allCounters ?? [], (v) => v.counter_name, (v) => selectedCounterId = v.row_id.toString()),
+          // _commonDropdown(
+          //   label: "COUNTER *",
+          //   items: masterProv.allCounters ?? [],
+          //   itemLabel: (v) => v.counter_name,
+          //   selectedItem: (masterProv.allCounters ?? []).cast<dynamic>().firstWhere(
+          //           (c) => c.row_id.toString() == selectedCounterId,
+          //       orElse: () => null
+          //   ),
+          //   onSelected: (v) => setState(() => selectedCounterId = v?.row_id.toString()),
+          // ),
+
           _commonDropdown(
-            label: "COUNTER *",
-            items: masterProv.allCounters ?? [],
-            itemLabel: (v) => v.counter_name,
-            selectedItem: (masterProv.allCounters ?? []).cast<dynamic>().firstWhere(
-                    (c) => c.row_id.toString() == selectedCounterId,
+            label: "SUPPLIER *",
+            items: masterProv.allSuppliers ?? [],
+            itemLabel: (v) => v.supplier_name ?? "",
+            selectedItem: (masterProv.allSuppliers ?? []).cast<dynamic>().firstWhere(
+                    (s) => s.row_id.toString() == selectedSupplierId,
                 orElse: () => null
             ),
-            onSelected: (v) => setState(() => selectedCounterId = v?.row_id.toString()),
+            onSelected: (v) => setState(() => selectedSupplierId = v?.row_id.toString()),
           ),
-
           _box("PRICE (₹) *", priceController, isNum: true),
-          _box("UNIT", unitController, hint: "kg/pc"),
+          // _box("UNIT", unitController, hint: "kg/pc"),
+          _simpleDropdown("UNIT", unitList, selectedUnit, (v) => setState(() => selectedUnit = v ?? "kg")),
         ]),
         const SizedBox(height: 16),
         _formGrid(isMobile, [
@@ -330,13 +368,19 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
             color: bgLight,
             child: Row(
               children: [
-                Expanded(flex: 1, child: Text("IMG", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.blueGrey))),
+                // Expanded(flex: 1, child: Text("IMG", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.blueGrey))),
+                SizedBox(
+                  width: 50,
+                  child: Text("IMG", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.blueGrey)),
+                ),
                 Container(width: 60),
                 Expanded(flex: 3, child: Text("ITEM NAME", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.blueGrey))),
-                Expanded(flex: 2, child: Text("SHOP", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.blueGrey))),
+                // Expanded(flex: 2, child: Text("SHOP", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.blueGrey))),
+                Expanded(flex: 2, child: Text("DEPT", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.blueGrey))),
                 Expanded(flex: 2, child: Text("CATEGORY", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.blueGrey))),
-                Expanded(flex: 2, child: Text("COUNTER", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.blueGrey))),
-                Expanded(flex: 1, child: Text("PRICE", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.blueGrey))),
+                Expanded(flex: 2, child: Text("SUPPLIER", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.blueGrey))),
+                // Expanded(flex: 2, child: Text("COUNTER", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.blueGrey))),
+                // Expanded(flex: 1, child: Text("PRICE", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.blueGrey))),
                 Expanded(flex: 1, child: Text("S.LIFE", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.blueGrey))),
               ],
             ),
@@ -358,26 +402,42 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
                   child: Row(
                     children: [
                       // 1. Image Column with Click functionality
-                      Expanded(
-                        flex: 1,
+                      // Expanded(
+                      //   flex: 1,
+                      //   child: GestureDetector(
+                      //     onTap: () {
+                      //       if(item.image_url != null && item.image_url != "") {
+                      //         _showImageDialog(item.image_url);
+                      //       }
+                      //     },
+                      //     child: Hero(
+                      //       tag: "img_${item.row_id}", // Animation ke liye
+                      //       child: _tableImg(item.image_url),
+                      //     ),
+                      //   ),
+                      // ),
+                      SizedBox(
+                        width: 50, // Fixed cell width for Image Column
                         child: GestureDetector(
                           onTap: () {
-                            if(item.image_url != null && item.image_url != "") {
+                            if (item.image_url != null && item.image_url != "") {
                               _showImageDialog(item.image_url);
                             }
                           },
                           child: Hero(
-                            tag: "img_${item.row_id}", // Animation ke liye
+                            tag: "img_${item.row_id}",
                             child: _tableImg(item.image_url),
                           ),
                         ),
                       ),
                       Container(width: 60),
                       Expanded(flex: 3, child: Text(item.sweet_name ?? "-", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: primaryDark))),
-                      Expanded(flex: 2, child: Text(item.shop_name ?? "-", style: const TextStyle(fontSize: 12, color: Colors.blueGrey))),
+                      // Expanded(flex: 2, child: Text(item.shop_name ?? "-", style: const TextStyle(fontSize: 12, color: Colors.blueGrey))),
+                      Expanded(flex: 2, child: Text(item.department_name ?? "-", style: const TextStyle(fontSize: 12, color: Colors.blueGrey))),
                       Expanded(flex: 2, child: Text(item.category_name ?? "-", style: const TextStyle(fontSize: 12))),
-                      Expanded(flex: 2, child: Text(item.counter_name ?? "-", style: const TextStyle(fontSize: 12, color: Colors.blueGrey))),
-                      Expanded(flex: 1, child: Text("₹${item.price}", style: const TextStyle(fontWeight: FontWeight.bold, color: successGreen))),
+                      Expanded(flex: 2, child: Text(item.supplier_name ?? "-", style: const TextStyle(fontSize: 12, color: Colors.blueGrey))),
+                      // Expanded(flex: 2, child: Text(item.counter_name ?? "-", style: const TextStyle(fontSize: 12, color: Colors.blueGrey))),
+                      // Expanded(flex: 1, child: Text("₹${item.price}", style: const TextStyle(fontWeight: FontWeight.bold, color: successGreen))),
                       Expanded(flex: 1, child: Text("${item.shelf_life_days ?? '0'} D", style: const TextStyle(fontSize: 12))),
                     ],
                   ),
@@ -392,18 +452,53 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
 
 // Image Thumbnail Helper
   Widget _tableImg(String? path) {
+    final bool hasImage = path != null && path.trim().isNotEmpty;
+
     return Container(
-      width: 38, height: 38,
+      width: 42,
+      height: 42,
       decoration: BoxDecoration(
-          color: bgLight,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: borderCol.withOpacity(0.5))
+        color: const Color(0xffF8FAFC),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xffE2E8F0), width: 1),
       ),
-      child: (path != null && path.isNotEmpty)
-          ? ClipRRect(
-          borderRadius: BorderRadius.circular(7),
-          child: Image.network("$serverUrlMedia$path", fit: BoxFit.cover, errorBuilder: (c,e,s) => Icon(Icons.broken_image, size: 16, color: Colors.grey)))
-          : const Icon(Icons.fastfood_outlined, size: 18, color: Colors.grey),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(7),
+        child: hasImage
+            ? Image.network(
+          "$serverUrlMedia$path",
+          fit: BoxFit.cover, // Perfectly crops image into 1:1 ratio
+          loadingBuilder: (context, child, loadingProgress) {
+            if (loadingProgress == null) return child;
+            return Center(
+              child: SizedBox(
+                width: 14,
+                height: 14,
+                child: CircularProgressIndicator(
+                  strokeWidth: 1.5,
+                  color: Colors.grey.shade400,
+                ),
+              ),
+            );
+          },
+          errorBuilder: (c, e, s) => Container(
+            color: const Color(0xffF1F5F9),
+            child: const Icon(
+              Icons.image_not_supported_outlined,
+              size: 18,
+              color: Color(0xff94A3B8),
+            ),
+          ),
+        )
+            : Container(
+          color: const Color(0xffF1F5F9),
+          child: const Icon(
+            Icons.fastfood_outlined,
+            size: 18,
+            color: Color(0xff94A3B8),
+          ),
+        ),
+      ),
     );
   }
 
@@ -414,38 +509,61 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
       barrierDismissible: true,
       builder: (context) => Dialog(
         backgroundColor: Colors.transparent,
-        insetPadding: const EdgeInsets.all(20),
+        insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
         child: Stack(
           alignment: Alignment.center,
           children: [
             // Background Click to Close
-            GestureDetector(onTap: () => Navigator.pop(context), child: Container(color: Colors.transparent)),
+            GestureDetector(
+              onTap: () => Navigator.pop(context),
+              child: Container(color: Colors.transparent),
+            ),
 
-            // The Image Container
+            // Main Content Box
             Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Container(
-                  decoration: BoxDecoration(
+                // Flexible container to prevent bottom overflow on smaller screens
+                Flexible(
+                  child: Container(
+                    constraints: BoxConstraints(
+                      maxHeight: MediaQuery.of(context).size.height * 0.75, // Max 75% height of screen
+                      maxWidth: 600, // Max width standard
+                    ),
+                    decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(15),
-                      boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 20)]
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(15),
-                    child: Image.network(
-                      "$serverUrlMedia$path",
-                      fit: BoxFit.contain,
-                      loadingBuilder: (context, child, progress) => progress == null ? child : const Padding(padding: EdgeInsets.all(50), child: CircularProgressIndicator()),
+                      boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 20)],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(15),
+                      child: InteractiveViewer( // Pinch to zoom feature added
+                        child: Image.network(
+                          "$serverUrlMedia$path",
+                          fit: BoxFit.contain,
+                          loadingBuilder: (context, child, progress) => progress == null
+                              ? child
+                              : const Padding(
+                            padding: EdgeInsets.all(50),
+                            child: CircularProgressIndicator(),
+                          ),
+                          errorBuilder: (context, error, stackTrace) => const Padding(
+                            padding: EdgeInsets.all(40),
+                            child: Icon(Icons.broken_image, size: 50, color: Colors.grey),
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                 ),
-                const SizedBox(height: 15),
+                const SizedBox(height: 12),
+
                 // Close Button below image
                 IconButton(
                   onPressed: () => Navigator.pop(context),
-                  icon: const Icon(Icons.cancel, color: Colors.white, size: 40),
-                )
+                  icon: const Icon(Icons.cancel, color: Colors.white, size: 38),
+                  tooltip: "Close",
+                ),
               ],
             ),
           ],
@@ -453,7 +571,6 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
       ),
     );
   }
-
 
   // Widget _tableImg(String? path) {
   //   return Container(
@@ -556,10 +673,12 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
               Expanded(
                 child: DropdownButtonHideUnderline(
                   child: DropdownButton<String>(
+                    dropdownColor: Colors.white,
+                    menuMaxHeight: 250,
                     isExpanded: true,
                     value: currentValue,
                     icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 20),
-                    hint: const Text("Select Type", style: TextStyle(fontSize: 13, color: Colors.grey)),
+                    hint: const Text("Select Type", style: TextStyle(fontSize: 12, color: Colors.grey)),
                     items: items.map((e) => DropdownMenuItem(
                         value: e,
                         child: Text(e, style: const TextStyle(fontSize: 12, color: Color(0xff1A2B4C)))

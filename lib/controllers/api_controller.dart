@@ -204,7 +204,7 @@ class ApiController {
   static fetchDepartments({context,params})async{
     var token = await getloggedinUserToken();
     var res = await ApiService().fetchDepartments(param: params,token: token);
-    //print("fetchDepartments response:-----$res");
+    print("fetchDepartments response:-----$res");
     List<FetchDepartmentModel> data = [];
     if (res != null && res['status'] == 0) {
       for (var i = 0; i < res['data'].length; i++) {
