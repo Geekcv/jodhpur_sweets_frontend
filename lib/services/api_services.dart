@@ -283,11 +283,11 @@ class ApiService extends ChangeNotifier {
   fetchSweets({token, param}) async {
     var data = {
       "fn": "common_fn",
-      "se": "fe_sweets",
+      "se": "fe_all_my_sweets",
       "data": {}
     };
 
-    //print("data send fetchSweets:----------$data");
+    // print("data send fetchSweets:----------$data");
     var encodedData = await Functions.encodeData(data);
     var res = await Functions.httpPostToken(data: encodedData,token: token);
     var decodedData = await Functions.decodeData(res);
@@ -764,10 +764,11 @@ class ApiService extends ChangeNotifier {
       "data": {}
     };
 
-    //print("data send fetchDashboardAccordingToRole:----------$data");
+    // print("data send fetchDashboardAccordingToRole:----------$data");
     var encodedData = await Functions.encodeData(data);
     var res = await Functions.httpPostToken(data: encodedData,token: token);
     var decodedData = await Functions.decodeData(res);
+    // print("data send res:----------$res");
     return decodedData;
   }
 
@@ -804,5 +805,25 @@ class ApiService extends ChangeNotifier {
     return decodedData;
   }
 
+
+
+
+
+  assignSweetToCounters({token, param}) async {
+    var data = {
+      "fn": "common_fn",
+      "se": "ass_sweets_con",
+      "data": {
+        "sweet_id": param['sweet_id'].toString(),
+        "counter_ids": param['counter_ids'],
+      }
+    };
+
+    print("data send assignSweetToCounters:----------$data");
+    var encodedData = await Functions.encodeData(data);
+    var res = await Functions.httpPostToken(data: encodedData,token: token);
+    var decodedData = await Functions.decodeData(res);
+    return decodedData;
+  }
 
 }

@@ -1590,7 +1590,8 @@ class _DashboardOverviewState extends State<DashboardOverview> {
 
 
                     // ADMIN aur SHOP_ADMIN dono ko dikhega
-                    if (role == 'ADMIN' || role == 'SHOP_ADMIN')
+                    // if (role == 'ADMIN' || role == 'SHOP_ADMIN')
+                    if (role == 'SHOP_ADMIN')
                       _dropdownSubItem("Add Counter", Icons.badge_outlined, 6),
 
 
@@ -1601,6 +1602,10 @@ class _DashboardOverviewState extends State<DashboardOverview> {
                     // Sirf ADMIN ko dikhega (Supplier management shop admin ka kaam nahi hai)
                     if (role == 'ADMIN')
                       _dropdownSubItem("Add Supplier", Icons.local_shipping_outlined, 9),
+
+
+                    if (role == 'SHOP_ADMIN')
+                      _dropdownSubItem("Assign Sweets To Counter", Icons.assignment_turned_in_outlined, 19),
 
                     const SizedBox(height: 5),
                   ],

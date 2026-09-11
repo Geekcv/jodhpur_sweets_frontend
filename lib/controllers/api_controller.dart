@@ -724,7 +724,7 @@ class ApiController {
       var res = await ApiService().fetchDashboardAccordingToRole(param: params, token: token);
 
       //print("role-----$role");
-      //print("fetchDashboardAccordingToRole response:-----$res");
+      print("fetchDashboardAccordingToRole response:-----$res");
 
       if (res != null && (res['status'] == 0 || res['status'] == "0")) {
         final data = res['data'];
@@ -780,6 +780,18 @@ class ApiController {
   }
 
 
+
+  static assignSweetToCounters({context,params})async{
+    var token = await getloggedinUserToken();
+    var res = await ApiService().assignSweetToCounters(param: params,token: token);
+    print("assignSweetToCounters response:- $res");
+    if(res['status']==0){
+      return res;
+    }
+    else{
+      return res;
+    }
+  }
 
 
 

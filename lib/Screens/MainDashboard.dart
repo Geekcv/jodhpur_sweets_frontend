@@ -18,6 +18,7 @@ import 'CounterUser/OrderRequestListScreen.dart';
 import 'DashboardOverview.dart';
 import 'NotificationScreen.dart';
 import 'ProfileScreen.dart';
+import 'ShopAdmin/AssignSweetsToCounter.dart';
 import 'ShopAdmin/ShopAdminOrderRequestsScreen.dart';
 import 'ShopAdminAndCounterUser/AddInventoryScreen.dart';
 import 'ShopAdminAndCounterUser/ExpireItemsScreen.dart';
@@ -58,6 +59,7 @@ class _MainDashboardState extends ConsumerState<MainDashboard> with TickerProvid
     "My Orders", // 16
     "Expiry Items", // 17
     "Notifications",    // 18 <--- YE ADD KARNA HAI
+    "Assign Sweets",
   ];
 
 
@@ -142,6 +144,7 @@ class _MainDashboardState extends ConsumerState<MainDashboard> with TickerProvid
       case 7: return const AddDepartmentScreen();
       case 8: return const AddCategoryScreen();
       case 9: return const AddSupplierScreen();
+      case 19: return const AssignSweetsToCounter();
 
     // NEW SCREENS FOR ROLES
       case 10: return const ShopAdminOrderRequestsScreen(); // fe_or_details (Shop Admin)

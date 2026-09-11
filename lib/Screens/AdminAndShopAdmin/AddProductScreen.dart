@@ -83,9 +83,9 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
     }
 
     final desc = descController.text.trim();
-    if (desc.isEmpty) {
-      return _showToast("Description is required!", Colors.redAccent);
-    }
+    // if (desc.isEmpty) {
+    //   return _showToast("Description is required!", Colors.redAccent);
+    // }
 
 
     if (attachments_uploaded.isEmpty) {
@@ -206,6 +206,33 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
   }
 
   Widget _buildFormInputs(bool isMobile, var masterProv) {
+    final List<dynamic> allCategoriesList = masterProv.allCategories ?? [];
+    final List<dynamic> allDepartmentsList = masterProv.allDepartments ?? [];
+
+    // --- Dynamic filtering logic for Vice-Versa condition ---
+    List<dynamic> filteredCategories = List.from(allCategoriesList);
+    List<dynamic> filteredDepartments = List.from(allDepartmentsList);
+
+    // 1. Agar Department selected hai, to sirf us Department ki Categories filter honge
+    if (selectedDepartmentId != null) {
+      filteredCategories = allCategoriesList.where((cat) {
+        return cat.department_id?.toString() == selectedDepartmentId.toString();
+      }).toList();
+    }
+
+    // 2. Agar Category selected hai aur Department pehle se select nahi tha, to Department list filter hogi
+    if (selectedCatId != null && selectedDepartmentId == null) {
+      final selectedCategoryObj = allCategoriesList.cast<dynamic?>().firstWhere(
+            (cat) => cat?.row_id?.toString() == selectedCatId,
+        orElse: () => null,
+      );
+      if (selectedCategoryObj != null && selectedCategoryObj.department_id != null) {
+        filteredDepartments = allDepartmentsList.where((dept) {
+          return dept.row_id?.toString() == selectedCategoryObj.department_id.toString();
+        }).toList();
+      }
+    }
+
     return Column(
       children: [
         _formGrid(isMobile, [
@@ -213,13 +240,30 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
 
           _commonDropdown(
             label: "DEPARTMENT *",
-            items: masterProv.allDepartments ?? [],
+            items: filteredDepartments,
             itemLabel: (v) => v.department_name ?? "",
-            selectedItem: (masterProv.allDepartments ?? []).cast<dynamic>().firstWhere(
-                    (d) => d.row_id.toString() == selectedDepartmentId,
-                orElse: () => null
+            // --- FIXED: Safe type conversion to avoid DDC TypeError ---
+            selectedItem: selectedDepartmentId == null
+                ? null
+                : allDepartmentsList.cast<dynamic?>().firstWhere(
+                  (d) => d?.row_id?.toString() == selectedDepartmentId,
+              orElse: () => null,
             ),
-            onSelected: (v) => setState(() => selectedDepartmentId = v?.row_id.toString()),
+            onSelected: (v) {
+              setState(() {
+                selectedDepartmentId = v?.row_id?.toString();
+                // Reset category if selected category doesn't match selected department
+                if (selectedCatId != null) {
+                  final catObj = allCategoriesList.cast<dynamic?>().firstWhere(
+                        (c) => c?.row_id?.toString() == selectedCatId,
+                    orElse: () => null,
+                  );
+                  if (catObj != null && catObj.department_id?.toString() != selectedDepartmentId) {
+                    selectedCatId = null;
+                  }
+                }
+              });
+            },
           ),
           // if(LoginUserDetails.isAdmin)
           // // _commonDropdown("SHOP *", masterProv.allShops ?? [], (v) => v.shop_name, (v) => selectedShopId = v.row_id.toString()),
@@ -254,13 +298,23 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
           // _commonDropdown("CATEGORY *", masterProv.allCategories ?? [], (v) => v.category_name, (v) => selectedCatId = v.row_id.toString()),
           _commonDropdown(
             label: "CATEGORY *",
-            items: masterProv.allCategories ?? [],
-            itemLabel: (v) => v.category_name,
-            selectedItem: (masterProv.allCategories ?? []).cast<dynamic>().firstWhere(
-                    (c) => c.row_id.toString() == selectedCatId,
-                orElse: () => null
+            items: filteredCategories,
+            itemLabel: (v) => v.category_name ?? "",
+            // --- FIXED: Safe type conversion to avoid DDC TypeError ---
+            selectedItem: selectedCatId == null
+                ? null
+                : filteredCategories.cast<dynamic?>().firstWhere(
+                  (c) => c?.row_id?.toString() == selectedCatId,
+              orElse: () => null,
             ),
-            onSelected: (v) => setState(() => selectedCatId = v?.row_id.toString()),
+            onSelected: (v) {
+              setState(() {
+                selectedCatId = v?.row_id?.toString();
+                if (v != null && v.department_id != null) {
+                  selectedDepartmentId = v.department_id.toString();
+                }
+              });
+            },
           ),
 
 
