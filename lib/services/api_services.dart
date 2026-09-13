@@ -280,14 +280,17 @@ class ApiService extends ChangeNotifier {
 
 
 
-  fetchSweets({token, param}) async {
+  fetchSweets({token, param, bool? isCounterSide}) async {
+
+    final bool counterSide = isCounterSide ?? false;
+
     var data = {
       "fn": "common_fn",
-      "se": "fe_all_my_sweets",
+      "se": counterSide ? 'fe_all_my_sweets' : "fe_sweets",
       "data": {}
     };
 
-    // print("data send fetchSweets:----------$data");
+    print("data send fetchSweets:----------$data");
     var encodedData = await Functions.encodeData(data);
     var res = await Functions.httpPostToken(data: encodedData,token: token);
     var decodedData = await Functions.decodeData(res);
@@ -368,7 +371,7 @@ class ApiService extends ChangeNotifier {
       }
     };
 
-    //print("data send createFinalOrderByShopAdmin:----------$data");
+    print("data send createFinalOrderByShopAdmin:----------$data");
     var encodedData = await Functions.encodeData(data);
     var res = await Functions.httpPostToken(data: encodedData,token: token);
     var decodedData = await Functions.decodeData(res);
@@ -726,7 +729,7 @@ class ApiService extends ChangeNotifier {
       }
     };
 
-    //print("data send updateOrderItemBySupplier:----------$data");
+    print("data send updateOrderItemBySupplier:----------$data");
     var encodedData = await Functions.encodeData(data);
     var res = await Functions.httpPostToken(data: encodedData,token: token);
     var decodedData = await Functions.decodeData(res);

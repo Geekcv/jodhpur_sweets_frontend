@@ -265,9 +265,9 @@ class ApiController {
     }
   }
 
-  static fetchSweets({context,params})async{
+  static fetchSweets({context,params, isCounterSide})async{
     var token = await getloggedinUserToken();
-    var res = await ApiService().fetchSweets(param: params,token: token);
+    var res = await ApiService().fetchSweets(param: params,token: token, isCounterSide: isCounterSide);
     log("fetchSweets response:-----$res");
     List<FetchSweetsModel> data = [];
     if (res != null && res['status'] == 0) {
@@ -340,7 +340,7 @@ class ApiController {
   static createFinalOrderByShopAdmin({context,params})async{
     var token = await getloggedinUserToken();
     var res = await ApiService().createFinalOrderByShopAdmin(param: params,token: token);
-    //print("createFinalOrderByShopAdmin response:- $res");
+    print("createFinalOrderByShopAdmin response:- $res");
     if(res['status']==0){
       return res;
     }

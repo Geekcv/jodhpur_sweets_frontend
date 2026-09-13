@@ -51,7 +51,7 @@ class _CounterOrderRequestScreenState extends ConsumerState<CounterOrderRequestS
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(master_Provider).fetchSweets();
+      ref.read(master_Provider).fetchSweets(isCounterSide: true);
       if (!LoginUserDetails.isCounterUser) {
         ref.read(master_Provider).fetchCounter();
       }

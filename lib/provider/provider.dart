@@ -150,12 +150,12 @@ class ProviderClass extends ChangeNotifier {
 
 
   List<FetchSweetsModel> allSweets=[];
-  fetchSweets({params}) async {
+  fetchSweets({params, isCounterSide}) async {
     loading = true;
     allSweets.clear();
     notifyListeners();
 
-    allSweets = await ApiController.fetchSweets(params: params);
+    allSweets = await ApiController.fetchSweets(params: params, isCounterSide: isCounterSide);
 
     loading = false;
     notifyListeners();
