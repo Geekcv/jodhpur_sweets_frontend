@@ -68,6 +68,7 @@ class _SupplierOrdersScreenState extends State<SupplierOrdersScreen> {
     List<Map<String, dynamic>> editableItems = selectedOrder!.items!.map((e) => {
       "sweet_id": e.sweetId,
       "sweet_name": e.sweetName,
+      "order_item_id": e.orderItemId,
       "unit": e.unit,
       "quantity": double.tryParse(e.quantity.toString()) ?? 0.0,
       "status": "ACCEPTED",
@@ -224,6 +225,7 @@ class _SupplierOrdersScreenState extends State<SupplierOrdersScreen> {
                               "order_id": orderId,
                               "items": editableItems.map((e) => {
                                 "sweet_id": e['sweet_id'],
+                                'order_item_id' : e['order_item_id'],
                                 "status": e['status'],
                                 "supplied_quantity": e['quantity']
                               }).toList(),

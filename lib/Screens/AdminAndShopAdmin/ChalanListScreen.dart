@@ -201,7 +201,7 @@ class _ChalanListScreenState extends ConsumerState<ChalanListScreen> {
 
   Widget _buildChalanCard(ChalanDataModel data) {
     final ScrollController cardScrollController = ScrollController();
-    bool isAlreadyVerified = data.is_verified == true;
+    bool isAlreadyVerified = data.isVerified == true;
     return InkWell(
       onTap: () => _showChalanDetail(data),
       borderRadius: BorderRadius.circular(12),
@@ -290,7 +290,7 @@ class _ChalanListScreenState extends ConsumerState<ChalanListScreen> {
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                                     decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(4), border: Border.all(color: const Color(0xffE2E8F0))),
-                                    child: Text("${item.quantity} ${item.unit}", style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: Color(0xff1A2B4C))),
+                                    child: Text("${item.suppliedQuantity} ${item.unit}", style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: Color(0xff1A2B4C))),
                                   ),
                                 ],
                               ),
@@ -725,7 +725,7 @@ class _ChalanListScreenState extends ConsumerState<ChalanListScreen> {
                                               Expanded(
                                                 flex: 1,
                                                 child: Text(
-                                                  "${item.quantity ?? '-'} ${item.unit ?? ''}",
+                                                  "${item.suppliedQuantity ?? '-'} ${item.unit ?? ''}",
                                                   textAlign: TextAlign.center,
                                                   style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xff0F172A)),
                                                 ),
