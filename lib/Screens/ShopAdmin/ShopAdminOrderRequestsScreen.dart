@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-
 import '../../constants/static.dart';
 import '../../controllers/api_controller.dart';
 import '../../models/ShopAdminOrderRequestModel.dart';
@@ -13,12 +12,10 @@ class ShopAdminOrderRequestsScreen extends ConsumerStatefulWidget {
   const ShopAdminOrderRequestsScreen({super.key});
 
   @override
-  ConsumerState<ShopAdminOrderRequestsScreen> createState() =>
-      _ShopAdminOrderRequestsScreenState();
+  ConsumerState<ShopAdminOrderRequestsScreen> createState() => _ShopAdminOrderRequestsScreenState();
 }
 
-class _ShopAdminOrderRequestsScreenState
-    extends ConsumerState<ShopAdminOrderRequestsScreen> {
+class _ShopAdminOrderRequestsScreenState extends ConsumerState<ShopAdminOrderRequestsScreen> {
   static const Color primaryNavy = Color(0xff0F172A);
   static const Color slateSub = Color(0xff64748B);
   static const Color borderCol = Color(0xffE2E8F0);
@@ -95,10 +92,7 @@ class _ShopAdminOrderRequestsScreenState
         final counter = (req.counterName ?? '').toLowerCase();
         final reqId = (req.requestedOrder ?? '').toLowerCase();
         final status = (req.status ?? 'pending').toLowerCase();
-        return sweet.contains(q) ||
-            counter.contains(q) ||
-            reqId.contains(q) ||
-            status.contains(q);
+        return sweet.contains(q) || counter.contains(q) || reqId.contains(q) || status.contains(q);
       }).toList();
 
       if (matchingRequests.isNotEmpty || grpTime.contains(q)) {
@@ -175,20 +169,9 @@ class _ShopAdminOrderRequestsScreenState
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: const [
-            Text(
-              "Counter Requests",
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.w800,
-                color: primaryNavy,
-                letterSpacing: -0.5,
-              ),
-            ),
+            Text("Counter Requests", style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: primaryNavy, letterSpacing: -0.5,)),
             SizedBox(height: 2),
-            Text(
-              "Review and forward counter requests to suppliers",
-              style: TextStyle(fontSize: 12, color: slateSub),
-            ),
+            Text("Review and forward counter requests to suppliers", style: TextStyle(fontSize: 12, color: slateSub)),
           ],
         ),
         ElevatedButton.icon(
@@ -201,10 +184,8 @@ class _ShopAdminOrderRequestsScreenState
             disabledBackgroundColor: const Color(0xff94A3B8),
             disabledForegroundColor: Colors.white,
             elevation: 0,
-            padding: EdgeInsets.symmetric(
-                horizontal: isMobile ? 12 : 18, vertical: 12),
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8)),
+            padding: EdgeInsets.symmetric(horizontal: isMobile ? 12 : 18, vertical: 12),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           ),
         ),
       ],
@@ -317,7 +298,13 @@ class _ShopAdminOrderRequestsScreenState
   // --- ACCORDION GROUP CARD ---
   Widget _buildGroupAccordion(ShopAdminOrderGroupModel group, double screenWidth, bool isMobile) {
     final requests = group.requests ?? [];
-    final pendingRequests = requests.where((e) => (e.status == null || e.status.toString().toUpperCase() == "PENDING")).toList();
+
+    // Logic Update: Counter -> Shop Admin flow me pending status requestStatus par depend karta hai
+    final pendingRequests = requests.where((e) {
+      String reqStatus = (e.requestStatus ?? e.status ?? "PENDING").toString().toUpperCase();
+      return reqStatus == "PENDING";
+    }).toList();
+
     bool isFullySelected = pendingRequests.isNotEmpty && pendingRequests.every((e) => selectedIds.contains(e.rowId.toString()));
 
     return Container(
@@ -338,40 +325,39 @@ class _ShopAdminOrderRequestsScreenState
         data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
         child: ExpansionTile(
           initiallyExpanded: true,
-          tilePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 2),
+          tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
           childrenPadding: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
           title: Wrap(
             alignment: WrapAlignment.spaceBetween,
             crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 12,
             runSpacing: 8,
             children: [
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    // "Counter Request Batch: ${_formatDateTime(group.requestGroup ?? group.crOn?.toString())}",
-                    "Counter Request",
-                    style: const TextStyle(
-                      fontSize: 13,
+                  const Text("Counter Request", style: TextStyle(
+                      fontSize: 13.5,
                       fontWeight: FontWeight.w700,
                       color: primaryNavy,
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    _formatDateTime(group.crOn?.toString() ?? group.requestGroup),
+                    _formatDateTime(group.crOn?.toString() ?? group.requestGroup?.toString()),
                     style: const TextStyle(fontSize: 11, color: slateSub),
                   ),
                 ],
               ),
-              Row(
-                mainAxisSize: MainAxisSize.min,
+              // Header Stats Badges
+              Wrap(
+                spacing: 10,
+                runSpacing: 6,
                 children: [
-                  _metaText("Total Items:", "${group.totalRequests ?? requests.length}"),
-                  const SizedBox(width: 12),
-                  _metaText("Total Requested Qty:", "${group.totalRequestedQuantity ?? 0}"),
-                  const SizedBox(width: 12),
-                  _metaText("Total Pending Qty:", "${group.totalPendingQuantity ?? 0}", color: Colors.orange.shade800),
+                  _headerMetaBadge("Items", "${group.totalRequests ?? requests.length}", const Color(0xff475569)),
+                  _headerMetaBadge("Req Qty", "${group.totalRequestedQuantity ?? 0}", const Color(0xff2563EB)),
+                  _headerMetaBadge("Supplied Qty", "${group.totalSuppliedQuantity ?? 0}", const Color(0xff16A34A)),
+                  _headerMetaBadge("Pending Qty", "${group.totalPendingQuantity ?? 0}", const Color(0xffD97706)),
                 ],
               ),
             ],
@@ -391,15 +377,31 @@ class _ShopAdminOrderRequestsScreenState
                 alignment: Alignment.centerLeft,
                 child: InkWell(
                   onTap: () => _toggleGroupSelection(group),
+                  borderRadius: BorderRadius.circular(6),
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4),
-                    child: Text(
-                      isFullySelected ? "✓ Select All (selected)" : "Select All Pending",
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: accentBlue,
-                      ),
+                    padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          isFullySelected
+                              ? Icons.check_box_rounded
+                              : Icons.check_box_outline_blank_rounded,
+                          size: 18,
+                          color: accentBlue,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          isFullySelected
+                              ? "Deselect All Pending (${pendingRequests.length})"
+                              : "Select All Pending (${pendingRequests.length})",
+                          style: const TextStyle(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w600,
+                            color: accentBlue,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -411,20 +413,33 @@ class _ShopAdminOrderRequestsScreenState
     );
   }
 
-  Widget _metaText(String label, String value, {Color color = primaryNavy}) {
-    return Text.rich(
-      TextSpan(
-        text: "$label ",
-        style: const TextStyle(fontSize: 11, color: slateSub),
-        children: [
-          TextSpan(
-            text: value,
-            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: color),
-          ),
-        ],
+// Helper badge for accordion header stats
+  Widget _headerMetaBadge(String label, String value, Color themeColor) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: themeColor.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: themeColor.withOpacity(0.2), width: 0.8),
+      ),
+      child: RichText(
+        text: TextSpan(
+          style: const TextStyle(fontSize: 10.5, fontFamily: 'sans-serif'),
+          children: [
+            TextSpan(
+              text: "$label: ",
+              style: TextStyle(color: themeColor.withOpacity(0.9), fontWeight: FontWeight.w500),
+            ),
+            TextSpan(
+              text: value,
+              style: TextStyle(color: themeColor, fontWeight: FontWeight.w700),
+            ),
+          ],
+        ),
       ),
     );
   }
+
 
   // --- GRID CARDS VIEW ---
   Widget _buildGridCardLayout(List<ShopAdminOrderRequestModel> items, double screenWidth) {
@@ -440,69 +455,144 @@ class _ShopAdminOrderRequestsScreenState
       physics: const NeverScrollableScrollPhysics(),
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: crossAxisCount,
-        crossAxisSpacing: 10,
-        mainAxisSpacing: 10,
-        mainAxisExtent: 90,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
+        mainAxisExtent: 138, // Clean spacing aur explicit full labels ke liye height set ki hai
       ),
       itemCount: items.length,
       itemBuilder: (context, index) {
         final item = items[index];
         bool isSelected = selectedIds.contains(item.rowId.toString());
-        bool isPending = (item.status == null || item.status.toString().toUpperCase() == "PENDING");
+
+        // Status extraction
+        String reqStatus = (item.requestStatus ?? item.status ?? "PENDING").toString().toUpperCase();
+        String itemStat = (item.itemStatus ?? "PENDING").toString().toUpperCase();
+
+        bool isPending = reqStatus == "PENDING";
 
         return InkWell(
           onTap: isPending ? () => _toggleSelection(item.rowId.toString()) : null,
-          borderRadius: BorderRadius.circular(8),
-          child: Container(
-            padding: const EdgeInsets.all(12),
+          borderRadius: BorderRadius.circular(10),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
-              color: isSelected ? const Color(0xffEFF6FF) : const Color(0xffF8FAFC),
-              borderRadius: BorderRadius.circular(8),
+              color: isSelected ? const Color(0xffEFF6FF) : Colors.white,
+              borderRadius: BorderRadius.circular(10),
               border: Border.all(
-                color: isSelected ? accentBlue : borderCol,
+                color: isSelected ? const Color(0xff2563EB) : const Color(0xffE2E8F0),
                 width: isSelected ? 1.5 : 1,
               ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.02),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 _buildCheckbox(isPending, isSelected),
-                const SizedBox(width: 10),
+                const SizedBox(width: 12),
+
+                // Main Details Container
                 Expanded(
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(
-                        item.sweetName ?? "-",
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                            color: primaryNavy),
+                      // --- ROW 1: Sweet Details & Counter Request Status ---
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  item.sweetName ?? "-",
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontSize: 13.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: Color(0xff0F172A),
+                                  ),
+                                ),
+                                const SizedBox(height: 3),
+                                Text(
+                                  "${item.requestedOrder ?? 'REQ'} • ${item.counterName ?? '-'}",
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w500,
+                                    color: Color(0xff64748B),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text(
+                                "${item.requestedQuantity ?? 0} ${item.unit ?? ''}",
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w800,
+                                  color: Color(0xff0F172A),
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              _statusBadgeUI("REQ: $reqStatus", _getReqStatusColor(reqStatus)),
+                            ],
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        "${item.requestedOrder ?? 'REQ'} • ${item.counterName ?? ''}",
-                        style: const TextStyle(fontSize: 11, color: slateSub),
+
+                      // --- Ultra-thin subtle divider ---
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 8),
+                        child: Divider(
+                          height: 1,
+                          thickness: 0.5,
+                          color: Color(0xffE2E8F0),
+                        ),
+                      ),
+
+                      // --- ROW 2: Supplier Status & Full Quantity Labels ---
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          // Left: Supplier Status Badge
+                          _statusBadgeUI("SUPPLIER: $itemStat", _getItemStatusColor(itemStat)),
+
+                          // Right: Supplied & Pending Explicit Quantities
+                          RichText(
+                            text: TextSpan(
+                              style: const TextStyle(fontSize: 11, color: Color(0xff475569)),
+                              children: [
+                                const TextSpan(text: "Supplied: "),
+                                TextSpan(
+                                  text: "${item.suppliedQuantity ?? 0}",
+                                  style: const TextStyle(fontWeight: FontWeight.w700, color: Color(0xff16A34A)),
+                                ),
+                                const TextSpan(text: " | Pending: "),
+                                TextSpan(
+                                  text: "${item.pendingQuantity ?? 0} ${item.unit ?? ''}",
+                                  style: const TextStyle(fontWeight: FontWeight.w700, color: Color(0xffD97706)),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                ),
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      "${item.requestedQuantity ?? 0} ${item.unit ?? ''}",
-                      style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: primaryNavy),
-                    ),
-                    const SizedBox(height: 4),
-                    _statusBadge(item.status, item.pendingQuantity),
-                  ],
                 ),
               ],
             ),
@@ -512,9 +602,57 @@ class _ShopAdminOrderRequestsScreenState
     );
   }
 
+  // Custom UI Badge Component
+  Widget _statusBadgeUI(String fullText, Color statusColor) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+      decoration: BoxDecoration(
+        color: statusColor.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(5),
+        border: Border.all(color: statusColor.withOpacity(0.25), width: 0.8),
+      ),
+      child: Text(
+        fullText,
+        style: TextStyle(
+          fontSize: 9,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.2,
+          color: statusColor,
+        ),
+      ),
+    );
+  }
+
+// Request Status Color Scheme
+  Color _getReqStatusColor(String status) {
+    switch (status) {
+      case 'APPROVED':
+        return const Color(0xff16A34A); // Modern Emerald Green
+      case 'REJECTED':
+        return const Color(0xffDC2626); // Rose Red
+      case 'PENDING':
+      default:
+        return const Color(0xffD97706); // Amber Orange
+    }
+  }
+
+// Item Status Color Scheme
+  Color _getItemStatusColor(String status) {
+    switch (status) {
+      case 'ACCEPTED':
+        return const Color(0xff0D9488); // Teal
+      case 'PARTIAL':
+        return const Color(0xffEA580C); // Burnt Orange
+      case 'REJECTED':
+        return const Color(0xffDC2626); // Rose Red
+      case 'PENDING':
+      default:
+      return const Color(0xff2563EB);
+    }
+  }
+
   // --- LIST ROW VIEW ---
-  Widget _buildListRowLayout(
-      List<ShopAdminOrderRequestModel> items, bool isMobile) {
+  Widget _buildListRowLayout(List<ShopAdminOrderRequestModel> items, bool isMobile) {
     return ListView.separated(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -523,64 +661,128 @@ class _ShopAdminOrderRequestsScreenState
       itemBuilder: (context, index) {
         final item = items[index];
         bool isSelected = selectedIds.contains(item.rowId.toString());
-        bool isPending =
-        (item.status == null || item.status.toString().toUpperCase() == "PENDING");
+
+        // 1. Counter Request Status (Counter -> Shop Admin)
+        String reqStatus = (item.requestStatus ?? item.status ?? "PENDING").toString().toUpperCase();
+
+        // 2. Supplier Item Status (Shop Admin -> Supplier)
+        String itemStat = (item.itemStatus ?? "PENDING").toString().toUpperCase();
+
+        // Pending logic strictly based on requestStatus
+        bool isPending = reqStatus == "PENDING";
 
         return InkWell(
           onTap: isPending ? () => _toggleSelection(item.rowId.toString()) : null,
-          borderRadius: BorderRadius.circular(8),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          borderRadius: BorderRadius.circular(10),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
-              color: isSelected ? const Color(0xffEFF6FF) : const Color(0xffF8FAFC),
-              borderRadius: BorderRadius.circular(8),
+              color: isSelected ? const Color(0xffEFF6FF) : Colors.white,
+              borderRadius: BorderRadius.circular(10),
               border: Border.all(
-                color: isSelected ? accentBlue : const Color(0xffF1F5F9),
+                color: isSelected ? const Color(0xff2563EB) : const Color(0xffE2E8F0),
                 width: isSelected ? 1.5 : 1,
               ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.02),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 _buildCheckbox(isPending, isSelected),
                 const SizedBox(width: 12),
+
+                // Item Name & Counter Details
                 Expanded(
-                  flex: 3,
+                  flex: isMobile ? 4 : 4,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
                         item.sweetName ?? "-",
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                            color: primaryNavy),
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xff0F172A),
+                        ),
                       ),
-                      const SizedBox(height: 2),
+                      const SizedBox(height: 3),
                       Text(
-                        item.requestedOrder ?? "-",
-                        style: const TextStyle(fontSize: 11, color: slateSub),
+                        "${item.requestedOrder ?? 'REQ'} • ${item.counterName ?? '-'}",
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                          color: Color(0xff64748B),
+                        ),
                       ),
                     ],
                   ),
                 ),
+
+                const SizedBox(width: 8),
+
+                // Requested & Fulfill Breakdown
                 Expanded(
-                  flex: 3,
-                  child: Text(
-                    item.counterName ?? "-",
-                    style: const TextStyle(fontSize: 12, color: slateSub),
+                  flex: isMobile ? 4 : 4,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        "Req: ${item.requestedQuantity ?? 0} ${item.unit ?? ''}",
+                        style: const TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xff0F172A),
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      RichText(
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        text: TextSpan(
+                          style: const TextStyle(fontSize: 10.5, color: Color(0xff475569)),
+                          children: [
+                            const TextSpan(text: "Supplied: "),
+                            TextSpan(
+                              text: "${item.suppliedQuantity ?? 0}",
+                              style: const TextStyle(fontWeight: FontWeight.w700, color: Color(0xff16A34A)),
+                            ),
+                            const TextSpan(text: " | Pending: "),
+                            TextSpan(
+                              text: "${item.pendingQuantity ?? 0}",
+                              style: const TextStyle(fontWeight: FontWeight.w700, color: Color(0xffD97706)),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                Expanded(
-                  flex: 2,
-                  child: Text(
-                    "${item.requestedQuantity ?? 0} ${item.unit ?? ''}",
-                    style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: primaryNavy),
-                  ),
+
+                const SizedBox(width: 8),
+
+                // Status Badges Column (Admin & Supplier)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _statusBadgeUI("REQ: $reqStatus", _getReqStatusColor(reqStatus)),
+                    const SizedBox(height: 4),
+                    _statusBadgeUI("SUPPLIER: $itemStat", _getItemStatusColor(itemStat)),
+                  ],
                 ),
-                _statusBadge(item.status, item.pendingQuantity),
               ],
             ),
           ),
@@ -609,36 +811,6 @@ class _ShopAdminOrderRequestsScreenState
     );
   }
 
-  // --- STATUS BADGE ---
-  Widget _statusBadge(dynamic statusVal, dynamic pendingQty) {
-    String text = (statusVal == null || statusVal.toString().isEmpty) ? "Pending" : statusVal.toString();
-
-    Color bg = const Color(0xffFEF3C7);
-    Color textCol = const Color(0xffD97706);
-
-    String uppercase = text.toUpperCase();
-    if (uppercase == "ACCEPTED" || uppercase == "APPROVED") {
-      bg = const Color(0xffDCFCE7);
-      textCol = const Color(0xff16A34A);
-      text = "Approved";
-    } else if (uppercase == "REJECTED") {
-      bg = const Color(0xffFEE2E2);
-      textCol = const Color(0xffDC2626);
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Text(
-        // pendingQty != null ? "$text  P: $pendingQty" : text,
-        text,
-        style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: textCol),
-      ),
-    );
-  }
 
   // --- SUPPLIER MODAL DIALOG ---
   void _openSupplierDialog() {

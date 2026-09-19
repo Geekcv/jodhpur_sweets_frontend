@@ -71,6 +71,7 @@ class _TrackOwnOrdersShopAdminScreenState
   }
 
   // --- DIALOG FOR BULK REORDER / CANCEL WITH CHECKBOXES ---
+
   Future<void> _showBulkActionDialog({
     required TrackOwnOrdersByShopAdminModel order,
     required bool isReorder,
@@ -280,7 +281,7 @@ class _TrackOwnOrdersShopAdminScreenState
 
                     const Divider(height: 1, color: Color(0xffE2E8F0)),
 
-                    // ITEM CHECKBOX LIST (OPTIMIZED FOR 100+ ITEMS)
+                    // ITEM CHECKBOX LIST
                     Expanded(
                       child: visibleItems.isEmpty
                           ? const Center(
@@ -306,6 +307,22 @@ class _TrackOwnOrdersShopAdminScreenState
                               .toString()
                               .toUpperCase();
 
+                          // CHANGE 1: Color helper for item status dynamic styling
+                          Color getStatusColor(String status) {
+                            switch (status) {
+                              case "REJECTED":
+                                return Colors.redAccent;
+                              case "PARTIAL":
+                                return Colors.orangeAccent;
+                              case "ACCEPTED":
+                                return Colors.green;
+                              default:
+                                return Colors.amber.shade800;
+                            }
+                          }
+
+                          Color statusColor = getStatusColor(itemStat);
+
                           return CheckboxListTile(
                             contentPadding: const EdgeInsets.symmetric(
                                 horizontal: 8, vertical: 2),
@@ -330,23 +347,22 @@ class _TrackOwnOrdersShopAdminScreenState
                                 color: Color(0xff0F172A),
                               ),
                             ),
+                            // CHANGE 2: JSON attributes mapping for accurate quantity & remaining quantity readouts
                             subtitle: Padding(
                               padding: const EdgeInsets.only(top: 2),
                               child: Text(
-                                "Ordered: ${item.quantity} ${item.unit} | Remaining: ${item.remainingQuantity ?? item.quantity} ${item.unit}",
+                                "Ordered: ${item.quantity ?? 0} ${item.unit ?? ''} | Remaining: ${item.remainingQuantity ?? 0} ${item.unit ?? ''}",
                                 style: const TextStyle(
                                     fontSize: 11.5,
                                     color: Color(0xff64748B)),
                               ),
                             ),
+                            // CHANGE 3: Dynamic background and text colors based on API status values (PARTIAL, REJECTED, ACCEPTED, PENDING)
                             secondary: Container(
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 8, vertical: 3),
                               decoration: BoxDecoration(
-                                color: (itemStat == "REJECTED"
-                                    ? Colors.red
-                                    : Colors.amber.shade800)
-                                    .withOpacity(0.1),
+                                color: statusColor.withOpacity(0.12),
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Text(
@@ -354,9 +370,7 @@ class _TrackOwnOrdersShopAdminScreenState
                                 style: TextStyle(
                                   fontSize: 9.5,
                                   fontWeight: FontWeight.bold,
-                                  color: itemStat == "REJECTED"
-                                      ? Colors.redAccent
-                                      : Colors.amber.shade900,
+                                  color: statusColor,
                                 ),
                               ),
                             ),
@@ -474,29 +488,50 @@ class _TrackOwnOrdersShopAdminScreenState
   // --- API CALL FOR BULK CANCEL ---
   Future<void> _submitBulkCancel(
       TrackOwnOrdersByShopAdminModel order, List<String> itemIds) async {
-    String finalOrderId = (order.parentOrderId != null &&
+
+    // Check if this is a child order by checking if parentOrderId exists and is valid
+    bool isChildOrder = order.parentOrderId != null &&
         order.parentOrderId.toString().isNotEmpty &&
-        order.parentOrderId.toString() != "null")
+        order.parentOrderId.toString() != "null";
+
+    // Set the order_id based on whether it is a child or parent order
+    String targetOrderId = isChildOrder
         ? order.parentOrderId.toString()
         : order.orderId.toString();
 
+    // Map selected item IDs to the exact payload required by the backend API
+    List<Map<String, String>> formattedItems = order.items
+        ?.where((item) => itemIds.contains(item.orderItemId.toString()))
+        .map((item) {
+      // If child order -> send parent_order_item_id as the order_item_id
+      // If normal order -> send the item's own order_item_id
+      String itemIdToSend = isChildOrder
+          ? (item.parentOrderItemId?.toString() ?? item.orderItemId.toString())
+          : item.orderItemId.toString();
+
+      return {
+        "order_item_id": itemIdToSend,
+      };
+    }).toList() ?? [];
+
+    // Construct the exact params expected by ApiController.cancelOrderByShopAdmin
     var params = {
-      "order_id": finalOrderId,
-      "items": itemIds.map((id) => {"order_item_id": id}).toList()
+      "order_id": targetOrderId,
+      "items": formattedItems,
     };
 
     try {
       var res = await ApiController.cancelOrderByShopAdmin(
           context: context, params: params);
+
       if (res != null && (res['status'] == 0 || res['status'] == "0")) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content:
-              Text(res['msg'] ?? "Selected items cancelled successfully")),
+              content: Text(res['msg'] ?? "Selected items cancelled successfully")),
         );
-        ref
-            .read(master_Provider)
-            .trackOrderStatusShopAdminSendToSupplier(
+
+        // Refresh order list from provider
+        ref.read(master_Provider).trackOrderStatusShopAdminSendToSupplier(
             params: shop_id != null ? {'shop_id': shop_id} : null);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -513,6 +548,7 @@ class _TrackOwnOrdersShopAdminScreenState
       );
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -1213,16 +1249,12 @@ class _ModernOrderCardState extends State<ModernOrderCard> {
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isHovered
-                ? const Color(0xff0284C7)
-                : const Color(0xffE2E8F0),
+            color: isHovered ? const Color(0xff0284C7) : const Color(0xffE2E8F0),
             width: isHovered ? 1.5 : 1,
           ),
           boxShadow: [
             BoxShadow(
-              color: isHovered
-                  ? const Color(0x140284C7)
-                  : const Color(0x06000000),
+              color: isHovered ? const Color(0x140284C7) : const Color(0x06000000),
               blurRadius: isHovered ? 18 : 8,
               offset: const Offset(0, 4),
             )
@@ -1240,19 +1272,64 @@ class _ModernOrderCardState extends State<ModernOrderCard> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text("ORDER ID",
-                          style: TextStyle(
-                              fontSize: 8.5,
-                              fontWeight: FontWeight.w800,
-                              color: Color(0xff94A3B8))),
+                      const Text(
+                        "ORDER ID",
+                        style: TextStyle(
+                          fontSize: 8.5,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xff94A3B8),
+                        ),
+                      ),
                       const SizedBox(height: 2),
-                      Text(
-                        "#${widget.order.orderId.toString().split('_').last}",
-                        style: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w900,
-                            fontFamily: 'monospace',
-                            color: Color(0xff0F172A)),
+                      Row(
+                        children: [
+                          Text(
+                            "#${widget.order.orderId.toString().split('_').last}",
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w900,
+                              fontFamily: 'monospace',
+                              color: Color(0xff0F172A),
+                            ),
+                          ),
+
+                          // PARENT ORDER ID BADGE (Renders only if parentOrderId is present)
+                          if (widget.order.parentOrderId != null &&
+                              widget.order.parentOrderId.toString().isNotEmpty) ...[
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: const Color(0xffEFF6FF), // Light Soft Blue
+                                borderRadius: BorderRadius.circular(4),
+                                border: Border.all(
+                                  color: const Color(0xffBFDBFE), // Soft Blue Border
+                                  width: 0.8,
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(
+                                    Icons.subdirectory_arrow_right_rounded,
+                                    size: 10,
+                                    color: Color(0xff2563EB),
+                                  ),
+                                  const SizedBox(width: 2),
+                                  Text(
+                                    "REORDER OF: #${widget.order.parentOrderId.toString().split('_').last}",
+                                    style: const TextStyle(
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.w700,
+                                      fontFamily: 'monospace',
+                                      color: Color(0xff1D4ED8),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
                     ],
                   ),
@@ -1364,6 +1441,11 @@ class _ModernOrderCardState extends State<ModernOrderCard> {
                         ],
                       ),
                       const SizedBox(height: 6),
+                      const Divider(
+                        height: 12,
+                        thickness: 0.8,
+                        color: Color(0xffE2E8F0),
+                      ),
                       Expanded(
                         child: ListView.separated(
                           physics: const BouncingScrollPhysics(),
@@ -1375,19 +1457,33 @@ class _ModernOrderCardState extends State<ModernOrderCard> {
                           ),
                           itemBuilder: (context, idx) {
                             final item = widget.order.items![idx];
-                            String itemStat = (item.itemStatus ?? "PENDING")
-                                .toString()
-                                .toUpperCase();
-                            bool isPartialOrRejected = itemStat == "PARTIAL" ||
-                                itemStat == "REJECTED";
+                            String itemStat = (item.itemStatus ?? "PENDING").toString().toUpperCase();
+
+                            // Dynamic Status Color Mapping
+                            Color badgeBg;
+                            Color badgeText;
+
+                            if (itemStat == "ACCEPTED" || itemStat == "APPROVED" || itemStat == "COMPLETED") {
+                              badgeText = const Color(0xFF10B981); // Emerald Green
+                              badgeBg = const Color(0xFF10B981).withOpacity(0.12);
+                            } else if (itemStat == "PARTIAL" || itemStat == "PARTIALLY_ACCEPTED") {
+                              badgeText = Colors.amber.shade800; // Orange / Amber
+                              badgeBg = Colors.amber.shade800.withOpacity(0.12);
+                            } else if (itemStat == "REJECTED" || itemStat == "CANCELLED") {
+                              badgeText = Colors.redAccent; // Red Accent
+                              badgeBg = Colors.redAccent.withOpacity(0.12);
+                            } else {
+                              // Default: PENDING
+                              badgeText = const Color(0xFF0284C7); // Sky Blue
+                              badgeBg = const Color(0xFF0284C7).withOpacity(0.12);
+                            }
 
                             return Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment:
-                                    CrossAxisAlignment.start,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         item.sweetName ?? "-",
@@ -1413,10 +1509,7 @@ class _ModernOrderCardState extends State<ModernOrderCard> {
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 7, vertical: 2.5),
                                   decoration: BoxDecoration(
-                                    color: (isPartialOrRejected
-                                        ? Colors.amber.shade800
-                                        : const Color(0xFF64748B))
-                                        .withOpacity(0.1),
+                                    color: badgeBg,
                                     borderRadius: BorderRadius.circular(5),
                                   ),
                                   child: Text(
@@ -1424,9 +1517,7 @@ class _ModernOrderCardState extends State<ModernOrderCard> {
                                     style: TextStyle(
                                       fontSize: 9,
                                       fontWeight: FontWeight.bold,
-                                      color: isPartialOrRejected
-                                          ? Colors.amber.shade900
-                                          : const Color(0xff475569),
+                                      color: badgeText,
                                     ),
                                   ),
                                 ),

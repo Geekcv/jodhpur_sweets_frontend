@@ -15,6 +15,10 @@ class ShopAdminOrderRequestModel {
   var counterName;
   var location;
   var shopId;
+  var requestStatus;  // ADDED
+  var itemStatus;     // ADDED
+  var orderId;        // ADDED
+  var rejectReason;
 
   ShopAdminOrderRequestModel({
     this.rowId,
@@ -32,6 +36,10 @@ class ShopAdminOrderRequestModel {
     this.counterName,
     this.location,
     this.shopId,
+    this.rejectReason,
+    this.itemStatus,
+    this.orderId,
+    this.requestStatus
   });
 
   factory ShopAdminOrderRequestModel.fromJson(Map<String, dynamic> json) {
@@ -51,6 +59,10 @@ class ShopAdminOrderRequestModel {
       counterName: json['counter_name'],
       location: json['location'],
       shopId: json['shop_id'],
+      requestStatus: json['request_status'],  // ADDED
+      itemStatus: json['item_status'],        // ADDED
+      orderId: json['order_id'],              // ADDED
+      rejectReason: json['reject_reason'],    // ADDED
     );
   }
 
@@ -69,6 +81,10 @@ class ShopAdminOrderRequestModel {
     data['unit'] = unit;
     data['counter_id'] = counterId;
     data['counter_name'] = counterName;
+    data['request_status'] = requestStatus;  // ADDED
+    data['item_status'] = itemStatus;        // ADDED
+    data['order_id'] = orderId;              // ADDED
+    data['reject_reason'] = rejectReason;    // ADDED
     data['location'] = location;
     data['shop_id'] = shopId;
     return data;

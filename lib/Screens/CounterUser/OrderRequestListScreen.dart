@@ -8,7 +8,6 @@ import '../../models/FetchOrderRequestModel.dart';
 import '../../provider/provider.dart';
 import '../../widgets/CustomDropDownSearch.dart';
 
-
 class OrderRequestListScreen extends ConsumerStatefulWidget {
   const OrderRequestListScreen({super.key});
 
@@ -17,14 +16,16 @@ class OrderRequestListScreen extends ConsumerStatefulWidget {
       _OrderRequestListScreenState();
 }
 
-class _OrderRequestListScreenState extends ConsumerState<OrderRequestListScreen> {
+class _OrderRequestListScreenState
+    extends ConsumerState<OrderRequestListScreen> {
+  // Modern Slate & Indigo Enterprise Palette
   static const Color primaryNavy = Color(0xff0F172A);
   static const Color slateDark = Color(0xff334155);
   static const Color slateSub = Color(0xff64748B);
   static const Color bgCol = Color(0xffF8FAFC);
   static const Color borderCol = Color(0xffE2E8F0);
 
-  // --- FILTER STATES ---
+  // --- FILTER STATES (UNCHANGED) ---
   String selectedFilter = "ALL"; // ALL, PENDING, ACCEPTED, REJECTED
   String searchQuery = "";
   bool isCardView = true;
@@ -49,9 +50,11 @@ class _OrderRequestListScreenState extends ConsumerState<OrderRequestListScreen>
   @override
   Widget build(BuildContext context) {
     final masterProv = ref.watch(master_Provider);
-    final List<FetchOrderRequestModel> rawGroupList = masterProv.allOrdersOfCounterUser ?? [];
+    final List<FetchOrderRequestModel> rawGroupList =
+        masterProv.allOrdersOfCounterUser ?? [];
     final bool isLoading = masterProv.loading;
 
+    // --- YOUR EXACT FILTER & SEARCH LOGIC (UNCHANGED) ---
     final List<Map<String, dynamic>> processedGroups = [];
 
     for (var group in rawGroupList) {
@@ -65,7 +68,8 @@ class _OrderRequestListScreenState extends ConsumerState<OrderRequestListScreen>
         final groupTime = (group.requestGroup ?? "").toString().toLowerCase();
         final query = searchQuery.toLowerCase();
 
-        bool matchesFilter = (selectedFilter == "ALL") || (status == selectedFilter);
+        bool matchesFilter =
+            (selectedFilter == "ALL") || (status == selectedFilter);
         bool matchesSearch = sweetName.contains(query) ||
             reqOrder.contains(query) ||
             counterName.contains(query) ||
@@ -89,11 +93,11 @@ class _OrderRequestListScreenState extends ConsumerState<OrderRequestListScreen>
           double width = constraints.maxWidth;
 
           return Padding(
-            padding: EdgeInsets.all(width < 600 ? 12 : 24),
+            padding: EdgeInsets.all(width < 600 ? 12 : 20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Page Header Title & Subtitle
+                // Header Title Section
                 const Text(
                   "Track Request",
                   style: TextStyle(
@@ -105,12 +109,15 @@ class _OrderRequestListScreenState extends ConsumerState<OrderRequestListScreen>
                 ),
                 const SizedBox(height: 2),
                 const Text(
-                  "Track all your submitted orders",
-                  style: TextStyle(fontSize: 12, color: slateSub, fontWeight: FontWeight.w400),
+                  "Track all your submitted orders in real-time",
+                  style: TextStyle(
+                      fontSize: 12,
+                      color: slateSub,
+                      fontWeight: FontWeight.w400),
                 ),
                 const SizedBox(height: 16),
 
-                // Top Controls: Search Bar + Filter Dropdown + View Toggle Icons
+                // Top Controls: Search Bar + Filter Dropdown + View Switcher
                 _buildControlHeader(width),
                 const SizedBox(height: 16),
 
@@ -123,7 +130,8 @@ class _OrderRequestListScreenState extends ConsumerState<OrderRequestListScreen>
                       : ListView.separated(
                     physics: const BouncingScrollPhysics(),
                     itemCount: processedGroups.length,
-                    separatorBuilder: (context, index) => const SizedBox(height: 12),
+                    separatorBuilder: (context, index) =>
+                    const SizedBox(height: 14),
                     itemBuilder: (context, index) {
                       final groupData = processedGroups[index];
                       return _buildGroupCard(
@@ -147,16 +155,16 @@ class _OrderRequestListScreenState extends ConsumerState<OrderRequestListScreen>
     bool isSmallScreen = width < 700;
 
     Widget searchBar = SizedBox(
-      width: isSmallScreen ? double.infinity : 300,
+      width: isSmallScreen ? double.infinity : 280,
       height: 38,
       child: TextField(
         controller: _searchController,
         onChanged: (val) => setState(() => searchQuery = val),
-        style: const TextStyle(fontSize: 12),
+        style: const TextStyle(fontSize: 12, color: primaryNavy),
         decoration: InputDecoration(
           isDense: true,
           hintText: "Search sweet name, REQ ID...",
-          hintStyle: const TextStyle(fontSize: 12, color: Colors.grey),
+          hintStyle: const TextStyle(fontSize: 12, color: Color(0xff94A3B8)),
           prefixIcon: const Icon(Icons.search, size: 16, color: slateSub),
           suffixIcon: searchQuery.isNotEmpty
               ? InkWell(
@@ -164,7 +172,7 @@ class _OrderRequestListScreenState extends ConsumerState<OrderRequestListScreen>
               _searchController.clear();
               setState(() => searchQuery = "");
             },
-            child: const Icon(Icons.clear, size: 14, color: Colors.grey),
+            child: const Icon(Icons.clear, size: 14, color: slateSub),
           )
               : null,
           filled: true,
@@ -176,7 +184,7 @@ class _OrderRequestListScreenState extends ConsumerState<OrderRequestListScreen>
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(color: Color(0xff2563EB)),
+            borderSide: const BorderSide(color: Color(0xff2563EB), width: 1.5),
           ),
         ),
       ),
@@ -281,20 +289,21 @@ class _OrderRequestListScreenState extends ConsumerState<OrderRequestListScreen>
   }
 
   // ---------- EXPANDABLE REQUEST GROUP CARD CONTAINER ----------
-  Widget _buildGroupCard(FetchOrderRequestModel groupHeader, List<OrderItemModel> items, double screenWidth) {
+  Widget _buildGroupCard(FetchOrderRequestModel groupHeader,
+      List<OrderItemModel> items, double screenWidth) {
     bool isMobile = screenWidth < 700;
 
     return Container(
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(color: borderCol),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x04000000),
-            blurRadius: 8,
-            offset: Offset(0, 3),
+            color: Color(0x05000000),
+            blurRadius: 6,
+            offset: Offset(0, 2),
           ),
         ],
       ),
@@ -302,8 +311,9 @@ class _OrderRequestListScreenState extends ConsumerState<OrderRequestListScreen>
         data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
         child: ExpansionTile(
           initiallyExpanded: true,
-          tilePadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-          childrenPadding: const EdgeInsets.only(left: 14, right: 14, bottom: 14),
+          tilePadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+          childrenPadding:
+          const EdgeInsets.only(left: 14, right: 14, bottom: 14),
           title: Wrap(
             alignment: WrapAlignment.spaceBetween,
             crossAxisAlignment: WrapCrossAlignment.center,
@@ -315,14 +325,14 @@ class _OrderRequestListScreenState extends ConsumerState<OrderRequestListScreen>
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // const Icon(Icons.folder_open_rounded, size: 16, color: Color(0xff2563EB)),
-                      // const SizedBox(width: 6),
+                      const Icon(Icons.receipt_long_rounded,
+                          size: 15, color: Color(0xff2563EB)),
+                      const SizedBox(width: 6),
                       Text(
-                        // "Group: ${groupHeader.requestGroup ?? '-'}",
-                        "Request: ",
+                        "Request #${groupHeader.requestGroup ?? '-'}",
                         style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w800,
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w700,
                           color: primaryNavy,
                         ),
                       ),
@@ -331,25 +341,45 @@ class _OrderRequestListScreenState extends ConsumerState<OrderRequestListScreen>
                   const SizedBox(height: 2),
                   Text(
                     _formatFullDate(groupHeader.crOn),
-                    style: const TextStyle(fontSize: 11, color: slateSub),
+                    style: const TextStyle(
+                        fontSize: 11,
+                        color: slateSub,
+                        fontWeight: FontWeight.w400),
                   ),
                 ],
               ),
-              // Summary Counters
+              // Compact Summary Chips
               Wrap(
-                spacing: 8,
-                runSpacing: 6,
+                spacing: 6,
+                runSpacing: 4,
                 children: [
-                  _badgeChip("Total Items", "${groupHeader.totalRequests ?? items.length}", Colors.amber),
-                  _badgeChip("Total Req Qty", "${groupHeader.totalRequestedQuantity ?? 0}", Colors.blue),
-                  _badgeChip("Total Supplied", "${groupHeader.totalSuppliedQuantity ?? 0}", Colors.teal),
-                  _badgeChip("Total Pending", "${groupHeader.totalPendingQuantity ?? 0}", Colors.orange),
+                  _badgeChip(
+                      "Items",
+                      "${groupHeader.totalRequests ?? items.length}",
+                      const Color(0xffF1F5F9),
+                      const Color(0xff334155)),
+                  _badgeChip(
+                      "Req Qty",
+                      "${groupHeader.totalRequestedQuantity ?? 0}",
+                      const Color(0xffEFF6FF),
+                      const Color(0xff1D4ED8)),
+                  _badgeChip(
+                      "Supplied",
+                      "${groupHeader.totalSuppliedQuantity ?? 0}",
+                      const Color(0xffCCFBF1),
+                      const Color(0xff0F766E)),
+                  _badgeChip(
+                      "Pending",
+                      "${groupHeader.totalPendingQuantity ?? 0}",
+                      const Color(0xffFEF3C7),
+                      const Color(0xffB45309)),
                 ],
               ),
             ],
           ),
           children: [
-            const Divider(height: 16, color: borderCol),
+            const Divider(height: 12, color: borderCol),
+            const SizedBox(height: 4),
             isCardView
                 ? _buildGridCardLayout(items, screenWidth)
                 : _buildListRowLayout(items, isMobile),
@@ -359,93 +389,217 @@ class _OrderRequestListScreenState extends ConsumerState<OrderRequestListScreen>
     );
   }
 
-  Widget _badgeChip(String label, String val, MaterialColor col) {
+  Widget _badgeChip(
+      String label, String val, Color bgColor, Color textColor) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
       decoration: BoxDecoration(
-        color: col.shade50,
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: col.shade200),
+        color: bgColor,
+        borderRadius: BorderRadius.circular(5),
       ),
       child: Text(
         "$label: $val",
-        style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: col.shade800),
+        style: TextStyle(
+            fontSize: 9.5, fontWeight: FontWeight.w600, color: textColor),
       ),
     );
   }
 
-  // ---------- VIEW 1: RESPONSIVE GRID CARDS LAYOUT ----------
+  // ---------- VIEW 1: RESPONSIVE COMPACT CARD GRID (NO OVERFLOW/OVERSIZING) ----------
   Widget _buildGridCardLayout(List<OrderItemModel> items, double screenWidth) {
-    int crossAxisCount = 1;
-    if (screenWidth >= 1200) {
-      crossAxisCount = 3;
-    } else if (screenWidth >= 768) {
-      crossAxisCount = 2;
-    }
+    int crossAxisCount =
+    screenWidth >= 1200 ? 3 : (screenWidth >= 768 ? 2 : 1);
 
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: crossAxisCount,
-        crossAxisSpacing: 10,
-        mainAxisSpacing: 10,
-        mainAxisExtent: 120, // Clean readable height
-      ),
-      itemCount: items.length,
-      itemBuilder: (context, index) {
-        final item = items[index];
-        final status = (item.shopStatus ?? "PENDING").toString().toUpperCase();
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final double cardWidth =
+            (constraints.maxWidth - ((crossAxisCount - 1) * 12)) /
+                crossAxisCount;
 
-        return Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: const Color(0xffF8FAFC),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: borderCol),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Text(
-                      item.sweetName?.toString() ?? "-",
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: primaryNavy),
+        return Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: items.map((item) {
+            final String shopStatus =
+            (item.shopStatus ?? "PENDING").toString().toUpperCase();
+            final String supplierStatus =
+            (item.supplierStatus ?? "PENDING").toString().toUpperCase();
+            final bool hasReorders =
+                item.reorderOrders != null && item.reorderOrders!.isNotEmpty;
+
+            return SizedBox(
+              width: cardWidth,
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: borderCol, width: 1),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x04000000),
+                      blurRadius: 4,
+                      offset: Offset(0, 1),
+                    )
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // 1. Header Row
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                item.sweetName?.toString() ?? "-",
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                  color: primaryNavy,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                "${item.requestedOrder ?? ''} • ${item.counterName ?? ''}",
+                                style: const TextStyle(
+                                    fontSize: 10,
+                                    color: slateSub,
+                                    fontWeight: FontWeight.w500),
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (item.orderType != null)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: const Color(0xffF1F5F9),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              item.orderType.toString(),
+                              style: const TextStyle(
+                                  fontSize: 8.5,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xff475569)),
+                            ),
+                          ),
+                      ],
                     ),
-                  ),
-                  const SizedBox(width: 6),
-                  _statusBadge(status),
-                ],
-              ),
-              Text(
-                "${item.requestedOrder ?? ''} • ${item.counterName ?? ''}",
-                style: const TextStyle(fontSize: 11, color: slateSub, fontWeight: FontWeight.w500),
-              ),
-              const Divider(height: 8, color: Color(0xffE2E8F0)),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text("Qty: ${item.requestedQuantity ?? 0} ${item.unit ?? ''}",
-                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: primaryNavy)),
-                  Row(
-                    children: [
-                      Text("Supplied qty: ${item.suppliedQuantity ?? 0}",
-                          style: TextStyle(fontSize: 10, color: Colors.teal.shade700, fontWeight: FontWeight.w700)),
-                      const SizedBox(width: 8),
-                      Text("Pending qty: ${item.pendingQuantity ?? 0}",
-                          style: TextStyle(fontSize: 10, color: Colors.orange.shade800, fontWeight: FontWeight.w700)),
+
+                    const SizedBox(height: 8),
+
+                    // 2. Status Chips
+                    Wrap(
+                      spacing: 4,
+                      runSpacing: 4,
+                      children: [
+                        _buildCompactBadge("Shop: $shopStatus",
+                            _getStatusTextColor(shopStatus), _getStatusBgColor(shopStatus)),
+                        _buildCompactBadge("Supp: $supplierStatus",
+                            _getStatusTextColor(supplierStatus), _getStatusBgColor(supplierStatus)),
+                      ],
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    // 3. Compact Quantities Overview Box
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: const Color(0xffF8FAFC),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: const Color(0xffF1F5F9)),
+                      ),
+                      child: Column(
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                  child: _metricCell("Req Qty",
+                                      "${item.requestedQuantity ?? 0} ${item.unit ?? ''}")),
+                              Expanded(
+                                  child: _metricCell("Supplied",
+                                      "${item.suppliedQuantity ?? 0} ${item.unit ?? ''}")),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _metricCell(
+                                  "Pending",
+                                  "${item.remainingQuantity ?? item.pendingQuantity ?? 0} ${item.unit ?? ''}",
+                                  isWarning: true,
+                                ),
+                              ),
+                              if ((item.reorderSuppliedQuantity ?? 0) > 0)
+                                Expanded(
+                                  child: _metricCell("Reorder Sup.",
+                                      "${item.reorderSuppliedQuantity} ${item.unit ?? ''}"),
+                                )
+                              else if ((item.cancelledQuantity ?? 0) > 0)
+                                Expanded(
+                                  child: _metricCell("Cancelled",
+                                      "${item.cancelledQuantity} ${item.unit ?? ''}",
+                                      isDanger: true),
+                                )
+                              else
+                                const Expanded(child: SizedBox.shrink()),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // 4. Nested Reorders Section
+                    if (hasReorders) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        "Reorders (${item.reorderOrders!.length}):",
+                        style: const TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w700,
+                            color: slateSub),
+                      ),
+                      const SizedBox(height: 4),
+                      ...item.reorderOrders!.map((reorder) {
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 2),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                "#${reorder.orderNumber ?? 'Reorder'}",
+                                style: const TextStyle(
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.w600,
+                                    color: slateDark),
+                              ),
+                              Text(
+                                "Req: ${reorder.requestedQuantity} | Sup: ${reorder.suppliedQuantity}",
+                                style: const TextStyle(
+                                    fontSize: 9, color: slateSub),
+                              ),
+                            ],
+                          ),
+                        );
+                      }),
                     ],
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ],
-          ),
+            );
+          }).toList(),
         );
       },
     );
@@ -457,15 +611,16 @@ class _OrderRequestListScreenState extends ConsumerState<OrderRequestListScreen>
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       itemCount: items.length,
-      separatorBuilder: (context, index) => const SizedBox(height: 8),
+      separatorBuilder: (context, index) => const SizedBox(height: 6),
       itemBuilder: (context, index) {
         final item = items[index];
-        final status = (item.shopStatus ?? "PENDING").toString().toUpperCase();
+        final String shopStatus =
+        (item.shopStatus ?? "PENDING").toString().toUpperCase();
 
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
-            color: const Color(0xffF8FAFC),
+            color: Colors.white,
             borderRadius: BorderRadius.circular(8),
             border: Border.all(color: borderCol),
           ),
@@ -479,28 +634,40 @@ class _OrderRequestListScreenState extends ConsumerState<OrderRequestListScreen>
                   Expanded(
                     child: Text(
                       item.sweetName?.toString() ?? "-",
-                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: primaryNavy),
+                      style: const TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w700,
+                          color: primaryNavy),
                     ),
                   ),
-                  _statusBadge(status),
+                  _statusBadge(shopStatus),
                 ],
               ),
               const SizedBox(height: 2),
               Text(
                 "${item.requestedOrder ?? ''} • ${item.counterName ?? ''}",
-                style: const TextStyle(fontSize: 11, color: slateSub),
+                style: const TextStyle(fontSize: 10.5, color: slateSub),
               ),
               const SizedBox(height: 8),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text("Qty: ${item.requestedQuantity ?? 0} ${item.unit ?? ''}",
-                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: primaryNavy)),
-                  Text("Supplied: ${item.suppliedQuantity ?? 0}",
-                      style: TextStyle(fontSize: 11, color: Colors.teal.shade700, fontWeight: FontWeight.w600)),
-                  Text("Pending: ${item.pendingQuantity ?? 0}",
-                      style: TextStyle(fontSize: 11, color: Colors.orange.shade800, fontWeight: FontWeight.w600)),
-                ],
+              Container(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 8, vertical: 6),
+                decoration: BoxDecoration(
+                  color: const Color(0xffF8FAFC),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    _metricCell("Req Qty",
+                        "${item.requestedQuantity ?? 0} ${item.unit ?? ''}"),
+                    _metricCell("Supplied",
+                        "${item.suppliedQuantity ?? 0}"),
+                    _metricCell("Pending",
+                        "${item.pendingQuantity ?? 0}",
+                        isWarning: true),
+                  ],
+                ),
               ),
             ],
           )
@@ -513,12 +680,16 @@ class _OrderRequestListScreenState extends ConsumerState<OrderRequestListScreen>
                   children: [
                     Text(
                       item.sweetName?.toString() ?? "-",
-                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: primaryNavy),
+                      style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: primaryNavy),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       "${item.requestedOrder ?? ''} • ${item.counterName ?? ''}",
-                      style: const TextStyle(fontSize: 11, color: slateSub),
+                      style: const TextStyle(
+                          fontSize: 11, color: slateSub),
                     ),
                   ],
                 ),
@@ -528,17 +699,18 @@ class _OrderRequestListScreenState extends ConsumerState<OrderRequestListScreen>
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    Text("Qty: ${item.requestedQuantity ?? 0} ${item.unit ?? ''}",
-                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: primaryNavy)),
-                    Text("Supplied: ${item.suppliedQuantity ?? 0}",
-                        style: TextStyle(fontSize: 11, color: Colors.teal.shade700, fontWeight: FontWeight.w600)),
-                    Text("Pending: ${item.pendingQuantity ?? 0}",
-                        style: TextStyle(fontSize: 11, color: Colors.orange.shade800, fontWeight: FontWeight.w600)),
+                    _metricCell("Req Qty",
+                        "${item.requestedQuantity ?? 0} ${item.unit ?? ''}"),
+                    _metricCell("Supplied",
+                        "${item.suppliedQuantity ?? 0}"),
+                    _metricCell("Pending",
+                        "${item.pendingQuantity ?? 0}",
+                        isWarning: true),
                   ],
                 ),
               ),
-              const SizedBox(width: 14),
-              _statusBadge(status),
+              const SizedBox(width: 12),
+              _statusBadge(shopStatus),
             ],
           ),
         );
@@ -546,37 +718,83 @@ class _OrderRequestListScreenState extends ConsumerState<OrderRequestListScreen>
     );
   }
 
-  // ---------- STATUS BADGE ----------
+  // ---------- HELPER COMPONENTS ----------
+  Widget _buildCompactBadge(String text, Color textColor, Color bgColor) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+            fontSize: 8.5, fontWeight: FontWeight.w600, color: textColor),
+      ),
+    );
+  }
+
+  Widget _metricCell(String label, String value,
+      {bool isWarning = false, bool isDanger = false}) {
+    Color valColor = primaryNavy;
+    if (isWarning) valColor = const Color(0xffD97706);
+    if (isDanger) valColor = const Color(0xffDC2626);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label,
+            style: const TextStyle(fontSize: 8.5, color: slateSub)),
+        Text(
+          value,
+          style: TextStyle(
+              fontSize: 10.5, fontWeight: FontWeight.w700, color: valColor),
+        ),
+      ],
+    );
+  }
+
   Widget _statusBadge(String status) {
-    Color bg = const Color(0xffFEF3C7);
-    Color text = const Color(0xffD97706);
-
-    if (status == "ACCEPTED" || status == "APPROVED") {
-      bg = const Color(0xffDCFCE7);
-      text = const Color(0xff16A34A);
-    } else if (status == "REJECTED") {
-      bg = const Color(0xffFEE2E2);
-      text = const Color(0xffDC2626);
-    }
-
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(10),
+        color: _getStatusBgColor(status),
+        borderRadius: BorderRadius.circular(6),
       ),
       child: Text(
-        status == "ACCEPTED" ? "Approved" : (status == "PENDING" ? "Pending" : status),
-        style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: text),
+        status == "ACCEPTED" || status == "APPROVED"
+            ? "Approved"
+            : (status == "PENDING" ? "Pending" : status),
+        style: TextStyle(
+            fontSize: 9.5,
+            fontWeight: FontWeight.w700,
+            color: _getStatusTextColor(status)),
       ),
     );
+  }
+
+  Color _getStatusBgColor(String status) {
+    if (status == "ACCEPTED" || status == "APPROVED") {
+      return const Color(0xffDCFCE7);
+    } else if (status == "REJECTED") {
+      return const Color(0xffFEE2E2);
+    }
+    return const Color(0xffFEF3C7);
+  }
+
+  Color _getStatusTextColor(String status) {
+    if (status == "ACCEPTED" || status == "APPROVED") {
+      return const Color(0xff16A34A);
+    } else if (status == "REJECTED") {
+      return const Color(0xffDC2626);
+    }
+    return const Color(0xffD97706);
   }
 
   String _formatFullDate(dynamic dateStr) {
     if (dateStr == null || dateStr.toString().isEmpty) return "-";
     try {
       DateTime dt = DateTime.parse(dateStr.toString());
-      // return DateFormat('yyyy-MM-dd HH:mm').format(dt);
       return DateFormat('dd-MM-yyyy hh:mm a').format(dt);
     } catch (e) {
       return dateStr.toString();
@@ -588,11 +806,12 @@ class _OrderRequestListScreenState extends ConsumerState<OrderRequestListScreen>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: const [
-          Icon(Icons.search_off_rounded, size: 40, color: Colors.grey),
+          Icon(Icons.search_off_rounded, size: 40, color: slateSub),
           SizedBox(height: 10),
           Text(
             "No matching requests found",
-            style: TextStyle(color: Colors.grey, fontSize: 13, fontWeight: FontWeight.w500),
+            style: TextStyle(
+                color: slateSub, fontSize: 13, fontWeight: FontWeight.w500),
           ),
         ],
       ),
