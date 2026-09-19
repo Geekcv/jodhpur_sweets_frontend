@@ -829,4 +829,47 @@ class ApiService extends ChangeNotifier {
     return decodedData;
   }
 
+
+
+
+  reorderByShopAdmin({token, param}) async {
+    var data = {
+      "fn": "common_fn",
+      "se": "reorder_remaining",
+      "data": {
+        "order_id": param['order_id'].toString(),
+        "items": param['items'],
+      }
+    };
+
+    print("data send reorderByShopAdmin:----------$data");
+    var encodedData = await Functions.encodeData(data);
+    var res = await Functions.httpPostToken(data: encodedData,token: token);
+    var decodedData = await Functions.decodeData(res);
+    return decodedData;
+  }
+
+
+
+  cancelOrderByShopAdmin({token, param}) async {
+    var data = {
+      "fn": "common_fn",
+      "se": "cancel_remaining",
+      "data": {
+        "order_id": param['order_id'].toString(),
+        "items": param['items'],
+      }
+    };
+
+    print("data send cancelOrderByShopAdmin:----------$data");
+    var encodedData = await Functions.encodeData(data);
+    var res = await Functions.httpPostToken(data: encodedData,token: token);
+    var decodedData = await Functions.decodeData(res);
+    return decodedData;
+  }
+
+
+
+
+
 }

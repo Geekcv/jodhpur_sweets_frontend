@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:js_order_website/controllers/api_controller.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -63,109 +64,259 @@ class _SupplierOrdersScreenState extends State<SupplierOrdersScreen> {
   void _showChallanDialog(String orderId) {
     final transportController = TextEditingController();
     DateTime selectedDate = DateTime.now();
-    String? vehicleError; // Validation error handle karne ke liye
+    String? vehicleError;
 
-    List<Map<String, dynamic>> editableItems = selectedOrder!.items!.map((e) => {
-      "sweet_id": e.sweetId,
-      "sweet_name": e.sweetName,
-      "order_item_id": e.orderItemId,
-      "unit": e.unit,
-      "quantity": double.tryParse(e.quantity.toString()) ?? 0.0,
-      "status": "ACCEPTED",
+    // Har item ke liye Dedicated Controller persistent rakha gaya hai
+    List<Map<String, dynamic>> editableItems = selectedOrder!.items!.map((e) {
+      double initialQty = double.tryParse(e.quantity.toString()) ?? 0.0;
+      return {
+        "sweet_id": e.sweetId,
+        "sweet_name": e.sweetName,
+        "order_item_id": e.orderItemId,
+        "unit": e.unit,
+        "original_qty": initialQty,
+        "quantity": initialQty,
+        "status": "ACCEPTED",
+        "qty_controller": TextEditingController(text: initialQty.toString().replaceAll(RegExp(r'\.0$'), '')),
+      };
     }).toList();
 
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) {
-          int activeCount = editableItems.where((e) => e['status'] == "ACCEPTED").length;
+          int activeCount = editableItems.where((e) => e['status'] != "REJECTED").length;
           int totalItems = editableItems.length;
 
           return Dialog(
             backgroundColor: Colors.transparent,
             child: Container(
-              width: 460,
-              constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.8),
-              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
+              width: 480,
+              constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.85),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.12),
+                    blurRadius: 24,
+                    offset: const Offset(0, 8),
+                  )
+                ],
+              ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // --- Header ---
-                  Padding(
-                    padding: const EdgeInsets.all(16),
+                  // --- Modern Sleek Header ---
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                    decoration: const BoxDecoration(
+                      color: Color(0xffF8FAFC),
+                      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                    ),
                     child: Row(
                       children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: const Color(0xffEFF6FF),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(Icons.local_shipping_outlined, color: Color(0xff2563EB), size: 20),
+                        ),
+                        const SizedBox(width: 12),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text("Dispatch Challan", style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Color(0xff0F172A))),
+                            const Text(
+                              "Dispatch Challan",
+                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xff0F172A)),
+                            ),
                             Text(
-                                "ID: #${orderId.length > 4 ? orderId.substring(orderId.length - 4) : orderId}",
-                                style: const TextStyle(fontSize: 11, color: Color(0xff64748B), fontWeight: FontWeight.w500)
+                              "Order ID: #${orderId.length > 6 ? orderId.substring(orderId.length - 6) : orderId}",
+                              style: const TextStyle(fontSize: 11, color: Color(0xff64748B), fontWeight: FontWeight.w500),
                             ),
                           ],
                         ),
                         const Spacer(),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(color: const Color(0xffF1F5F9), borderRadius: BorderRadius.circular(6)),
-                          child: Text("$totalItems Items", style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xff475569))),
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: const Color(0xffE2E8F0),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            "$totalItems ${totalItems > 1 ? 'Items' : 'Item'}",
+                            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xff334155)),
+                          ),
                         )
                       ],
                     ),
                   ),
-                  const Divider(height: 1, color: Color(0xffF1F5F9)),
+                  const Divider(height: 1, color: Color(0xffE2E8F0)),
 
                   // --- Items List ---
                   Flexible(
                     child: SingleChildScrollView(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      padding: const EdgeInsets.all(16),
                       child: Column(
                         children: editableItems.asMap().entries.map((entry) {
                           int idx = entry.key;
                           var item = entry.value;
                           bool isRejected = item['status'] == "REJECTED";
+                          bool isPartial = item['status'] == "PARTIAL";
+                          TextEditingController qtyCtrl = item['qty_controller'];
 
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 4),
+                          // Color badge according to status
+                          Color statusBg = isRejected
+                              ? const Color(0xffFEF2F2)
+                              : (isPartial ? const Color(0xffFFFBEB) : const Color(0xffF0FDF4));
+                          Color statusColor = isRejected
+                              ? const Color(0xffDC2626)
+                              : (isPartial ? const Color(0xffD97706) : const Color(0xff16A34A));
+
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 10),
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: isRejected ? const Color(0xffFAFAFA) : Colors.white,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: isRejected ? const Color(0xffF1F5F9) : const Color(0xffE2E8F0),
+                                width: 1,
+                              ),
+                            ),
                             child: Row(
                               children: [
+                                // Switch for Accept / Reject
                                 Transform.scale(
-                                  scale: 0.6,
+                                  scale: 0.8,
                                   child: Switch(
                                     value: !isRejected,
-                                    activeColor: Colors.green,
+                                    activeColor: const Color(0xff16A34A),
                                     onChanged: (val) => setDialogState(() {
-                                      item['status'] = val ? "ACCEPTED" : "REJECTED";
-                                      item['quantity'] = val ? (double.tryParse(selectedOrder!.items![idx].quantity.toString()) ?? 0.0) : 0.0;
+                                      if (!val) {
+                                        item['status'] = "REJECTED";
+                                      } else {
+                                        // Restoring based on current input in TextField
+                                        double inputVal = double.tryParse(qtyCtrl.text.trim()) ?? 0.0;
+                                        double origQty = item['original_qty'];
+
+                                        if (inputVal <= 0) {
+                                          // Empty/Zero tha to original reset karo
+                                          item['quantity'] = origQty;
+                                          qtyCtrl.text = origQty.toString().replaceAll(RegExp(r'\.0$'), '');
+                                          item['status'] = "ACCEPTED";
+                                        } else if (inputVal < origQty) {
+                                          item['quantity'] = inputVal;
+                                          item['status'] = "PARTIAL";
+                                        } else {
+                                          item['quantity'] = origQty;
+                                          qtyCtrl.text = origQty.toString().replaceAll(RegExp(r'\.0$'), '');
+                                          item['status'] = "ACCEPTED";
+                                        }
+                                      }
                                     }),
                                   ),
                                 ),
+                                const SizedBox(width: 4),
+
+                                // Sweet Details & Status Badge
                                 Expanded(
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Text(item['sweet_name'], style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: isRejected ? Colors.grey : const Color(0xff334155))),
-                                      Text(isRejected ? "REJECTED" : "AVAILABLE", style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: isRejected ? Colors.red.shade400 : Colors.green.shade600, letterSpacing: 0.5)),
+                                      Text(
+                                        item['sweet_name'] ?? "",
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w600,
+                                          color: isRejected ? const Color(0xff94A3B8) : const Color(0xff1E293B),
+                                          decoration: isRejected ? TextDecoration.lineThrough : TextDecoration.none,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Row(
+                                        children: [
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                            decoration: BoxDecoration(
+                                              color: statusBg,
+                                              borderRadius: BorderRadius.circular(4),
+                                            ),
+                                            child: Text(
+                                              item['status'],
+                                              style: TextStyle(
+                                                fontSize: 9,
+                                                fontWeight: FontWeight.w700,
+                                                color: statusColor,
+                                                letterSpacing: 0.3,
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 6),
+                                          Text(
+                                            "Ordered: ${item['original_qty']} ${item['unit']}",
+                                            style: const TextStyle(fontSize: 10, color: Color(0xff64748B), fontWeight: FontWeight.w500),
+                                          ),
+                                        ],
+                                      ),
                                     ],
                                   ),
                                 ),
+
+                                // Quantity Input Field
                                 if (!isRejected)
                                   SizedBox(
-                                    width: 80,
-                                    height: 28,
+                                    width: 90,
+                                    height: 34,
                                     child: TextField(
+                                      controller: qtyCtrl,
                                       textAlign: TextAlign.center,
-                                      keyboardType: TextInputType.number,
-                                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                      inputFormatters: [
+                                        FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+                                      ],
+                                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xff0F172A)),
                                       decoration: InputDecoration(
-                                        suffixText: item['unit'],
-                                        suffixStyle: const TextStyle(fontSize: 9, color: Colors.grey),
-                                        contentPadding: EdgeInsets.zero,
-                                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(4), borderSide: const BorderSide(color: Color(0xffE2E8F0))),
+                                        suffixText: item['unit'] ?? "",
+                                        suffixStyle: const TextStyle(fontSize: 10, color: Color(0xff64748B), fontWeight: FontWeight.w500),
+                                        contentPadding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+                                        fillColor: const Color(0xffF8FAFC),
+                                        filled: true,
+                                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(6), borderSide: const BorderSide(color: Color(0xffCBD5E1))),
+                                        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(6), borderSide: const BorderSide(color: Color(0xff2563EB), width: 1.5)),
                                       ),
-                                      onChanged: (v) => item['quantity'] = double.tryParse(v) ?? 0,
-                                      controller: TextEditingController(text: item['quantity'].toString()),
+                                      onChanged: (v) {
+                                        setDialogState(() {
+                                          double origQty = item['original_qty'];
+
+                                          if (v.trim().isEmpty) {
+                                            // Empty rakhne par reject nahi hoga, bas quantity 0 update hogi
+                                            item['quantity'] = 0.0;
+                                            item['status'] = "PARTIAL";
+                                            return;
+                                          }
+
+                                          double parsedQty = double.tryParse(v) ?? 0.0;
+
+                                          // Restrict max quantity to ordered amount
+                                          if (parsedQty > origQty) {
+                                            parsedQty = origQty;
+                                            qtyCtrl.text = origQty.toString().replaceAll(RegExp(r'\.0$'), '');
+                                            qtyCtrl.selection = TextSelection.fromPosition(TextPosition(offset: qtyCtrl.text.length));
+                                          }
+
+                                          item['quantity'] = parsedQty;
+
+                                          // Dynamic Status calculation
+                                          if (parsedQty < origQty) {
+                                            item['status'] = "PARTIAL";
+                                          } else {
+                                            item['status'] = "ACCEPTED";
+                                          }
+                                        });
+                                      },
                                     ),
                                   ),
                               ],
@@ -176,48 +327,54 @@ class _SupplierOrdersScreenState extends State<SupplierOrdersScreen> {
                     ),
                   ),
 
-                  // --- Logistics Section (Validation Added Here) ---
+                  // --- Logistics Section ---
                   Padding(
-                    padding: const EdgeInsets.all(20),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text("VEHICLE DETAILS", style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Color(0xff94A3B8), letterSpacing: 0.5)),
+                        const Text(
+                          "LOGISTICS & TRANSPORT",
+                          style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Color(0xff64748B), letterSpacing: 0.5),
+                        ),
                         const SizedBox(height: 6),
                         CustomTextInput(
-                          height: 40,
+                          height: 42,
                           controller: transportController,
                           validator: true,
-                          hintText: "Enter Vehicle Number",
+                          hintText: "Enter Vehicle Number (e.g. RJ19 CB 1234)",
                           onChanged: (value) {
                             if (vehicleError != null) setDialogState(() => vehicleError = null);
                           },
                         ),
+                        if (vehicleError != null)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4, left: 2),
+                            child: Text(vehicleError!, style: const TextStyle(color: Color(0xffEF4444), fontSize: 11, fontWeight: FontWeight.w500)),
+                          )
                       ],
                     ),
                   ),
 
-                  // --- Footer Button ---
+                  // --- Footer Action Button ---
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+                    padding: const EdgeInsets.all(16),
                     child: SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
                         onPressed: activeCount == 0 ? null : () async {
-                          // 1. Check if vehicle number is empty
                           if (transportController.text.trim().isEmpty) {
                             setDialogState(() {
-                              vehicleError = "Vehicle number is required";
+                              vehicleError = "Vehicle number is required to generate challan";
                             });
                             return;
                           }
 
-                          // --- Loader Dikhao ---
+                          // Loader
                           showDialog(
                             context: context,
                             barrierDismissible: false,
-                            builder: (context) => const Center(child: CircularProgressIndicator(color: Colors.blue)),
-                            // builder: (context) => buildShimmerEffect(context: context),
+                            builder: (context) => const Center(child: CircularProgressIndicator(color: Color(0xff2563EB))),
                           );
 
                           try {
@@ -225,9 +382,10 @@ class _SupplierOrdersScreenState extends State<SupplierOrdersScreen> {
                               "order_id": orderId,
                               "items": editableItems.map((e) => {
                                 "sweet_id": e['sweet_id'],
-                                'order_item_id' : e['order_item_id'],
-                                "status": e['status'],
-                                "supplied_quantity": e['quantity']
+                                'order_item_id': e['order_item_id'],
+                                "status": e['status'].toString().toUpperCase(),
+                                // "supplied_quantity": e['quantity']
+                                "supplied_quantity": e['status'].toString().toUpperCase() == "REJECTED" ? '0' : e['quantity'],
                               }).toList(),
                             });
 
@@ -238,51 +396,36 @@ class _SupplierOrdersScreenState extends State<SupplierOrdersScreen> {
                                 "transport_details": transportController.text.trim(),
                               });
 
-                              Navigator.pop(context); // Close Loader
+                              if (mounted) Navigator.pop(context); // Close Loader
 
                               if (challanRes != null && (challanRes['status'] == 0 || challanRes['status'] == "0")) {
                                 fetchOrders();
-                                Navigator.pop(context); // Close Main Dialog
-                                _showSnackBar(challanRes['message'] ?? "Order Dispatched Successfully!", Colors.green);
+                                if (mounted) Navigator.pop(context); // Close Main Dialog
+                                _showSnackBar(challanRes['message'] ?? "Challan generated & order dispatched!", Colors.green);
                               } else {
                                 _showSnackBar(challanRes?['message'] ?? "Failed to generate challan", Colors.red);
                               }
                             } else {
-                              Navigator.pop(context); // Close Loader
+                              if (mounted) Navigator.pop(context); // Close Loader
                               _showSnackBar(updateRes?['message'] ?? "Failed to update item status", Colors.red);
                             }
                           } catch (e) {
-                            if (Navigator.canPop(context)) Navigator.pop(context); // Close Loader if open
+                            if (mounted && Navigator.canPop(context)) Navigator.pop(context);
                             _showSnackBar("Something went wrong: ${e.toString()}", Colors.red);
                           }
                         },
-                          style: ElevatedButton.styleFrom(
-                            // Professional Modern Blue (Slate / Indigo Accent mix look)
-                            backgroundColor: const Color(0xFF2563EB),
-                            foregroundColor: Colors.white,
-
-                            // Clean padding & size consistency
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                            minimumSize: const Size(double.infinity, 48), // Sleek full-width height
-
-                            // Smooth subtle elevation
-                            elevation: 0.5,
-                            shadowColor: const Color(0xFF2563EB).withOpacity(0.3),
-
-                            // Rounded subtle borders with subtle outer stroke
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              side: const BorderSide(color: Color(0xFF1D4ED8), width: 0.5),
-                            ),
-
-                            // Text styling for clear typography
-                            textStyle: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: 0.3,
-                            ),
-                          ),
-                        child: Text("DISPATCH $activeCount ${activeCount > 1 ? 'ITEMS' : 'ITEM'}", style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white)),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF2563EB),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          minimumSize: const Size(double.infinity, 46),
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        ),
+                        child: Text(
+                          "DISPATCH $activeCount ${activeCount > 1 ? 'ITEMS' : 'ITEM'}",
+                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, letterSpacing: 0.5),
+                        ),
                       ),
                     ),
                   ),
@@ -292,9 +435,14 @@ class _SupplierOrdersScreenState extends State<SupplierOrdersScreen> {
           );
         },
       ),
-    );
+    ).then((_) {
+      // Memory leak protection
+      transportController.dispose();
+      for (var item in editableItems) {
+        (item['qty_controller'] as TextEditingController).dispose();
+      }
+    });
   }
-
   void _showSnackBar(String msg, Color color) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(msg, style: const TextStyle(fontSize: 12)),
@@ -1253,7 +1401,7 @@ class _SupplierOrdersScreenState extends State<SupplierOrdersScreen> {
                   _buildActionBtn("Dispatch", Colors.white, Colors.black87, Icons.description,
                           () => _showChallanDialog(selectedOrder!.orderId.toString()), isOutline: true),
                 ],
-                if (status == "DISPATCHED")
+                if (status == "DISPATCHED" || status == "DELIVERED")
                   const Center(child: Text("✓ Order Dispatched & Challan Generated", style: TextStyle(color: Colors.green, fontSize: 12, fontWeight: FontWeight.bold))),
               ],
             ),

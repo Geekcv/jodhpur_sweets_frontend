@@ -794,6 +794,32 @@ class ApiController {
   }
 
 
+  static reorderByShopAdmin({context,params})async{
+    var token = await getloggedinUserToken();
+    var res = await ApiService().reorderByShopAdmin(param: params,token: token);
+    print("reorderByShopAdmin response:- $res");
+    if(res['status']==0){
+      return res;
+    }
+    else{
+      return res;
+    }
+  }
+
+
+  static cancelOrderByShopAdmin({context,params})async{
+    var token = await getloggedinUserToken();
+    var res = await ApiService().cancelOrderByShopAdmin(param: params,token: token);
+    print("cancelOrderByShopAdmin response:- $res");
+    if(res['status']==0){
+      return res;
+    }
+    else{
+      return res;
+    }
+  }
+
+
 
   static logOut(context) async {
     LoginUserDetails.clear();
