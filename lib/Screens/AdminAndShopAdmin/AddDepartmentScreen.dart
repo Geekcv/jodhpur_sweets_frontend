@@ -259,7 +259,7 @@ class _AddDepartmentScreenState extends ConsumerState<AddDepartmentScreen> {
         alignment: WrapAlignment.start, // Push to right on Desktop
         crossAxisAlignment: WrapCrossAlignment.end,
         children: [
-          if(LoginUserDetails.isAdmin)
+          // if(LoginUserDetails.isAdmin)
           // _dropdownBoxFoShop("SELECT SHOP *", shops, isMobile ? double.infinity : 270),
           _compactField("NAME *", nameController, "Department Name", 200),
           _compactField("DESCRIPTION", descController, "Short description...", 350),

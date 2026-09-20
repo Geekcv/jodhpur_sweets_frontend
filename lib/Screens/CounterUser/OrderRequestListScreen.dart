@@ -406,6 +406,7 @@ class _OrderRequestListScreenState
   }
 
   // ---------- VIEW 1: RESPONSIVE COMPACT CARD GRID (NO OVERFLOW/OVERSIZING) ----------
+// ---------- VIEW 1: RESPONSIVE COMPACT CARD GRID (NO OVERFLOW/OVERSIZING) ----------
   Widget _buildGridCardLayout(List<OrderItemModel> items, double screenWidth) {
     int crossAxisCount =
     screenWidth >= 1200 ? 3 : (screenWidth >= 768 ? 2 : 1);
@@ -426,6 +427,12 @@ class _OrderRequestListScreenState
             (item.supplierStatus ?? "PENDING").toString().toUpperCase();
             final bool hasReorders =
                 item.reorderOrders != null && item.reorderOrders!.isNotEmpty;
+
+            // --- SAFE NUMBER PARSING (FIX FOR TYPE ERROR) ---
+            final num reorderSupplied =
+                num.tryParse(item.reorderSuppliedQuantity?.toString() ?? '0') ?? 0;
+            final num cancelledQty =
+                num.tryParse(item.cancelledQuantity?.toString() ?? '0') ?? 0;
 
             return SizedBox(
               width: cardWidth,
@@ -542,15 +549,16 @@ class _OrderRequestListScreenState
                                   isWarning: true,
                                 ),
                               ),
-                              if ((item.reorderSuppliedQuantity ?? 0) > 0)
+                              // Safe comparison using parsed num values
+                              if (reorderSupplied > 0)
                                 Expanded(
                                   child: _metricCell("Reorder Sup.",
-                                      "${item.reorderSuppliedQuantity} ${item.unit ?? ''}"),
+                                      "$reorderSupplied ${item.unit ?? ''}"),
                                 )
-                              else if ((item.cancelledQuantity ?? 0) > 0)
+                              else if (cancelledQty > 0)
                                 Expanded(
                                   child: _metricCell("Cancelled",
-                                      "${item.cancelledQuantity} ${item.unit ?? ''}",
+                                      "$cancelledQty ${item.unit ?? ''}",
                                       isDanger: true),
                                 )
                               else
@@ -604,7 +612,6 @@ class _OrderRequestListScreenState
       },
     );
   }
-
   // ---------- VIEW 2: RESPONSIVE LIST / ROW LAYOUT ----------
   Widget _buildListRowLayout(List<OrderItemModel> items, bool isMobile) {
     return ListView.separated(

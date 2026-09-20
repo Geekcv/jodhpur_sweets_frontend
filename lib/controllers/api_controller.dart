@@ -820,6 +820,17 @@ class ApiController {
   }
 
 
+  static downloadDepartmentWiseSlipSupplierSide({context,params})async{
+    var token = await getloggedinUserToken();
+    var res = await ApiService().downloadDepartmentWiseSlipSupplierSide(param: params,token: token);
+    print("downloadDepartmentWiseSlipSupplierSide response:-----$res");
+
+    if (res != null && res['status'] == 0) {
+      return res;
+    } else {
+      return res;
+    }
+  }
 
   static logOut(context) async {
     LoginUserDetails.clear();

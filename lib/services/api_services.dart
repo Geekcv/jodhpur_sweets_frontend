@@ -871,5 +871,21 @@ class ApiService extends ChangeNotifier {
 
 
 
+  downloadDepartmentWiseSlipSupplierSide({token, param}) async {
+    var data = {
+      "fn": "common_fn",
+      "se": "de_department_slip",
+      "data": {
+        'order_id':param['order_id']
+      }
+    };
+
+    print("data send downloadDepartmentWiseSlipSupplierSide:----------$data");
+    var encodedData = await Functions.encodeData(data);
+    var res = await Functions.httpPostToken(data: encodedData,token: token);
+    var decodedData = await Functions.decodeData(res);
+    return decodedData;
+  }
+
 
 }

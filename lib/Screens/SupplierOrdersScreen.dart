@@ -774,6 +774,58 @@ class _SupplierOrdersScreenState extends State<SupplierOrdersScreen> {
                     _statusBadge(status),
                     const Spacer(),
 
+                    // NEW BUTTON: Department Wise Slip (Only visible when status != PENDING)
+                    if (status.toUpperCase() != "PENDING") ...[
+                      Container(
+                        height: 32,
+                        width: 32,
+                        decoration: BoxDecoration(
+                          color: const Color(0xffFEF3C7), // Light Amber
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: IconButton(
+                          tooltip: "Department Slip",
+                          padding: EdgeInsets.zero,
+                          icon: const Icon(
+                            Icons.assignment_outlined,
+                            color: Color(0xffD97706), // Amber Icon
+                            size: 16,
+                          ),
+                          onPressed: () async {
+                            final String currentOrderId = item.orderId.toString();
+                            var res = await ApiController.downloadDepartmentWiseSlipSupplierSide(
+                              context: context,
+                              params: {'order_id': currentOrderId},
+                            );
+
+                            if (res != null && res['status'] == 0 && res['filePath'] != null) {
+                              final Uri url = Uri.parse(res['filePath']);
+                              if (await canLaunchUrl(url)) {
+                                await launchUrl(
+                                  url,
+                                  webOnlyWindowName: '_blank',
+                                  mode: LaunchMode.externalApplication,
+                                );
+                              } else {
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text("Could not open Department Slip URL")),
+                                  );
+                                }
+                              }
+                            } else {
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text(res?['msg'] ?? "Unable to fetch Department Slip URL")),
+                                );
+                              }
+                            }
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                    ],
+
                     // Action Button 1: View PDF
                     Container(
                       height: 32,
@@ -858,7 +910,7 @@ class _SupplierOrdersScreenState extends State<SupplierOrdersScreen> {
                 ),
                 const SizedBox(height: 8),
 
-                Divider(thickness: 0.3),
+                const Divider(thickness: 0.3),
                 // 2. Info Grid: Destination & Total Items Count
                 Row(
                   children: [
@@ -1067,9 +1119,8 @@ class _SupplierOrdersScreenState extends State<SupplierOrdersScreen> {
       margin: const EdgeInsets.all(12),
       decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(12), // Thoda zyada rounded for premium look
-          border: Border.all(color: const Color(0xffE2E8F0))
-      ),
+          borderRadius: BorderRadius.circular(12), // Premium rounded corners
+          border: Border.all(color: const Color(0xffE2E8F0))),
       child: Column(
         children: [
           // --- Table Header ---
@@ -1077,16 +1128,15 @@ class _SupplierOrdersScreenState extends State<SupplierOrdersScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             decoration: const BoxDecoration(
                 color: Color(0xffF8FAFC),
-                borderRadius: BorderRadius.vertical(top: Radius.circular(12))
-            ),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(12))),
             child: Row(
               children: const [
                 Expanded(flex: 1, child: Text("ID", style: _headerStyle)),
                 Expanded(flex: 2, child: Text("SHOP NAME", style: _headerStyle)),
                 Expanded(flex: 2, child: Text("SWEET NAME", style: _headerStyle)),
                 Expanded(flex: 2, child: Text("QTY", style: _headerStyle)),
-                Expanded(flex: 1, child: Text("TOTAL ITEMS", style: _headerStyle)), // Naya Column
-                Expanded(flex: 1, child: Text("STATUS", style: _headerStyle,)),
+                Expanded(flex: 1, child: Text("TOTAL ITEMS", style: _headerStyle)),
+                Expanded(flex: 1, child: Text("STATUS", style: _headerStyle)),
                 Expanded(flex: 2, child: Text("ACTION", style: _headerStyle, textAlign: TextAlign.center)),
               ],
             ),
@@ -1100,6 +1150,7 @@ class _SupplierOrdersScreenState extends State<SupplierOrdersScreen> {
               separatorBuilder: (context, index) => const Divider(height: 1, color: Color(0xffF1F5F9)),
               itemBuilder: (context, index) {
                 var item = supplierOrders[index];
+                String status = item.orderStatus ?? "PENDING";
                 bool isSelected = selectedOrder?.orderId == item.orderId;
                 bool isDownloading = downloadingIds.contains(item.orderId.toString());
 
@@ -1109,25 +1160,11 @@ class _SupplierOrdersScreenState extends State<SupplierOrdersScreen> {
                 String sweetDisplay = itemsCount > 1 ? "$firstSweet +${itemsCount - 1} More" : firstSweet;
 
                 return InkWell(
-                  // onTap: () => setState(() { selectedOrder = item; showDetails = true; }),
-                  // onTap: () {
-                  //   setState(() {
-                  //     if (selectedOrder?.orderId == item.orderId) {
-                  //       // Agar wahi item hai, toh band kar do (toggle)
-                  //       showDetails = !showDetails;
-                  //     } else {
-                  //       // Agar naya item hai, toh select karo aur panel khol do
-                  //       selectedOrder = item;
-                  //       showDetails = true;
-                  //     }
-                  //   });
-                  // },
                   onTap: () {
                     setState(() {
                       selectedOrder = item;
                       showDetails = true;
                     });
-                    // EndDrawer kholne ke liye yeh line required hai:
                     _scaffoldKey.currentState?.openEndDrawer();
                   },
                   child: AnimatedContainer(
@@ -1136,78 +1173,154 @@ class _SupplierOrdersScreenState extends State<SupplierOrdersScreen> {
                     decoration: BoxDecoration(
                       color: isSelected ? const Color(0xffF0F7FF) : Colors.transparent,
                       border: Border(
-                          left: BorderSide(color: isSelected ? const Color(0xff3B82F6) : Colors.transparent, width: 4)
+                        left: BorderSide(
+                          color: isSelected ? const Color(0xff3B82F6) : Colors.transparent,
+                          width: 4,
+                        ),
                       ),
                     ),
                     child: Row(
                       children: [
                         // 1. ID
-                        Expanded(flex: 1, child: Text("#${getShortId(item.orderId)}", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xff1E293B)))),
+                        Expanded(
+                          flex: 1,
+                          child: Text(
+                            "#${getShortId(item.orderId)}",
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
+                              color: Color(0xff1E293B),
+                            ),
+                          ),
+                        ),
 
                         // 2. Shop Name
-                        Expanded(flex: 2, child: Text(item.shop?.shopName ?? "-", style: const TextStyle(fontSize: 13, color: Color(0xff475569)), overflow: TextOverflow.ellipsis)),
+                        Expanded(
+                          flex: 2,
+                          child: Text(
+                            item.shop?.shopName ?? "-",
+                            style: const TextStyle(fontSize: 13, color: Color(0xff475569)),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
 
                         // 3. Sweet Name (With More Tag)
                         Expanded(
-                            flex: 2,
-                            child: Text(
-                                sweetDisplay,
-                                style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: itemsCount > 1 ? FontWeight.w600 : FontWeight.normal,
-                                    color: itemsCount > 1 ? const Color(0xff3B82F6) : const Color(0xff475569)
-                                ),
-                                overflow: TextOverflow.ellipsis
-                            )
+                          flex: 2,
+                          child: Text(
+                            sweetDisplay,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: itemsCount > 1 ? FontWeight.w600 : FontWeight.normal,
+                              color: itemsCount > 1 ? const Color(0xff3B82F6) : const Color(0xff475569),
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
 
+                        // 4. Total Quantity (Sum of all items)
+                        Expanded(
+                          flex: 2,
+                          child: Builder(
+                            builder: (context) {
+                              List<String> qtyList = item.items?.map((e) => "${e.quantity}${e.unit}").toList() ?? [];
+                              String qtyDisplay = "";
+                              if (qtyList.length > 2) {
+                                qtyDisplay = "${qtyList.take(2).join(", ")} +${qtyList.length - 2} More";
+                              } else {
+                                qtyDisplay = qtyList.join(", ");
+                              }
 
-                        // 5. Total Quantity (Sum of all items)
-                      Expanded(
-                        flex: 2,
-                        child: Builder(
-                          builder: (context) {
-                            // Saari quantities ko "5kg, 3kg, 8kg" format mein map karo
-                            List<String> qtyList = item.items?.map((e) => "${e.quantity}${e.unit}").toList() ?? [];
-
-                            // Display logic: Pehli 2 quantities dikhao, baaki ke liye "+More"
-                            String qtyDisplay = "";
-                            if (qtyList.length > 2) {
-                              qtyDisplay = "${qtyList.take(2).join(", ")} +${qtyList.length - 2} More";
-                            } else {
-                              qtyDisplay = qtyList.join(", ");
-                            }
-
-                            return Text(
-                              qtyDisplay,
-                              style: TextStyle(
+                              return Text(
+                                qtyDisplay,
+                                style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: qtyList.length > 2 ? FontWeight.w600 : FontWeight.normal,
-                                  color: qtyList.length > 2 ? const Color(0xff3B82F6) : const Color(0xff1E293B)
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            );
-                          },
+                                  color: qtyList.length > 2 ? const Color(0xff3B82F6) : const Color(0xff1E293B),
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              );
+                            },
+                          ),
                         ),
-                      ),
 
-                        // 4. Total Items Count
+                        // 5. Total Items Count
                         Expanded(
-                            flex: 1,
-                            child: Text("${itemsCount}", style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold))
+                          flex: 1,
+                          child: Text(
+                            "$itemsCount",
+                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                          ),
                         ),
 
                         // 6. Status
-                        Expanded(flex: 1, child: Align(alignment: Alignment.centerLeft, child: _statusBadge(item.orderStatus))),
+                        Expanded(
+                          flex: 1,
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: _statusBadge(item.orderStatus),
+                          ),
+                        ),
 
                         // 7. Actions
-
                         Expanded(
                           flex: 2,
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              // View PDF Button
+                              // Action Button 1: Department Slip (Only visible when status != PENDING)
+                              if (status.toUpperCase() != "PENDING") ...[
+                                Container(
+                                  height: 32,
+                                  width: 32,
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xffFEF3C7), // Light Amber
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: IconButton(
+                                    tooltip: "Department Slip",
+                                    padding: EdgeInsets.zero,
+                                    icon: const Icon(
+                                      Icons.assignment_outlined,
+                                      color: Color(0xffD97706), // Amber
+                                      size: 16,
+                                    ),
+                                    onPressed: () async {
+                                      final String currentOrderId = item.orderId.toString();
+                                      var res = await ApiController.downloadDepartmentWiseSlipSupplierSide(
+                                        context: context,
+                                        params: {'order_id': currentOrderId},
+                                      );
+
+                                      if (res != null && res['status'] == 0 && res['filePath'] != null) {
+                                        final Uri url = Uri.parse(res['filePath']);
+                                        if (await canLaunchUrl(url)) {
+                                          await launchUrl(
+                                            url,
+                                            webOnlyWindowName: '_blank',
+                                            mode: LaunchMode.externalApplication,
+                                          );
+                                        } else {
+                                          if (context.mounted) {
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              const SnackBar(content: Text("Could not open Department Slip URL")),
+                                            );
+                                          }
+                                        }
+                                      } else {
+                                        if (context.mounted) {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(content: Text(res?['msg'] ?? "Unable to fetch Department Slip URL")),
+                                          );
+                                        }
+                                      }
+                                    },
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                              ],
+
+                              // Action Button 2: View Order PDF
                               Container(
                                 height: 32,
                                 width: 32,
@@ -1265,7 +1378,7 @@ class _SupplierOrdersScreenState extends State<SupplierOrdersScreen> {
                                   },
                                 ),
                               ),
-                              const SizedBox(width: 8),
+                              const SizedBox(width: 6),
 
                               // Print / Download Button
                               Container(

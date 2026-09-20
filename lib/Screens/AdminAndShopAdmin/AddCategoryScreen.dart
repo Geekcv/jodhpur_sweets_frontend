@@ -178,7 +178,7 @@ class _AddCategoryScreenState extends ConsumerState<AddCategoryScreen> {
             crossAxisAlignment: WrapCrossAlignment.end,
             children: [
               // 1. Department Dropdown
-              if(LoginUserDetails.isAdmin)
+              // if(LoginUserDetails.isAdmin)
                 // _dropdownBoxFoShop("SELECT SHOP *", shops, isWide ? 250 : double.infinity),
 
               _dropdownBox("SELECT DEPARTMENT *", departments, isWide ? 250 : double.infinity),
