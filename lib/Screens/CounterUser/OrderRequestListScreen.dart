@@ -406,7 +406,6 @@ class _OrderRequestListScreenState
   }
 
   // ---------- VIEW 1: RESPONSIVE COMPACT CARD GRID (NO OVERFLOW/OVERSIZING) ----------
-// ---------- VIEW 1: RESPONSIVE COMPACT CARD GRID (NO OVERFLOW/OVERSIZING) ----------
   Widget _buildGridCardLayout(List<OrderItemModel> items, double screenWidth) {
     int crossAxisCount =
     screenWidth >= 1200 ? 3 : (screenWidth >= 768 ? 2 : 1);
@@ -417,314 +416,526 @@ class _OrderRequestListScreenState
             (constraints.maxWidth - ((crossAxisCount - 1) * 12)) /
                 crossAxisCount;
 
-        return Wrap(
-          spacing: 12,
-          runSpacing: 12,
-          children: items.map((item) {
-            final String shopStatus =
-            (item.shopStatus ?? "PENDING").toString().toUpperCase();
-            final String supplierStatus =
-            (item.supplierStatus ?? "PENDING").toString().toUpperCase();
-            final bool hasReorders =
-                item.reorderOrders != null && item.reorderOrders!.isNotEmpty;
+        return Align(
+          alignment: Alignment.topLeft,
+          child: Wrap(
+            alignment: WrapAlignment.start,
+            crossAxisAlignment: WrapCrossAlignment.start,
+            spacing: 12,
+            runSpacing: 12,
+            children: items.map((item) {
+              final String shopStatus =
+              (item.shopStatus ?? "PENDING").toString().toUpperCase();
+              final String supplierStatus =
+              (item.supplierStatus ?? "PENDING").toString().toUpperCase();
+              final bool hasReorders =
+                  item.reorderOrders != null && item.reorderOrders!.isNotEmpty;
 
-            // --- SAFE NUMBER PARSING (FIX FOR TYPE ERROR) ---
-            final num reorderSupplied =
-                num.tryParse(item.reorderSuppliedQuantity?.toString() ?? '0') ?? 0;
-            final num cancelledQty =
-                num.tryParse(item.cancelledQuantity?.toString() ?? '0') ?? 0;
+              // --- SAFE NUMBER PARSING (FIX FOR TYPE ERROR) ---
+              final num reorderSupplied =
+                  num.tryParse(item.reorderSuppliedQuantity?.toString() ?? '0') ?? 0;
+              final num cancelledQty =
+                  num.tryParse(item.cancelledQuantity?.toString() ?? '0') ?? 0;
 
-            return SizedBox(
-              width: cardWidth,
-              child: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: borderCol, width: 1),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Color(0x04000000),
-                      blurRadius: 4,
-                      offset: Offset(0, 1),
-                    )
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // 1. Header Row
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                item.sweetName?.toString() ?? "-",
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w700,
-                                  color: primaryNavy,
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                "${item.requestedOrder ?? ''} • ${item.counterName ?? ''}",
-                                style: const TextStyle(
-                                    fontSize: 10,
-                                    color: slateSub,
-                                    fontWeight: FontWeight.w500),
-                              ),
-                            ],
-                          ),
-                        ),
-                        if (item.orderType != null)
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 6, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: const Color(0xffF1F5F9),
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(
-                              item.orderType.toString(),
-                              style: const TextStyle(
-                                  fontSize: 8.5,
-                                  fontWeight: FontWeight.w600,
-                                  color: Color(0xff475569)),
-                            ),
-                          ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 8),
-
-                    // 2. Status Chips
-                    Wrap(
-                      spacing: 4,
-                      runSpacing: 4,
-                      children: [
-                        _buildCompactBadge("Shop: $shopStatus",
-                            _getStatusTextColor(shopStatus), _getStatusBgColor(shopStatus)),
-                        _buildCompactBadge("Supp: $supplierStatus",
-                            _getStatusTextColor(supplierStatus), _getStatusBgColor(supplierStatus)),
-                      ],
-                    ),
-
-                    const SizedBox(height: 8),
-
-                    // 3. Compact Quantities Overview Box
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: const Color(0xffF8FAFC),
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: const Color(0xffF1F5F9)),
-                      ),
-                      child: Column(
+              return SizedBox(
+                width: cardWidth,
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: borderCol, width: 1),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x04000000),
+                        blurRadius: 4,
+                        offset: Offset(0, 1),
+                      )
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // 1. Header Row
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                  child: _metricCell("Req Qty",
-                                      "${item.requestedQuantity ?? 0} ${item.unit ?? ''}")),
-                              Expanded(
-                                  child: _metricCell("Supplied",
-                                      "${item.suppliedQuantity ?? 0} ${item.unit ?? ''}")),
-                            ],
-                          ),
-                          const SizedBox(height: 4),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: _metricCell(
-                                  "Pending",
-                                  "${item.remainingQuantity ?? item.pendingQuantity ?? 0} ${item.unit ?? ''}",
-                                  isWarning: true,
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  item.sweetName?.toString() ?? "-",
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                    color: primaryNavy,
+                                  ),
                                 ),
-                              ),
-                              // Safe comparison using parsed num values
-                              if (reorderSupplied > 0)
-                                Expanded(
-                                  child: _metricCell("Reorder Sup.",
-                                      "$reorderSupplied ${item.unit ?? ''}"),
-                                )
-                              else if (cancelledQty > 0)
-                                Expanded(
-                                  child: _metricCell("Cancelled",
-                                      "$cancelledQty ${item.unit ?? ''}",
-                                      isDanger: true),
-                                )
-                              else
-                                const Expanded(child: SizedBox.shrink()),
-                            ],
+                                const SizedBox(height: 2),
+                                Text(
+                                  "${item.requestedOrder ?? ''} • ${item.counterName ?? ''}",
+                                  style: const TextStyle(
+                                      fontSize: 10,
+                                      color: slateSub,
+                                      fontWeight: FontWeight.w500),
+                                ),
+                              ],
+                            ),
                           ),
+                          // if (item.orderType != null)
+                          //   Container(
+                          //     padding: const EdgeInsets.symmetric(
+                          //         horizontal: 6, vertical: 2),
+                          //     decoration: BoxDecoration(
+                          //       color: const Color(0xffF1F5F9),
+                          //       borderRadius: BorderRadius.circular(4),
+                          //     ),
+                          //     child: Text(
+                          //       item.orderType.toString(),
+                          //       style: const TextStyle(
+                          //           fontSize: 8.5,
+                          //           fontWeight: FontWeight.w600,
+                          //           color: Color(0xff475569)),
+                          //     ),
+                          //   ),
+                          if (item.final_status != null) ...[
+                            (() {
+                              final statusStr = item.final_status.toString().toUpperCase().trim();
+                              Color bgCol = const Color(0xffF1F5F9);
+                              Color textCol = const Color(0xff475569);
+
+                              switch (statusStr) {
+                                case "COMPLETED":
+                                  bgCol = const Color(0xffDCFCE7); // Light Green
+                                  textCol = const Color(0xff15803D); // Dark Green
+                                  break;
+                                case "CANCELLED":
+                                  bgCol = const Color(0xffFEE2E2); // Light Red
+                                  textCol = const Color(0xffB91C1C); // Dark Red
+                                  break;
+                                case "REORDER_PENDING":
+                                  bgCol = const Color(0xffFFEDD5); // Light Amber
+                                  textCol = const Color(0xffC2410C); // Dark Amber
+                                  break;
+                                case "PARTIAL":
+                                  bgCol = const Color(0xffFEF3C7); // Light Yellow
+                                  textCol = const Color(0xffB45309); // Dark Yellow
+                                  break;
+                                case "PENDING":
+                                default:
+                                  bgCol = const Color(0xffE0F2FE); // Light Blue
+                                  textCol = const Color(0xff0369A1); // Dark Blue
+                                  break;
+                              }
+
+                              return Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: bgCol,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  statusStr,
+                                  style: TextStyle(
+                                      fontSize: 8.5,
+                                      fontWeight: FontWeight.w700,
+                                      color: textCol),
+                                ),
+                              );
+                            })(),
+                          ],
                         ],
                       ),
-                    ),
 
-                    // 4. Nested Reorders Section
-                    if (hasReorders) ...[
                       const SizedBox(height: 8),
-                      Text(
-                        "Reorders (${item.reorderOrders!.length}):",
-                        style: const TextStyle(
-                            fontSize: 9,
-                            fontWeight: FontWeight.w700,
-                            color: slateSub),
+
+                      // 2. Status Chips
+                      Wrap(
+                        spacing: 4,
+                        runSpacing: 4,
+                        children: [
+                          _buildCompactBadge("Shop: $shopStatus",
+                              _getStatusTextColor(shopStatus), _getStatusBgColor(shopStatus)),
+                          _buildCompactBadge("Supplier: $supplierStatus",
+                              _getStatusTextColor(supplierStatus), _getStatusBgColor(supplierStatus)),
+                        ],
                       ),
-                      const SizedBox(height: 4),
-                      ...item.reorderOrders!.map((reorder) {
-                        return Padding(
-                          padding: const EdgeInsets.only(top: 2),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                "#${reorder.orderNumber ?? 'Reorder'}",
-                                style: const TextStyle(
-                                    fontSize: 9,
-                                    fontWeight: FontWeight.w600,
-                                    color: slateDark),
-                              ),
-                              Text(
-                                "Req: ${reorder.requestedQuantity} | Sup: ${reorder.suppliedQuantity}",
-                                style: const TextStyle(
-                                    fontSize: 9, color: slateSub),
-                              ),
-                            ],
-                          ),
-                        );
-                      }),
+
+                      const SizedBox(height: 8),
+
+                      // 3. Compact Quantities Overview Box
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: const Color(0xffF8FAFC),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: const Color(0xffF1F5F9)),
+                        ),
+                        child: Column(
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                    child: _metricCell("Req Qty",
+                                        "${item.requestedQuantity ?? 0} ${item.unit ?? ''}")),
+                                Expanded(
+                                    child: _metricCell("Supplied",
+                                        "${item.suppliedQuantity ?? 0} ${item.unit ?? ''}")),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: _metricCell(
+                                    "Pending",
+                                    "${item.remainingQuantity ?? item.pendingQuantity ?? 0} ${item.unit ?? ''}",
+                                    isWarning: true,
+                                  ),
+                                ),
+                                // Safe comparison using parsed num values
+                                if (reorderSupplied > 0)
+                                  Expanded(
+                                    child: _metricCell("Reorder Sup.",
+                                        "$reorderSupplied ${item.unit ?? ''}"),
+                                  )
+                                else if (cancelledQty > 0)
+                                  Expanded(
+                                    child: _metricCell("Cancelled",
+                                        "$cancelledQty ${item.unit ?? ''}",
+                                        isDanger: true),
+                                  )
+                                else
+                                  const Expanded(child: SizedBox.shrink()),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // 4. Nested Reorders Section
+                      if (hasReorders) ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          "Reorders (${item.reorderOrders!.length}):",
+                          style: const TextStyle(
+                              fontSize: 9,
+                              fontWeight: FontWeight.w700,
+                              color: slateSub),
+                        ),
+                        const SizedBox(height: 4),
+                        ...item.reorderOrders!.map((reorder) {
+                          return Padding(
+                            padding: const EdgeInsets.only(top: 2),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  "#${reorder.orderNumber ?? 'Reorder'}",
+                                  style: const TextStyle(
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.w600,
+                                      color: slateDark),
+                                ),
+                                Text(
+                                  "Req: ${reorder.requestedQuantity} | Sup: ${reorder.suppliedQuantity}",
+                                  style: const TextStyle(
+                                      fontSize: 9, color: slateSub),
+                                ),
+                              ],
+                            ),
+                          );
+                        }),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
-              ),
-            );
-          }).toList(),
+              );
+            }).toList(),
+          ),
         );
       },
     );
   }
   // ---------- VIEW 2: RESPONSIVE LIST / ROW LAYOUT ----------
   Widget _buildListRowLayout(List<OrderItemModel> items, bool isMobile) {
+    Widget buildFinalStatusBadge(dynamic rawStatus) {
+      if (rawStatus == null) return const SizedBox.shrink();
+      final statusStr = rawStatus.toString().toUpperCase().trim();
+      Color bgCol = const Color(0xffF1F5F9);
+      Color textCol = const Color(0xff475569);
+
+      switch (statusStr) {
+        case "COMPLETED":
+          bgCol = const Color(0xffDCFCE7);
+          textCol = const Color(0xff15803D);
+          break;
+        case "CANCELLED":
+          bgCol = const Color(0xffFEE2E2);
+          textCol = const Color(0xffB91C1C);
+          break;
+        case "REORDER_PENDING":
+          bgCol = const Color(0xffFFEDD5);
+          textCol = const Color(0xffC2410C);
+          break;
+        case "PARTIAL":
+          bgCol = const Color(0xffFEF3C7);
+          textCol = const Color(0xffB45309);
+          break;
+        case "PENDING":
+        default:
+          bgCol = const Color(0xffE0F2FE);
+          textCol = const Color(0xff0369A1);
+          break;
+      }
+
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+        decoration: BoxDecoration(
+          color: bgCol,
+          borderRadius: BorderRadius.circular(4),
+        ),
+        child: Text(
+          statusStr,
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.w700,
+            color: textCol,
+          ),
+        ),
+      );
+    }
+
     return ListView.separated(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       itemCount: items.length,
-      separatorBuilder: (context, index) => const SizedBox(height: 6),
+      separatorBuilder: (context, index) => const SizedBox(height: 8),
       itemBuilder: (context, index) {
         final item = items[index];
         final String shopStatus =
         (item.shopStatus ?? "PENDING").toString().toUpperCase();
+        final String supplierStatus =
+        (item.supplierStatus ?? "PENDING").toString().toUpperCase();
+        final bool hasReorders =
+            item.reorderOrders != null && item.reorderOrders!.isNotEmpty;
+
+        final num reorderSupplied =
+            num.tryParse(item.reorderSuppliedQuantity?.toString() ?? '0') ?? 0;
+        final num cancelledQty =
+            num.tryParse(item.cancelledQuantity?.toString() ?? '0') ?? 0;
 
         return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: borderCol),
+            border: Border.all(color: const Color(0xffE2E8F0), width: 1),
           ),
-          child: isMobile
-              ? Column(
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Text(
-                      item.sweetName?.toString() ?? "-",
-                      style: const TextStyle(
-                          fontSize: 12.5,
+              if (isMobile) ...[
+                // --- MOBILE LAYOUT ---
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        item.sweetName?.toString() ?? "-",
+                        style: const TextStyle(
+                          fontSize: 13,
                           fontWeight: FontWeight.w700,
-                          color: primaryNavy),
+                          color: primaryNavy,
+                        ),
+                      ),
                     ),
-                  ),
-                  _statusBadge(shopStatus),
-                ],
-              ),
-              const SizedBox(height: 2),
-              Text(
-                "${item.requestedOrder ?? ''} • ${item.counterName ?? ''}",
-                style: const TextStyle(fontSize: 10.5, color: slateSub),
-              ),
-              const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 8, vertical: 6),
-                decoration: BoxDecoration(
-                  color: const Color(0xffF8FAFC),
-                  borderRadius: BorderRadius.circular(6),
+                    buildFinalStatusBadge(item.final_status),
+                  ],
                 ),
-                child: Row(
+                const SizedBox(height: 2),
+                Text(
+                  "${item.requestedOrder ?? ''} • ${item.counterName ?? ''}",
+                  style: const TextStyle(fontSize: 11, color: slateSub),
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 4,
+                  children: [
+                    _buildCompactBadge("Shop: $shopStatus",
+                        _getStatusTextColor(shopStatus), _getStatusBgColor(shopStatus)),
+                    _buildCompactBadge("Supplier: $supplierStatus",
+                        _getStatusTextColor(supplierStatus), _getStatusBgColor(supplierStatus)),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     _metricCell("Req Qty",
                         "${item.requestedQuantity ?? 0} ${item.unit ?? ''}"),
                     _metricCell("Supplied",
-                        "${item.suppliedQuantity ?? 0}"),
-                    _metricCell("Pending",
-                        "${item.pendingQuantity ?? 0}",
-                        isWarning: true),
-                  ],
-                ),
-              ),
-            ],
-          )
-              : Row(
-            children: [
-              Expanded(
-                flex: 3,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      item.sweetName?.toString() ?? "-",
-                      style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: primaryNavy),
+                        "${item.suppliedQuantity ?? 0} ${item.unit ?? ''}"),
+                    _metricCell(
+                      "Pending",
+                      "${item.remainingQuantity ?? item.pendingQuantity ?? 0} ${item.unit ?? ''}",
+                      isWarning: true,
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      "${item.requestedOrder ?? ''} • ${item.counterName ?? ''}",
-                      style: const TextStyle(
-                          fontSize: 11, color: slateSub),
+                    if (reorderSupplied > 0)
+                      _metricCell("Reorder Sup.", "$reorderSupplied ${item.unit ?? ''}")
+                    else if (cancelledQty > 0)
+                      _metricCell("Cancelled", "$cancelledQty ${item.unit ?? ''}", isDanger: true),
+                  ],
+                ),
+              ] else ...[
+                // --- DESKTOP / TABLET PERFECT TABLE-LIKE ROW ---
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // Col 1: Name & Order ID
+                    SizedBox(
+                      width: 180,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            item.sweetName?.toString() ?? "-",
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.w700,
+                              color: primaryNavy,
+                            ),
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            "${item.requestedOrder ?? ''} • ${item.counterName ?? ''}",
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 10.5,
+                              color: slateSub,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(width: 12),
+
+                    // Col 2: Status Badges Block
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        buildFinalStatusBadge(item.final_status),
+                        const SizedBox(width: 8),
+                        _buildCompactBadge(
+                          "Shop: $shopStatus",
+                          _getStatusTextColor(shopStatus),
+                          _getStatusBgColor(shopStatus),
+                        ),
+                        const SizedBox(width: 6),
+                        _buildCompactBadge(
+                          "Supplier: $supplierStatus",
+                          _getStatusTextColor(supplierStatus),
+                          _getStatusBgColor(supplierStatus),
+                        ),
+                      ],
+                    ),
+
+                    const Spacer(), // Space pushes metrics evenly to the right side
+
+                    // Col 3: Metric Cells Perfectly Grid-Aligned
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SizedBox(
+                          width: 90,
+                          child: _metricCell("Req Qty",
+                              "${item.requestedQuantity ?? 0} ${item.unit ?? ''}"),
+                        ),
+                        const SizedBox(width: 16),
+                        SizedBox(
+                          width: 90,
+                          child: _metricCell("Supplied",
+                              "${item.suppliedQuantity ?? 0} ${item.unit ?? ''}"),
+                        ),
+                        const SizedBox(width: 16),
+                        SizedBox(
+                          width: 90,
+                          child: _metricCell(
+                            "Pending",
+                            "${item.remainingQuantity ?? item.pendingQuantity ?? 0} ${item.unit ?? ''}",
+                            isWarning: true,
+                          ),
+                        ),
+                        if (reorderSupplied > 0) ...[
+                          const SizedBox(width: 16),
+                          SizedBox(
+                            width: 90,
+                            child: _metricCell("Reorder Sup.",
+                                "$reorderSupplied ${item.unit ?? ''}"),
+                          ),
+                        ] else if (cancelledQty > 0) ...[
+                          const SizedBox(width: 16),
+                          SizedBox(
+                            width: 90,
+                            child: _metricCell("Cancelled",
+                                "$cancelledQty ${item.unit ?? ''}",
+                                isDanger: true),
+                          ),
+                        ],
+                      ],
                     ),
                   ],
                 ),
-              ),
-              Expanded(
-                flex: 4,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    _metricCell("Req Qty",
-                        "${item.requestedQuantity ?? 0} ${item.unit ?? ''}"),
-                    _metricCell("Supplied",
-                        "${item.suppliedQuantity ?? 0}"),
-                    _metricCell("Pending",
-                        "${item.pendingQuantity ?? 0}",
-                        isWarning: true),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 12),
-              _statusBadge(shopStatus),
+              ],
+
+              // Reorders nested list if present
+              if (hasReorders) ...[
+                const SizedBox(height: 8),
+                const Divider(height: 1, color: Color(0xffF1F5F9)),
+                const SizedBox(height: 6),
+                ...item.reorderOrders!.map((reorder) {
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          "Reorder #${reorder.orderNumber ?? ''}",
+                          style: const TextStyle(
+                            fontSize: 9.5,
+                            fontWeight: FontWeight.w600,
+                            color: slateDark,
+                          ),
+                        ),
+                        Text(
+                          "Req: ${reorder.requestedQuantity} | Sup: ${reorder.suppliedQuantity}",
+                          style: const TextStyle(fontSize: 9.5, color: slateSub),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+              ],
             ],
           ),
         );
       },
     );
   }
-
   // ---------- HELPER COMPONENTS ----------
   Widget _buildCompactBadge(String text, Color textColor, Color bgColor) {
     return Container(

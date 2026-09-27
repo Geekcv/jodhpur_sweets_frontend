@@ -72,6 +72,7 @@ class OrderItemModel {
   dynamic dispatchDate;
   dynamic orderCreatedAt;
   dynamic orderUpdatedAt;
+  dynamic final_status;
 
   // Nested Reorder orders list
   List<ReorderOrderModel>? reorderOrders;
@@ -113,6 +114,7 @@ class OrderItemModel {
     this.orderCreatedAt,
     this.orderUpdatedAt,
     this.reorderOrders,
+    this.final_status,
   });
 
   factory OrderItemModel.fromJson(Map<String, dynamic> json) {
@@ -145,6 +147,7 @@ class OrderItemModel {
       reorderSuppliedQuantity: json['reorder_supplied_quantity'],
       totalSuppliedQuantity: json['total_supplied_quantity'],
       remainingQuantity: json['remaining_quantity'],
+      final_status: json['final_status'],
       remainingAction: json['remaining_action'],
       remainingActionOn: json['remaining_action_on'],
       chalanId: json['chalan_id'],

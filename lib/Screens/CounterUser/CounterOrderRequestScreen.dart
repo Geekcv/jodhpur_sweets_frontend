@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:js_order_website/Screens/LoginUserDetails.dart';
 import 'package:js_order_website/config/config.dart';
 
+import '../../constants/static.dart';
 import '../../controllers/api_controller.dart';
 import '../../provider/provider.dart';
 import '../../widgets/CustomDropDownSearch.dart';
@@ -416,7 +417,8 @@ class _CounterOrderRequestScreenState extends ConsumerState<CounterOrderRequestS
 
               // --- SCROLLABLE TABLE CONTENT ONLY ---
               Expanded(
-                child: filteredSweets.isEmpty ? Padding(
+                child: masterProv.loading
+                    ? buildShimmerEffect(context: context) : filteredSweets.isEmpty ? Padding(
                   padding: EdgeInsets.symmetric(horizontal: padding),
                   child: _emptyState(),
                 ): Padding(
