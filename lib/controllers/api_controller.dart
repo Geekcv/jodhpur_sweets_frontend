@@ -106,7 +106,7 @@ class ApiController {
   static fetchShop({context,params})async{
     var token = await getloggedinUserToken();
     var res = await ApiService().fetchShop(param: params,token: token);
-    // print("fetchShop response:-----$res");
+    print("fetchShop response:-----$res");
 
     List<FetchShopModel> shopData = [];
     if (res != null && res['status'] == 0) {
@@ -256,7 +256,7 @@ class ApiController {
   static addSweets({context,params})async{
     var token = await getloggedinUserToken();
     var res = await ApiService().addSweets(param: params,token: token);
-    //print("addSweets response:- $res");
+    print("addSweets response:- $res");
     if(res['status']==0){
       return res;
     }

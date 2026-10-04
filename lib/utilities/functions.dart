@@ -293,10 +293,34 @@ class Functions {
     return base64.encode(utf8.encode(stringData));
   }
 
+  // static decodeData(data) {
+  //   // print("data-=---------------------$data");
+  //   var decodedData = json.decode((utf8.decode(base64.decode(data))));
+  //   return decodedData;
+  // }
+
+
   static decodeData(data) {
-    // print("data-=---------------------$data");
-    var decodedData = json.decode((utf8.decode(base64.decode(data))));
-    return decodedData;
+    if (data == null) return null;
+
+    try {
+      // 1. Response String ko clean karein
+      String rawString = (data is String ? data : data.toString()).trim();
+
+      // 2. Base64 decode karein
+      List<int> bytes = base64.decode(rawString);
+      String utf8String = utf8.decode(bytes, allowMalformed: true);
+
+      // 3. Backend encodeURIComponent ko URI Decode karein (Hindi/Unicode ke liye safe)
+      String decodedString = Uri.decodeComponent(utf8String);
+
+      // 4. Safely JSON decode karke return karein
+      return json.decode(decodedString);
+    } catch (e) {
+      // Fallback: Agar Uri.decodeComponent fail ho toh direct parse karein
+      String rawString = (data is String ? data : data.toString()).trim();
+      return json.decode(utf8.decode(base64.decode(rawString), allowMalformed: true));
+    }
   }
 
   static httpPostToken({data, token}) async {

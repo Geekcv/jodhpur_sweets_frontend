@@ -298,6 +298,7 @@ class _AddShopScreenState extends ConsumerState<AddShopScreen> {
           Expanded(flex: 3, child: Text("SHOP NAME", style: _hStyle)),
           Expanded(flex: 2, child: Text("OWNER", style: _hStyle)),
           Expanded(flex: 2, child: Text("CONTACT", style: _hStyle)),
+          Expanded(flex: 2, child: Text("PASSWORD", style: _hStyle)),
           Expanded(flex: 2, child: Text("CITY", style: _hStyle)),
           Expanded(flex: 2, child: Text("GST NO.", style: _hStyle)),
           // SizedBox(width: 80, child: Text("ACTIONS", textAlign: TextAlign.right, style: _hStyle)),
@@ -315,6 +316,7 @@ class _AddShopScreenState extends ConsumerState<AddShopScreen> {
           Expanded(flex: 3, child: Text(shop.shop_name ?? "-", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: primaryDark))),
           Expanded(flex: 2, child: Text(shop.owner_name ?? "-", style: const TextStyle(fontSize: 13, color: Colors.black87))),
           Expanded(flex: 2, child: Text(shop.phone ?? "-", style: const TextStyle(fontSize: 13, color: Colors.black54))),
+          Expanded(flex: 2, child: Text(shop.password ?? "-", style: const TextStyle(fontSize: 13, color: Colors.black54))),
           Expanded(flex: 2, child: Text(shop.city ?? "-", style: const TextStyle(fontSize: 13, color: Colors.black87))),
           Expanded(flex: 2, child: Text(shop.gst_number ?? "-", style: const TextStyle(fontSize: 12, color: Colors.blueGrey, fontWeight: FontWeight.bold))),
           // SizedBox(

@@ -5,7 +5,6 @@ import '../../constants/static.dart';
 import '../../controllers/api_controller.dart';
 import '../../models/ShopAdminOrderRequestModel.dart';
 import '../../provider/provider.dart';
-import '../../widgets/CustomDropDownSearch.dart';
 
 
 class ShopAdminOrderRequestsScreen extends ConsumerStatefulWidget {
@@ -31,7 +30,6 @@ class _ShopAdminOrderRequestsScreenState extends ConsumerState<ShopAdminOrderReq
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(master_Provider).fetchAllRequestOrderByShopAdmin();
-      ref.read(master_Provider).fetchSuppliers();
     });
   }
 
@@ -52,7 +50,10 @@ class _ShopAdminOrderRequestsScreenState extends ConsumerState<ShopAdminOrderReq
   }
 
   void _toggleGroupSelection(ShopAdminOrderGroupModel group) {
-    final pendingItems = (group.requests ?? []).where((e) => (e.status == null || e.status.toString().toUpperCase() == "PENDING")).map((e) => e.rowId.toString()).toList();
+    final pendingItems = (group.requests ?? []).where((e) {
+      String reqStatus = (e.requestStatus ?? e.status ?? "PENDING").toString().toUpperCase();
+      return reqStatus == "PENDING";
+    }).map((e) => e.rowId.toString()).toList();
 
     if (pendingItems.isEmpty) return;
 
@@ -110,6 +111,19 @@ class _ShopAdminOrderRequestsScreenState extends ConsumerState<ShopAdminOrderReq
     return filtered;
   }
 
+  // Helper to get selected items list for dialog
+  List<ShopAdminOrderRequestModel> _getSelectedItemsList(List<ShopAdminOrderGroupModel> groups) {
+    List<ShopAdminOrderRequestModel> selectedItems = [];
+    for (var grp in groups) {
+      for (var req in (grp.requests ?? [])) {
+        if (selectedIds.contains(req.rowId.toString())) {
+          selectedItems.add(req);
+        }
+      }
+    }
+    return selectedItems;
+  }
+
   @override
   Widget build(BuildContext context) {
     final provider = ref.watch(master_Provider);
@@ -131,7 +145,7 @@ class _ShopAdminOrderRequestsScreenState extends ConsumerState<ShopAdminOrderReq
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Header Section
-                _buildHeaderSection(isMobile),
+                _buildHeaderSection(isMobile, rawGroups),
                 const SizedBox(height: 16),
 
                 // Control Toolbar (Search Bar + View Toggle)
@@ -162,7 +176,7 @@ class _ShopAdminOrderRequestsScreenState extends ConsumerState<ShopAdminOrderReq
   }
 
   // --- HEADER SECTION ---
-  Widget _buildHeaderSection(bool isMobile) {
+  Widget _buildHeaderSection(bool isMobile, List<ShopAdminOrderGroupModel> groups) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -175,7 +189,7 @@ class _ShopAdminOrderRequestsScreenState extends ConsumerState<ShopAdminOrderReq
           ],
         ),
         ElevatedButton.icon(
-          onPressed: selectedIds.isEmpty ? null : () => _openSupplierDialog(),
+          onPressed: selectedIds.isEmpty ? null : () => _openSupplierDialog(groups),
           icon: const Icon(Icons.send_rounded, size: 14),
           label: Text("Send to Supplier (${selectedIds.length})"),
           style: ElevatedButton.styleFrom(
@@ -299,13 +313,14 @@ class _ShopAdminOrderRequestsScreenState extends ConsumerState<ShopAdminOrderReq
   Widget _buildGroupAccordion(ShopAdminOrderGroupModel group, double screenWidth, bool isMobile) {
     final requests = group.requests ?? [];
 
-    // Logic Update: Counter -> Shop Admin flow me pending status requestStatus par depend karta hai
     final pendingRequests = requests.where((e) {
       String reqStatus = (e.requestStatus ?? e.status ?? "PENDING").toString().toUpperCase();
       return reqStatus == "PENDING";
     }).toList();
 
-    bool isFullySelected = pendingRequests.isNotEmpty && pendingRequests.every((e) => selectedIds.contains(e.rowId.toString()));
+    // Check if group has pending requests
+    bool hasPendingRequests = pendingRequests.isNotEmpty;
+    bool isFullySelected = hasPendingRequests && pendingRequests.every((e) => selectedIds.contains(e.rowId.toString()));
 
     return Container(
       clipBehavior: Clip.antiAlias,
@@ -324,7 +339,8 @@ class _ShopAdminOrderRequestsScreenState extends ConsumerState<ShopAdminOrderReq
       child: Theme(
         data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
         child: ExpansionTile(
-          initiallyExpanded: true,
+          // Agr pending request hai toh Open rkho, agar koi pending nahi hai toh Close rkho
+          initiallyExpanded: hasPendingRequests,
           tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
           childrenPadding: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
           title: Wrap(
@@ -337,10 +353,10 @@ class _ShopAdminOrderRequestsScreenState extends ConsumerState<ShopAdminOrderReq
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text("Counter Request", style: TextStyle(
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.w700,
-                      color: primaryNavy,
-                    ),
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w700,
+                    color: primaryNavy,
+                  ),
                   ),
                   const SizedBox(height: 2),
                   Text(
@@ -413,7 +429,6 @@ class _ShopAdminOrderRequestsScreenState extends ConsumerState<ShopAdminOrderReq
     );
   }
 
-// Helper badge for accordion header stats
   Widget _headerMetaBadge(String label, String value, Color themeColor) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -440,7 +455,6 @@ class _ShopAdminOrderRequestsScreenState extends ConsumerState<ShopAdminOrderReq
     );
   }
 
-
   // --- GRID CARDS VIEW ---
   Widget _buildGridCardLayout(List<ShopAdminOrderRequestModel> items, double screenWidth) {
     int crossAxisCount = 1;
@@ -457,14 +471,13 @@ class _ShopAdminOrderRequestsScreenState extends ConsumerState<ShopAdminOrderReq
         crossAxisCount: crossAxisCount,
         crossAxisSpacing: 12,
         mainAxisSpacing: 12,
-        mainAxisExtent: 138, // Clean spacing aur explicit full labels ke liye height set ki hai
+        mainAxisExtent: 138,
       ),
       itemCount: items.length,
       itemBuilder: (context, index) {
         final item = items[index];
         bool isSelected = selectedIds.contains(item.rowId.toString());
 
-        // Status extraction
         String reqStatus = (item.requestStatus ?? item.status ?? "PENDING").toString().toUpperCase();
         String itemStat = (item.itemStatus ?? "PENDING").toString().toUpperCase();
 
@@ -497,12 +510,10 @@ class _ShopAdminOrderRequestsScreenState extends ConsumerState<ShopAdminOrderReq
                 _buildCheckbox(isPending, isSelected),
                 const SizedBox(width: 12),
 
-                // Main Details Container
                 Expanded(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // --- ROW 1: Sweet Details & Counter Request Status ---
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -552,8 +563,6 @@ class _ShopAdminOrderRequestsScreenState extends ConsumerState<ShopAdminOrderReq
                           ),
                         ],
                       ),
-
-                      // --- Ultra-thin subtle divider ---
                       const Padding(
                         padding: EdgeInsets.symmetric(vertical: 8),
                         child: Divider(
@@ -562,16 +571,11 @@ class _ShopAdminOrderRequestsScreenState extends ConsumerState<ShopAdminOrderReq
                           color: Color(0xffE2E8F0),
                         ),
                       ),
-
-                      // --- ROW 2: Supplier Status & Full Quantity Labels ---
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          // Left: Supplier Status Badge
                           _statusBadgeUI("SUPPLIER: $itemStat", _getItemStatusColor(itemStat)),
-
-                          // Right: Supplied & Pending Explicit Quantities
                           RichText(
                             text: TextSpan(
                               style: const TextStyle(fontSize: 11, color: Color(0xff475569)),
@@ -602,7 +606,6 @@ class _ShopAdminOrderRequestsScreenState extends ConsumerState<ShopAdminOrderReq
     );
   }
 
-  // Custom UI Badge Component
   Widget _statusBadgeUI(String fullText, Color statusColor) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
@@ -623,31 +626,29 @@ class _ShopAdminOrderRequestsScreenState extends ConsumerState<ShopAdminOrderReq
     );
   }
 
-// Request Status Color Scheme
   Color _getReqStatusColor(String status) {
     switch (status) {
       case 'APPROVED':
-        return const Color(0xff16A34A); // Modern Emerald Green
+        return const Color(0xff16A34A);
       case 'REJECTED':
-        return const Color(0xffDC2626); // Rose Red
+        return const Color(0xffDC2626);
       case 'PENDING':
       default:
-        return const Color(0xffD97706); // Amber Orange
+        return const Color(0xffD97706);
     }
   }
 
-// Item Status Color Scheme
   Color _getItemStatusColor(String status) {
     switch (status) {
       case 'ACCEPTED':
-        return const Color(0xff0D9488); // Teal
+        return const Color(0xff0D9488);
       case 'PARTIAL':
-        return const Color(0xffEA580C); // Burnt Orange
+        return const Color(0xffEA580C);
       case 'REJECTED':
-        return const Color(0xffDC2626); // Rose Red
+        return const Color(0xffDC2626);
       case 'PENDING':
       default:
-      return const Color(0xff2563EB);
+        return const Color(0xff2563EB);
     }
   }
 
@@ -662,13 +663,9 @@ class _ShopAdminOrderRequestsScreenState extends ConsumerState<ShopAdminOrderReq
         final item = items[index];
         bool isSelected = selectedIds.contains(item.rowId.toString());
 
-        // 1. Counter Request Status (Counter -> Shop Admin)
         String reqStatus = (item.requestStatus ?? item.status ?? "PENDING").toString().toUpperCase();
-
-        // 2. Supplier Item Status (Shop Admin -> Supplier)
         String itemStat = (item.itemStatus ?? "PENDING").toString().toUpperCase();
 
-        // Pending logic strictly based on requestStatus
         bool isPending = reqStatus == "PENDING";
 
         return InkWell(
@@ -698,7 +695,6 @@ class _ShopAdminOrderRequestsScreenState extends ConsumerState<ShopAdminOrderReq
                 _buildCheckbox(isPending, isSelected),
                 const SizedBox(width: 12),
 
-                // Item Name & Counter Details
                 Expanded(
                   flex: isMobile ? 4 : 4,
                   child: Column(
@@ -732,7 +728,6 @@ class _ShopAdminOrderRequestsScreenState extends ConsumerState<ShopAdminOrderReq
 
                 const SizedBox(width: 8),
 
-                // Requested & Fulfill Breakdown
                 Expanded(
                   flex: isMobile ? 4 : 4,
                   child: Column(
@@ -773,7 +768,6 @@ class _ShopAdminOrderRequestsScreenState extends ConsumerState<ShopAdminOrderReq
 
                 const SizedBox(width: 8),
 
-                // Status Badges Column (Admin & Supplier)
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -792,41 +786,38 @@ class _ShopAdminOrderRequestsScreenState extends ConsumerState<ShopAdminOrderReq
   }
 
   Widget _buildCheckbox(bool isPending, bool isSelected) {
-    // Completed / Processed Status
     if (!isPending) {
       return const Icon(
-        Icons.verified_rounded, // Pure solid badge icon
+        Icons.verified_rounded,
         color: Color(0xFF10B981),
         size: 18,
       );
     }
 
-    // Pending Selection Status
     return Icon(
       isSelected
-          ? Icons.task_alt_rounded // Clean round-check for selection
-          : Icons.radio_button_off_rounded, // Smooth border ring for unselected
+          ? Icons.task_alt_rounded
+          : Icons.radio_button_off_rounded,
       color: isSelected ? accentBlue : const Color(0xFFCBD5E1),
       size: 20,
     );
   }
 
 
-  // --- SUPPLIER MODAL DIALOG ---
-  void _openSupplierDialog() {
+  // --- CONFIRM & SEND TO SUPPLIER MODAL DIALOG ---
+  void _openSupplierDialog(List<ShopAdminOrderGroupModel> rawGroups) {
     if (selectedIds.isEmpty) return;
+
+    final selectedItems = _getSelectedItemsList(rawGroups);
 
     showDialog(
       context: context,
       builder: (context) {
-        dynamic selectedSupplier;
         bool isLoading = false;
         String? errorMessage;
 
         return StatefulBuilder(
           builder: (context, setDialogState) {
-            final suppliers = ref.read(master_Provider).allSuppliers ?? [];
-
             return AlertDialog(
               backgroundColor: Colors.white,
               surfaceTintColor: Colors.white,
@@ -838,7 +829,7 @@ class _ShopAdminOrderRequestsScreenState extends ConsumerState<ShopAdminOrderReq
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text(
-                    "Send to Supplier",
+                    "Confirm Order Request",
                     style: TextStyle(
                       color: primaryNavy,
                       fontSize: 16,
@@ -852,16 +843,17 @@ class _ShopAdminOrderRequestsScreenState extends ConsumerState<ShopAdminOrderReq
                 ],
               ),
               content: SizedBox(
-                width: 380,
+                width: 420,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      "${selectedIds.length} request(s) selected",
-                      style: const TextStyle(fontSize: 12, color: slateSub),
+                    const Text(
+                      "Review selected items before forwarding to supplier:",
+                      style: TextStyle(fontSize: 12, color: slateSub),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 12),
+
                     if (errorMessage != null)
                       Container(
                         margin: const EdgeInsets.only(bottom: 12),
@@ -876,32 +868,72 @@ class _ShopAdminOrderRequestsScreenState extends ConsumerState<ShopAdminOrderReq
                           style: const TextStyle(color: Colors.red, fontSize: 11),
                         ),
                       ),
-                    const Text(
-                      "Select Supplier",
-                      style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: primaryNavy),
-                    ),
-                    const SizedBox(height: 6),
-                    SizedBox(
-                      height: 40,
-                      child: CustomDropdownSearch<dynamic>(
-                        items: suppliers,
-                        itemLabelBuilder: (item) =>
-                        "${item.supplier_name ?? item.name ?? '-'} (${item.phone ?? 'No Contact'})",
-                        compareFn: (a, b) =>
-                        a.row_id.toString() == b.row_id.toString(),
-                        onChanged: (val) {
-                          setDialogState(() {
-                            selectedSupplier = val;
-                            errorMessage = null;
-                          });
+
+                    // DIRECT SELECTED ITEMS LIST
+                    Container(
+                      constraints: const BoxConstraints(maxHeight: 250),
+                      decoration: BoxDecoration(
+                        color: const Color(0xffF8FAFC),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: borderCol),
+                      ),
+                      child: ListView.separated(
+                        shrinkWrap: true,
+                        physics: const BouncingScrollPhysics(),
+                        itemCount: selectedItems.length,
+                        separatorBuilder: (_, __) =>
+                        const Divider(height: 1, color: borderCol),
+                        itemBuilder: (context, index) {
+                          final item = selectedItems[index];
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        item.sweetName ?? "-",
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: 12,
+                                          color: primaryNavy,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        "${item.requestedOrder ?? 'REQ'} • ${item.counterName ?? '-'}",
+                                        style: const TextStyle(
+                                          fontSize: 10.5,
+                                          color: slateSub,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: accentBlue.withOpacity(0.08),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Text(
+                                    "${item.requestedQuantity ?? 0} ${item.unit ?? ''}",
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w800,
+                                      fontSize: 11,
+                                      color: accentBlue,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
                         },
-                        hintText: "—",
                       ),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 16),
                   ],
                 ),
               ),
@@ -920,7 +952,7 @@ class _ShopAdminOrderRequestsScreenState extends ConsumerState<ShopAdminOrderReq
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8)),
                         ),
-                        onPressed: (isLoading || selectedSupplier == null)
+                        onPressed: isLoading
                             ? null
                             : () async {
                           setDialogState(() {
@@ -933,8 +965,6 @@ class _ShopAdminOrderRequestsScreenState extends ConsumerState<ShopAdminOrderReq
                                 .createFinalOrderByShopAdmin(
                               context: context,
                               params: {
-                                "supplier_id":
-                                selectedSupplier.row_id.toString(),
                                 "request_ids": List.from(selectedIds),
                               },
                             );
@@ -953,7 +983,7 @@ class _ShopAdminOrderRequestsScreenState extends ConsumerState<ShopAdminOrderReq
                                 const SnackBar(
                                   backgroundColor: Color(0xff10B981),
                                   content: Text(
-                                      "Order processed successfully"),
+                                      "Order sent to supplier successfully"),
                                   duration: Duration(seconds: 2),
                                 ),
                               );
@@ -973,7 +1003,7 @@ class _ShopAdminOrderRequestsScreenState extends ConsumerState<ShopAdminOrderReq
                         },
                         icon: isLoading
                             ? const SizedBox.shrink()
-                            : const Icon(Icons.local_shipping_outlined, size: 16),
+                            : const Icon(Icons.send_rounded, size: 16),
                         label: isLoading
                             ? const SizedBox(
                           height: 16,

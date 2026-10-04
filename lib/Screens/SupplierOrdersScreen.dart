@@ -133,7 +133,8 @@ class _SupplierOrdersScreenState extends State<SupplierOrdersScreen> {
                               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xff0F172A)),
                             ),
                             Text(
-                              "Order ID: #${orderId.length > 6 ? orderId.substring(orderId.length - 6) : orderId}",
+                              // "Order ID: #${orderId.length > 6 ? orderId.substring(orderId.length - 6) : orderId}",
+                              "Order ID: #${orderId.length > 4 ? orderId.substring(orderId.length - 4).toUpperCase() : orderId.toUpperCase()}",
                               style: const TextStyle(fontSize: 11, color: Color(0xff64748B), fontWeight: FontWeight.w500),
                             ),
                           ],
@@ -763,7 +764,7 @@ class _SupplierOrdersScreenState extends State<SupplierOrdersScreen> {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      "#${getShortId(item.orderId)}",
+                      "#${getShortId(item.orderId.toString().toUpperCase())}",
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
@@ -1554,9 +1555,9 @@ class _SupplierOrdersScreenState extends State<SupplierOrdersScreen> {
     decoration: BoxDecoration(color: const Color(0xffF8FAFC), borderRadius: BorderRadius.circular(6), border: Border.all(color: const Color(0xffF1F5F9))),
     child: Column(
       children: [
-        _infoRow("Order ID", "#${getShortId(selectedOrder!.orderId)}"),
+        _infoRow("Order ID", "#${getShortId(selectedOrder!.orderId.toString().toUpperCase())}"),
         _infoRow("Shop", selectedOrder!.shop?.shopName ?? "-"),
-        _infoRow("Received", selectedOrder!.orderDate != null ? DateFormat('dd MMM yyyy, hh:mm a').format(DateTime.parse(selectedOrder!.orderDate.toString())) : "N/A"),
+        _infoRow("Received", selectedOrder!.orderDate != null ? DateFormat('dd MMM yyyy').format(DateTime.parse(selectedOrder!.orderDate.toString())) : "N/A"),
       ],
     ),
   );

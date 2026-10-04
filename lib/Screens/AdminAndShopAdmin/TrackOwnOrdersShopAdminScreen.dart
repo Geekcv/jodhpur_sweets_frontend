@@ -50,7 +50,7 @@ class _TrackOwnOrdersShopAdminScreenState
     if (dateStr == null) return "N/A";
     try {
       DateTime dt = DateTime.parse(dateStr);
-      return DateFormat('dd MMM yyyy • hh:mm a').format(dt);
+      return DateFormat('dd MMM yyyy').format(dt);
     } catch (e) {
       return dateStr;
     }
@@ -167,7 +167,7 @@ class _TrackOwnOrdersShopAdminScreenState
                                     ),
                                   ),
                                   Text(
-                                    "Order ID: #${order.orderId.toString().split('_').last}",
+                                    "Order ID: ${order.orderId.toString().split('_').last.toUpperCase()}",
                                     style: const TextStyle(
                                         fontSize: 11, color: Color(0xff64748B)),
                                   ),
@@ -883,7 +883,7 @@ class _TrackOwnOrdersShopAdminScreenState
                               Row(
                                 children: [
                                   Text(
-                                    "ORDER #${order.orderId.toString().split('_').last}",
+                                    "ORDER ID: ${order.orderId.toString().split('_').last.toUpperCase()}",
                                     style: const TextStyle(
                                       fontSize: 18,
                                       fontWeight: FontWeight.w900,
@@ -1284,7 +1284,7 @@ class _ModernOrderCardState extends State<ModernOrderCard> {
                       Row(
                         children: [
                           Text(
-                            "#${widget.order.orderId.toString().split('_').last}",
+                            "${widget.order.orderId.toString().split('_').last.toUpperCase()}",
                             style: const TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w900,
@@ -1317,7 +1317,7 @@ class _ModernOrderCardState extends State<ModernOrderCard> {
                                   ),
                                   const SizedBox(width: 2),
                                   Text(
-                                    "REORDER OF: #${widget.order.parentOrderId.toString().split('_').last}",
+                                    "REORDER OF: ${widget.order.parentOrderId.toString().split('_').last.toUpperCase()}",
                                     style: const TextStyle(
                                       fontSize: 9,
                                       fontWeight: FontWeight.w700,
@@ -1534,7 +1534,7 @@ class _ModernOrderCardState extends State<ModernOrderCard> {
               const SizedBox(height: 10),
 
               // CARD-LEVEL ACTION BUTTONS (REORDER ALL / CANCEL ALL)
-              if (hasActionableItems) ...[
+              if (hasActionableItems && !LoginUserDetails.isAdmin) ...[
                 Row(
                   children: [
                     Expanded(

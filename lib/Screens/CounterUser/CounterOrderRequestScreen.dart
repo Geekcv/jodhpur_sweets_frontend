@@ -28,9 +28,12 @@ class _CounterOrderRequestScreenState extends ConsumerState<CounterOrderRequestS
 
   final searchCtrl = TextEditingController();
   String searchTerm = "";
+  bool showHindiName = false; // Toggle for Hindi/English display
 
   final Map<String, TextEditingController> _qtyControllers = {};
   final Map<String, dynamic> _cart = {};
+  // Track selected unit for each item (key: sweet_id)
+  final Map<String, String> _selectedUnits = {};
 
   // --- STYLING CONSTANTS ---
   static const Color primaryNavy = Color(0xff0F172A);
@@ -74,6 +77,12 @@ class _CounterOrderRequestScreenState extends ConsumerState<CounterOrderRequestS
       c.dispose();
     }
     super.dispose();
+  }
+
+  // ---------- UNIT HELPERS ----------
+  String _unitFor(dynamic sweet) {
+    final id = sweet.row_id.toString();
+    return _selectedUnits[id] ?? sweet.unit?.toString() ?? "kg";
   }
 
   // ---------- QUANTITY HELPERS ----------
@@ -240,7 +249,7 @@ class _CounterOrderRequestScreenState extends ConsumerState<CounterOrderRequestS
                         final key = _cart.keys.elementAt(index);
                         final sweet = _cart[key];
                         final qty = int.tryParse(_qtyControllers[key]?.text ?? "0") ?? 0;
-                        final unit = sweet.unit?.toString() ?? "unit";
+                        final unit = _unitFor(sweet);
 
                         return Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -306,7 +315,7 @@ class _CounterOrderRequestScreenState extends ConsumerState<CounterOrderRequestS
                         _handleFinalSubmit();
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Color(0xff2563EB),
+                        backgroundColor: const Color(0xff2563EB),
                         elevation: 0,
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
@@ -338,6 +347,7 @@ class _CounterOrderRequestScreenState extends ConsumerState<CounterOrderRequestS
         itemsPayload.add({
           "sweet_id": entry.key,
           "quantity": q,
+          "request_unit": _unitFor(entry.value),
         });
       }
     }
@@ -356,6 +366,7 @@ class _CounterOrderRequestScreenState extends ConsumerState<CounterOrderRequestS
           c.clear();
         }
         _cart.clear();
+        _selectedUnits.clear();
       });
     } else if (res != null && res['status'] == 1) {
       _showToast("${res['msg']}", Colors.redAccent);
@@ -450,13 +461,53 @@ class _CounterOrderRequestScreenState extends ConsumerState<CounterOrderRequestS
   Widget _buildSingleLineControlBar({required List sweets, required bool isMobile}) {
     final double dropdownWidth = isMobile ? double.infinity : 240;
     final double qtyWidth = isMobile ? double.infinity : 120;
-    final double searchWidth = isMobile ? double.infinity : 300;
+    final double searchWidth = isMobile ? double.infinity : 260;
+
+    // 1. Language Toggle Button (Hindi / English Display)
+    Widget langToggleButton = InkWell(
+      onTap: () {
+        setState(() {
+          showHindiName = !showHindiName;
+        });
+      },
+      borderRadius: BorderRadius.circular(6),
+      child: Container(
+        height: 34,
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        decoration: BoxDecoration(
+          color: showHindiName ? const Color(0xffFEF3C7) : cardBg,
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(
+            color: showHindiName ? const Color(0xffD97706) : borderCol,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.translate,
+              size: 14,
+              color: showHindiName ? const Color(0xffD97706) : Colors.blueGrey,
+            ),
+            const SizedBox(width: 4),
+            Text(
+              showHindiName ? "HI" : "EN",
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: showHindiName ? const Color(0xffD97706) : const Color(0xff0F172A),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
 
     // Input Controls Box (3 elements)
     Widget inputCard = Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: cardBg, // White Background sirf 3 inputs wale container ke liye
+        color: cardBg,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: borderCol),
       ),
@@ -465,7 +516,7 @@ class _CounterOrderRequestScreenState extends ConsumerState<CounterOrderRequestS
         runSpacing: 8,
         crossAxisAlignment: WrapCrossAlignment.center,
         children: [
-          // 1. Dropdown
+          // Dropdown (Shows Hindi name when showHindiName is true)
           SizedBox(
             width: dropdownWidth,
             height: 34,
@@ -473,14 +524,18 @@ class _CounterOrderRequestScreenState extends ConsumerState<CounterOrderRequestS
               items: sweets,
               selectedItem: selectedSweet,
               itemLabelBuilder: (v) {
-                return v != null ? "${v.sweet_name}" : "Select Item";
+                if (v == null) return "Select Item";
+                if (showHindiName && (v.hindi_sweets_name?.toString().isNotEmpty ?? false)) {
+                  return "${v.hindi_sweets_name}";
+                }
+                return "${v.sweet_name}";
               },
               compareFn: (a, b) => a?.row_id == b?.row_id,
               onChanged: (v) => setState(() => selectedSweet = v),
               hintText: "Select Item",
             ),
           ),
-          // 2. Qty Input
+          // Qty Input
           SizedBox(
             width: qtyWidth,
             height: 34,
@@ -492,7 +547,7 @@ class _CounterOrderRequestScreenState extends ConsumerState<CounterOrderRequestS
               maxLines: 1,
             ),
           ),
-          // 3. Add Button
+          // Add Button
           SizedBox(
             height: 34,
             width: isMobile ? double.infinity : null,
@@ -508,7 +563,7 @@ class _CounterOrderRequestScreenState extends ConsumerState<CounterOrderRequestS
                 ),
               ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xff2563EB),
+                backgroundColor: const Color(0xff2563EB),
                 elevation: 0,
                 padding: const EdgeInsets.symmetric(horizontal: 14),
                 shape: RoundedRectangleBorder(
@@ -533,7 +588,7 @@ class _CounterOrderRequestScreenState extends ConsumerState<CounterOrderRequestS
           hintStyle: const TextStyle(fontSize: 11, color: Colors.grey),
           prefixIcon: const Icon(Icons.search, size: 15, color: Colors.blueGrey),
           filled: true,
-          fillColor: cardBg, // Smooth contrast background
+          fillColor: cardBg,
           contentPadding: const EdgeInsets.symmetric(vertical: 6),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(6),
@@ -551,14 +606,20 @@ class _CounterOrderRequestScreenState extends ConsumerState<CounterOrderRequestS
       ),
     );
 
-    // Mobile layout setup (Vertical stack) vs Desktop layout setup (Horizontal Row)
+    // Mobile layout setup vs Desktop layout setup
     if (isMobile) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           inputCard,
           const SizedBox(height: 10),
-          searchField,
+          Row(
+            children: [
+              Expanded(child: searchField),
+              const SizedBox(width: 8),
+              langToggleButton,
+            ],
+          ),
         ],
       );
     }
@@ -568,48 +629,56 @@ class _CounterOrderRequestScreenState extends ConsumerState<CounterOrderRequestS
       children: [
         Expanded(child: Align(alignment: Alignment.centerLeft, child: inputCard)),
         const SizedBox(width: 12),
-        searchField,
+        Row(
+          children: [
+            searchField,
+            const SizedBox(width: 8),
+            langToggleButton,
+          ],
+        ),
       ],
     );
   }
-  // ---------- TABLE HEADER UI (Matching Example) ----------
+  // ---------- TABLE HEADER UI ----------
   Widget _buildTableHeader() {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
       decoration: BoxDecoration(
         color: bgLight,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(6),
-            topRight: Radius.circular(6),
-            bottomLeft: Radius.circular(0),
-            bottomRight: Radius.circular(0),
-          ),
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(6),
+          topRight: Radius.circular(6),
+          bottomLeft: Radius.circular(0),
+          bottomRight: Radius.circular(0),
+        ),
         border: Border.all(color: borderCol),
       ),
       child: const Row(
         children: [
           SizedBox(width: 45, child: Text("S.N.", style: _hStyle)),
           Expanded(flex: 3, child: Text("SWEET NAME", style: _hStyle)),
-          // Expanded(flex: 2, child: Text("COUNTER NAME", style: _hStyle)),
           Expanded(flex: 2, child: Text("CATEGORY", style: _hStyle)),
-          Expanded(flex: 2, child: Text("SHELF LIFE", style: _hStyle)),
+          Expanded(flex: 2, child: Text("UNIT TYPE", style: _hStyle)),
           Expanded(flex: 2, child: Text("QUANTITY", textAlign: TextAlign.center, style: _hStyle)),
         ],
       ),
     );
   }
 
-
-
-  // ---------- ORDER ROW UI (Matching Example Design) ----------
+  // ---------- ORDER ROW UI ----------
   Widget _buildOrderRow(dynamic sweet, bool isMobile, int index) {
     final qty = _qtyOf(sweet);
     final bool selected = qty > 0;
 
-    final String sweetName = sweet.sweet_name?.toString().toUpperCase() ?? 'N/A';
-    // final String counterName = sweet.counter_name?.toString() ?? '-';
+    // Display Name logic: Hindi selection toggle par hindi_sweets_name, request me English name hi jaayega
+    final String englishName = sweet.sweet_name?.toString().toUpperCase() ?? 'N/A';
+    final String hindiName = sweet.hindi_sweets_name?.toString() ?? '';
+
+    final String displayName = (showHindiName && hindiName.isNotEmpty)
+        ? hindiName
+        : englishName;
+
     final String categoryName = sweet.category_name?.toString() ?? '-';
-    final String shelfLife = sweet.shelf_life_days != null ? "${sweet.shelf_life_days} Days" : "-";
 
     if (isMobile) {
       return Container(
@@ -623,34 +692,34 @@ class _CounterOrderRequestScreenState extends ConsumerState<CounterOrderRequestS
             width: selected ? 1.2 : 1,
           ),
         ),
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // GestureDetector(
-            //   onTap: () => _showImageDialog(sweet.image_url?.toString()),
-            //   child: _thumb(sweet.image_url?.toString(), sweetName, size: 36),
-            // ),
-            // const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text("$index. $sweetName",style: const TextStyle(fontWeight: FontWeight.bold,fontSize: 13,color: primaryDark,)),
-                  const SizedBox(height: 2),
-                  Wrap(
-                    spacing: 4,
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // if (counterName != '-')
-                      //   _metaBadge(counterName, primaryNavy.withOpacity(0.06), primaryNavy),
+                      Text(
+                        "$index. $displayName",
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                          color: primaryDark,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
                       if (categoryName != '-')
                         _metaBadge(categoryName, Colors.blueGrey.withOpacity(0.08), Colors.blueGrey[800]!),
                     ],
-                  )
-                ],
-              ),
+                  ),
+                ),
+                _compactQtyStepper(sweet),
+              ],
             ),
-            const SizedBox(width: 8),
-            _compactQtyStepper(sweet),
+            const SizedBox(height: 6),
+            _buildUnitRadioButtons(sweet),
           ],
         ),
       );
@@ -667,61 +736,35 @@ class _CounterOrderRequestScreenState extends ConsumerState<CounterOrderRequestS
           // Index
           SizedBox(
             width: 45,
-            child: Text("${index.toString()}.",
-              style: TextStyle(color: Colors.grey[600],fontSize: 12,fontWeight: FontWeight.w500),
+            child: Text(
+              "${index.toString()}.",
+              style: TextStyle(color: Colors.grey[600], fontSize: 12, fontWeight: FontWeight.w500),
             ),
           ),
 
-          // Sweet Info
+          // Sweet Info (DisplayName)
           Expanded(
             flex: 3,
-            child: Row(
-              children: [
-                // GestureDetector(
-                //   onTap: () => _showImageDialog(sweet.image_url?.toString()),
-                //   child: _thumb(sweet.image_url?.toString(), sweetName, size: 32),
-                // ),
-                // const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(sweetName,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontWeight: FontWeight.bold,fontSize: 13,color: primaryDark),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+            child: Text(
+              displayName,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: primaryDark),
             ),
           ),
-
-          // Counter
-          // Expanded(
-          //   flex: 2,
-          //   child: Text(counterName,style: const TextStyle(fontSize: 13,color: Colors.blueGrey,fontWeight: FontWeight.w500)),
-          // ),
-
-          // Category
           Expanded(
             flex: 2,
-            child: Text(categoryName,
-              style: TextStyle(fontSize: 12,color: Colors.grey[700],fontWeight: FontWeight.w500),
+            child: Text(
+              categoryName,
+              style: TextStyle(fontSize: 12, color: Colors.grey[700], fontWeight: FontWeight.w500),
             ),
           ),
-
-          // Shelf Life
+          // Dynamic Radio Buttons for Units
           Expanded(
             flex: 2,
-            child: Text(shelfLife,
-              style: TextStyle(fontSize: 12,color: Colors.green[800],fontWeight: FontWeight.w600),
-            ),
+            child: _buildUnitRadioButtons(sweet),
           ),
-
-          // Quantity Stepper
+          // Quantity Stepper with dynamic unit tag reflect
           Expanded(
             flex: 2,
             child: Center(
@@ -730,6 +773,80 @@ class _CounterOrderRequestScreenState extends ConsumerState<CounterOrderRequestS
           ),
         ],
       ),
+    );
+  }
+  // Radio button for Unit Selection
+  Widget _buildUnitRadioButtons(dynamic sweet) {
+    final String id = sweet.row_id.toString();
+    final String basicUnit = sweet.unit?.toString() ?? "";
+    final String bulkUnit = sweet.bulk_unit?.toString() ?? "";
+
+    // Default basic unit set if null
+    final String currentUnit = _selectedUnits[id] ?? (basicUnit.isNotEmpty ? basicUnit : "kg");
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (basicUnit.isNotEmpty) ...[
+          InkWell(
+            onTap: () {
+              setState(() {
+                _selectedUnits[id] = basicUnit;
+              });
+            },
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Radio<String>(
+                  value: basicUnit,
+                  groupValue: currentUnit,
+                  visualDensity: VisualDensity.compact,
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  activeColor: const Color(0xff2563EB),
+                  onChanged: (val) {
+                    if (val != null) {
+                      setState(() {
+                        _selectedUnits[id] = val;
+                      });
+                    }
+                  },
+                ),
+                Text(basicUnit, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: primaryDark)),
+              ],
+            ),
+          ),
+        ],
+        if (bulkUnit.isNotEmpty) ...[
+          const SizedBox(width: 8),
+          InkWell(
+            onTap: () {
+              setState(() {
+                _selectedUnits[id] = bulkUnit;
+              });
+            },
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Radio<String>(
+                  value: bulkUnit,
+                  groupValue: currentUnit,
+                  visualDensity: VisualDensity.compact,
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  activeColor: const Color(0xff2563EB),
+                  onChanged: (val) {
+                    if (val != null) {
+                      setState(() {
+                        _selectedUnits[id] = val;
+                      });
+                    }
+                  },
+                ),
+                Text(bulkUnit, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: primaryDark)),
+              ],
+            ),
+          ),
+        ],
+      ],
     );
   }
 
@@ -747,9 +864,11 @@ class _CounterOrderRequestScreenState extends ConsumerState<CounterOrderRequestS
   Widget _compactQtyStepper(dynamic sweet) {
     final ctrl = _ctrlFor(sweet);
     final bool selected = _qtyOf(sweet) > 0;
+    final String currentUnit = _unitFor(sweet);
 
     return Container(
       height: 28,
+      padding: const EdgeInsets.symmetric(horizontal: 2),
       decoration: BoxDecoration(
         color: selected ? primaryNavy.withOpacity(0.05) : bgCol,
         borderRadius: BorderRadius.circular(5),
@@ -783,6 +902,20 @@ class _CounterOrderRequestScreenState extends ConsumerState<CounterOrderRequestS
             ),
           ),
           _stepperBtn(Icons.add, () => _bump(sweet, 1)),
+          const SizedBox(width: 4),
+          // Reflect unit dynamically right in stepper
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+            decoration: BoxDecoration(
+              color: const Color(0xff2563EB).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(3),
+            ),
+            child: Text(
+              currentUnit,
+              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xff2563EB)),
+            ),
+          ),
+          const SizedBox(width: 2),
         ],
       ),
     );
@@ -803,8 +936,7 @@ class _CounterOrderRequestScreenState extends ConsumerState<CounterOrderRequestS
   // ---------- BOTTOM SUBMIT BAR ----------
   Widget _buildBottomBar(bool isMobile) {
     return Container(
-      padding:
-      EdgeInsets.symmetric(horizontal: isMobile ? 12 : 20, vertical: 8),
+      padding: EdgeInsets.symmetric(horizontal: isMobile ? 12 : 20, vertical: 8),
       decoration: BoxDecoration(
         color: cardBg,
         border: const Border(top: BorderSide(color: borderCol)),
@@ -822,7 +954,6 @@ class _CounterOrderRequestScreenState extends ConsumerState<CounterOrderRequestS
           children: [
             Expanded(
               child: Text(
-                // "${_cart.length} Items Selected  •  Total Qty: $_totalUnits",
                 "${_cart.length} Items Selected",
                 style: const TextStyle(
                   fontWeight: FontWeight.w800,
@@ -855,7 +986,7 @@ class _CounterOrderRequestScreenState extends ConsumerState<CounterOrderRequestS
                   ),
                 ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Color(0xff2563EB),
+                  backgroundColor: const Color(0xff2563EB),
                   elevation: 0,
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   shape: RoundedRectangleBorder(
@@ -870,44 +1001,6 @@ class _CounterOrderRequestScreenState extends ConsumerState<CounterOrderRequestS
     );
   }
 
-  // ---------- THUMBNAIL RENDER ----------
-  // Widget _thumb(String? path, String? name, {double size = 32}) {
-  //   final String initial =
-  //   (name != null && name.isNotEmpty) ? name[0].toUpperCase() : "?";
-  //
-  //   Widget fallback = Container(
-  //     width: size,
-  //     height: size,
-  //     alignment: Alignment.center,
-  //     decoration: BoxDecoration(
-  //       color: primaryNavy.withOpacity(0.08),
-  //       borderRadius: BorderRadius.circular(6),
-  //     ),
-  //     child: Text(
-  //       initial,
-  //       style: TextStyle(
-  //         fontWeight: FontWeight.w800,
-  //         fontSize: size * 0.4,
-  //         color: primaryNavy,
-  //       ),
-  //     ),
-  //   );
-  //
-  //   if (path == null || path.isEmpty) return fallback;
-  //   final String url = path.startsWith("http") ? path : "$serverUrlMedia$path";
-  //
-  //   return ClipRRect(
-  //     borderRadius: BorderRadius.circular(6),
-  //     child: Image.network(
-  //       url,
-  //       width: size,
-  //       height: size,
-  //       fit: BoxFit.cover,
-  //       errorBuilder: (_, __, ___) => fallback,
-  //     ),
-  //   );
-  // }
-
   Widget _emptyState() {
     return Container(
       width: double.infinity,
@@ -921,7 +1014,6 @@ class _CounterOrderRequestScreenState extends ConsumerState<CounterOrderRequestS
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Soft rounded icon background
             Container(
               padding: const EdgeInsets.all(12),
               child: const Icon(

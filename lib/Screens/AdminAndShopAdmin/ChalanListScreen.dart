@@ -220,7 +220,7 @@ class _ChalanListScreenState extends ConsumerState<ChalanListScreen> {
                 children: [
                   const Icon(Icons.description_outlined, color: Color(0xff64748B), size: 20),
                   const SizedBox(width: 8),
-                  Text("CHL-${data.chalanId.toString().split('_').last}", style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: Color(0xff1E293B))),
+                  Text("CHL-${data.chalanId.toString().split('_').last.toUpperCase()}", style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: Color(0xff1E293B))),
                   const Spacer(),
                   _statusBadge(data.orderStatus ?? "PENDING"),
                 ],
@@ -235,7 +235,8 @@ class _ChalanListScreenState extends ConsumerState<ChalanListScreen> {
                   _infoTile(Icons.home_outlined, "DESTINATION", data.shopName ?? "-", "${data.city}, ${data.state}"),
                   _infoTile(Icons.local_shipping_outlined, "VEHICLE", data.transportDetails ?? "-", "${data.supplierName}"),
                   const SizedBox(width: 6),
-                  _infoTile(Icons.calendar_today_outlined, "DISPATCH", formatDate(data.dispatchDate.toString()), formatTime(data.orderDate.toString())),
+                  // _infoTile(Icons.calendar_today_outlined, "DISPATCH", formatDate(data.dispatchDate.toString()), formatTime(data.orderDate.toString())),
+                  _infoTile(Icons.calendar_today_outlined, "DISPATCH", formatDate(data.dispatchDate.toString()), ''),
                 ],
               ),
             ),
@@ -356,11 +357,11 @@ class _ChalanListScreenState extends ConsumerState<ChalanListScreen> {
 
   void _showChalanDetail(ChalanDataModel data) {
     String shortChalanId = data.chalanId.toString().length > 4
-        ? data.chalanId.toString().substring(data.chalanId.toString().length - 4)
-        : data.chalanId.toString();
+        ? data.chalanId.toString().substring(data.chalanId.toString().length - 4).toUpperCase()
+        : data.chalanId.toString().toUpperCase();
     String shortOrderId = data.orderId.toString().length > 4
-        ? data.orderId.toString().substring(data.orderId.toString().length - 4)
-        : data.orderId.toString();
+        ? data.orderId.toString().substring(data.orderId.toString().length - 4).toUpperCase()
+        : data.orderId.toString().toUpperCase();
 
     final ScrollController itemsScrollController = ScrollController();
 
@@ -605,7 +606,7 @@ class _ChalanListScreenState extends ConsumerState<ChalanListScreen> {
                                       ),
                                       const SizedBox(height: 4),
                                       Text(
-                                        "Order: #ORD-$shortOrderId",
+                                        "Order: #$shortOrderId",
                                         style: const TextStyle(fontSize: 12, color: Color(0xff64748B)),
                                       ),
                                       if (data.city != null || data.state != null) ...[

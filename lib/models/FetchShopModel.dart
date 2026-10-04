@@ -13,10 +13,11 @@ class FetchShopModel {
   var is_active;
   var cr_on;
   var up_on;
+  var password;
 
   FetchShopModel({this.row_id,this.shop_name,this.address, this.city, this.state,
     this.pincode, this.phone, this.email, this.gst_number, this.owner_name, this.logo_url,
-    this.is_active, this.cr_on,this.up_on});
+    this.is_active, this.cr_on,this.up_on,this.password});
 
   factory FetchShopModel.fromJson(Map<String, dynamic> json) {
     return FetchShopModel(
@@ -31,6 +32,7 @@ class FetchShopModel {
       gst_number: json['gst_number'],
       owner_name: json['owner_name'],
       logo_url: json['logo_url'],
+      password: json['password'],
       is_active: json['is_active'] ?? false,
       cr_on: json['cr_on'] != null ? DateTime.parse(json['cr_on']) : null,
     );
@@ -50,6 +52,7 @@ class FetchShopModel {
       'owner_name': owner_name,
       'logo_url': logo_url,
       'is_active': is_active,
+      'password': password,
       'cr_on': cr_on?.toIso8601String(),
     };
   }

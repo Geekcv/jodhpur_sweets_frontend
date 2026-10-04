@@ -19,6 +19,9 @@ class FetchSweetsModel {
   var counter_id;
   var supplier_id;
   var supplier_name;
+  var bulk_unit;
+  var bulk_conversion;
+  var hindi_sweets_name;
 
   FetchSweetsModel({
     this.row_id,
@@ -41,6 +44,9 @@ class FetchSweetsModel {
     this.counter_name,
     this.supplier_name,
     this.supplier_id,
+    this.bulk_unit,
+    this.bulk_conversion,
+    this.hindi_sweets_name,
   });
 
   factory FetchSweetsModel.fromJson(Map<String, dynamic> json) {
@@ -65,6 +71,9 @@ class FetchSweetsModel {
       counter_id: json['counter_id'] ?? "",
       supplier_name: json['supplier_name'] ?? "-",
       supplier_id: json['supplier_id'] ?? "",
+      bulk_unit: json['bulk_unit'] ?? "",
+      bulk_conversion: json['bulk_conversion'] ?? "",
+      hindi_sweets_name: json['hindi_sweets_name'] ?? "",
     );
   }
 
@@ -90,6 +99,9 @@ class FetchSweetsModel {
       'counter_id': counter_id,
       'supplier_id': supplier_id,
       'supplier_name': supplier_name,
+      'bulk_unit': bulk_unit,
+      'bulk_conversion': bulk_conversion,
+      'hindi_sweets_name': hindi_sweets_name,
     };
   }
 }

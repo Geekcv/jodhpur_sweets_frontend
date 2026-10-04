@@ -190,27 +190,27 @@ class _OrderRequestListScreenState
       ),
     );
 
-    Widget filterDropdown = SizedBox(
-      width: isSmallScreen ? double.infinity : 150,
-      height: 38,
-      child: CustomDropdownSearch<String>(
-        items: filterOptions,
-        selectedItem: selectedFilter,
-        itemLabelBuilder: (v) {
-          if (v == "ACCEPTED") return "Approved";
-          if (v == "PENDING") return "Pending";
-          if (v == "REJECTED") return "Rejected";
-          return v ?? "Select Filter";
-        },
-        compareFn: (a, b) => a == b,
-        onChanged: (v) {
-          if (v != null) {
-            setState(() => selectedFilter = v);
-          }
-        },
-        hintText: "Filter Status",
-      ),
-    );
+    // Widget filterDropdown = SizedBox(
+    //   width: isSmallScreen ? double.infinity : 150,
+    //   height: 38,
+    //   child: CustomDropdownSearch<String>(
+    //     items: filterOptions,
+    //     selectedItem: selectedFilter,
+    //     itemLabelBuilder: (v) {
+    //       if (v == "ACCEPTED") return "Approved";
+    //       if (v == "PENDING") return "Pending";
+    //       if (v == "REJECTED") return "Rejected";
+    //       return v ?? "Select Filter";
+    //     },
+    //     compareFn: (a, b) => a == b,
+    //     onChanged: (v) {
+    //       if (v != null) {
+    //         setState(() => selectedFilter = v);
+    //       }
+    //     },
+    //     hintText: "Filter Status",
+    //   ),
+    // );
 
     Widget viewToggleIcons = Container(
       height: 38,
@@ -245,7 +245,7 @@ class _OrderRequestListScreenState
           const SizedBox(height: 10),
           Row(
             children: [
-              Expanded(child: filterDropdown),
+              // Expanded(child: filterDropdown),
               const SizedBox(width: 10),
               viewToggleIcons,
             ],
@@ -258,8 +258,8 @@ class _OrderRequestListScreenState
       children: [
         searchBar,
         const SizedBox(width: 12),
-        filterDropdown,
-        const SizedBox(width: 12),
+        // filterDropdown,
+        // const SizedBox(width: 12),
         viewToggleIcons,
       ],
     );

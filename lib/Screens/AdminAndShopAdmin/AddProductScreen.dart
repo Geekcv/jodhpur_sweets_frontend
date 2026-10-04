@@ -31,14 +31,23 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
   String? selectedDepartmentId;
   String? selectedSupplierId;
 
-  String selectedUnit = "kg";
-  final List<String> unitList = ["kg", "gram", "pc", "box", "pkt", "litre"];
+  // --- UNIT SELECTION LISTS ---
+  static const List<String> basicUnitList = ["KG", "GM", "PCS"];
+  static const List<String> bulkUnitList = ["BOX", "CARTON", "TRAY", "CONTAINER"];
+
+  String selectedUnit = "KG";
+  String? selectedBulkUnit;
+
+  // Default layout Mode set to Grid
+  bool isGridView = true;
 
   final nameController = TextEditingController();
+  final hindiNameController = TextEditingController();
+  final hsnCodeController = TextEditingController();
+  final bulkConversionController = TextEditingController();
   final descController = TextEditingController();
   final priceController = TextEditingController();
   final shelfLifeController = TextEditingController();
-  final unitController = TextEditingController(text: "kg");
 
   static const Color primaryDark = Color(0xff1A2B4C);
   static const Color accentGold = Color(0xffC5A059);
@@ -55,12 +64,23 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
       ref.read(master_Provider).fetchSuppliers();
       ref.read(master_Provider).fetchDepartment();
 
-      // ref.read(master_Provider).fetchShop();
-      if(LoginUserDetails.isAdmin) {
+      if (LoginUserDetails.isAdmin) {
         ref.read(master_Provider).fetchShop();
       }
       ref.read(master_Provider).fetchCounter();
     });
+  }
+
+  @override
+  void dispose() {
+    nameController.dispose();
+    hindiNameController.dispose();
+    hsnCodeController.dispose();
+    bulkConversionController.dispose();
+    descController.dispose();
+    priceController.dispose();
+    shelfLifeController.dispose();
+    super.dispose();
   }
 
   // --- SAVE LOGIC ---
@@ -69,24 +89,22 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
     if (selectedCatId == null) return _showToast("Select Category!", Colors.redAccent);
     if (selectedDepartmentId == null) return _showToast("Select Department!", Colors.redAccent);
     if (selectedSupplierId == null) return _showToast("Select Supplier!", Colors.redAccent);
-    // if (selectedShopId == null && LoginUserDetails.isAdmin) return _showToast("Select Shop!", Colors.redAccent);
-    // if (selectedCounterId == null) return _showToast("Select Counter!", Colors.redAccent);
 
     final priceStr = priceController.text.trim();
     if (priceStr.isEmpty || double.tryParse(priceStr) == null || double.parse(priceStr) <= 0) {
       return _showToast("Enter valid Price!", Colors.redAccent);
     }
 
+    if (selectedBulkUnit != null && selectedBulkUnit!.isNotEmpty) {
+      if (bulkConversionController.text.trim().isEmpty) {
+        return _showToast("Bulk Conversion is required when Bulk Unit is selected!", Colors.redAccent);
+      }
+    }
+
     final shelfLifeStr = shelfLifeController.text.trim();
     if (shelfLifeStr.isNotEmpty && int.tryParse(shelfLifeStr) == null) {
       return _showToast("Shelf Life must be a number!", Colors.redAccent);
     }
-
-    final desc = descController.text.trim();
-    // if (desc.isEmpty) {
-    //   return _showToast("Description is required!", Colors.redAccent);
-    // }
-
 
     if (attachments_uploaded.isEmpty) {
       return _showToast("Please upload a product image!", Colors.orangeAccent);
@@ -100,6 +118,8 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
     try {
       final productData = {
         "sweet_name": nameController.text.trim(),
+        "hindi_sweets_name": hindiNameController.text.trim(),
+        "hsn_code": hsnCodeController.text.trim(),
         "description": descController.text.trim(),
         "price": priceStr,
         "department_id": selectedDepartmentId,
@@ -108,8 +128,9 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
         "shop_id": LoginUserDetails.isAdmin ? selectedShopId : LoginUserDetails.shopId,
         "counter_id": selectedCounterId,
         "shelf_life_days": shelfLifeController.text.trim().isEmpty ? "0" : shelfLifeController.text.trim(),
-        // "unit": unitController.text.trim(),
         "unit": selectedUnit,
+        "bulk_unit": selectedBulkUnit ?? "",
+        "Bulk_conversion": bulkConversionController.text.trim(),
         "return_type": selectedReturnType,
         "image_url": attachments_uploaded.isNotEmpty ? attachments_uploaded.first['foPa'] : "",
       };
@@ -119,8 +140,7 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
         _showToast("Sweet Item Saved Successfully!", Colors.green);
         _resetForm();
         ref.read(master_Provider).fetchSweets();
-      }
-      if (res['status'] == 1) {
+      } else if (res != null && res['status'] == 1) {
         _showToast("${res['msg']}", Colors.red);
       }
     } finally {
@@ -130,15 +150,18 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
 
   void _resetForm() {
     nameController.clear();
+    hindiNameController.clear();
+    hsnCodeController.clear();
+    bulkConversionController.clear();
     descController.clear();
     priceController.clear();
     shelfLifeController.clear();
-    unitController.text = "kg";
     attachments_uploaded.clear();
     selectedCatId = null;
     selectedDepartmentId = null;
     selectedSupplierId = null;
-    selectedUnit = "kg";
+    selectedUnit = "KG";
+    selectedBulkUnit = null;
     selectedShopId = null;
     selectedCounterId = null;
     selectedReturnType = null;
@@ -156,23 +179,53 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        bool isMobile = constraints.maxWidth < 900;
+        bool isMobile = constraints.maxWidth < 700;
+        bool isTab = constraints.maxWidth >= 700 && constraints.maxWidth < 1100;
 
         return Scaffold(
           backgroundColor: const Color(0xffF4F7FA),
           body: SingleChildScrollView(
-            padding: EdgeInsets.all(isMobile ? 16 : 25),
+            padding: EdgeInsets.all(isMobile ? 12 : 24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildHeader("Sweet Master", sweets.length),
-                const SizedBox(height: 25),
+                const SizedBox(height: 20),
                 _buildResponsiveForm(isMobile, masterProv),
-                const SizedBox(height: 35),
-                _buildSectionTitle("REGISTERED INVENTORY"),
+                const SizedBox(height: 30),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    _buildSectionTitle("REGISTERED INVENTORY"),
+                    // Toggle Grid / List View
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: borderCol),
+                      ),
+                      child: Row(
+                        children: [
+                          IconButton(
+                            icon: Icon(Icons.grid_view_rounded, size: 20, color: isGridView ? accentGold : Colors.grey),
+                            onPressed: () => setState(() => isGridView = true),
+                            tooltip: "Grid View",
+                          ),
+                          Container(width: 1, height: 20, color: borderCol),
+                          IconButton(
+                            icon: Icon(Icons.format_list_bulleted_rounded, size: 20, color: !isGridView ? accentGold : Colors.grey),
+                            onPressed: () => setState(() => isGridView = false),
+                            tooltip: "List View",
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
                 const SizedBox(height: 15),
-                // FIXED HEIGHT SCROLLABLE LIST
-                _buildScrollableList(sweets, masterProv.loading, isMobile),
+                isGridView
+                    ? _buildGridView(sweets, masterProv.loading, isMobile, isTab)
+                    : _buildScrollableList(sweets, masterProv.loading, isMobile),
               ],
             ),
           ),
@@ -184,7 +237,7 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
   Widget _buildResponsiveForm(bool isMobile, var masterProv) {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(isMobile ? 18 : 25),
+      padding: EdgeInsets.all(isMobile ? 16 : 24),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -199,7 +252,7 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
       ])
           : Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
         _buildLargeImagePicker(),
-        const SizedBox(width: 30),
+        const SizedBox(width: 25),
         Expanded(child: _buildFormInputs(isMobile, masterProv)),
       ]),
     );
@@ -236,10 +289,10 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
     return Column(
       children: [
         _formGrid(isMobile, [
-          _box("SWEET NAME *", nameController, hint: "Name"),
-
+          _box("SWEET NAME", nameController, hint: "Name"),
+          _box("HINDI SWEET NAME", hindiNameController, hint: "हिन्दी नाम"),
           _commonDropdown(
-            label: "DEPARTMENT *",
+            label: "DEPARTMENT",
             items: filteredDepartments,
             itemLabel: (v) => v.department_name ?? "",
             // --- FIXED: Safe type conversion to avoid DDC TypeError ---
@@ -297,7 +350,7 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
 
           // _commonDropdown("CATEGORY *", masterProv.allCategories ?? [], (v) => v.category_name, (v) => selectedCatId = v.row_id.toString()),
           _commonDropdown(
-            label: "CATEGORY *",
+            label: "CATEGORY",
             items: filteredCategories,
             itemLabel: (v) => v.category_name ?? "",
             // --- FIXED: Safe type conversion to avoid DDC TypeError ---
@@ -316,44 +369,35 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
               });
             },
           ),
-
-
-        ]),
-        const SizedBox(height: 16),
-        _formGrid(isMobile, [
-          // _commonDropdown("COUNTER *", masterProv.allCounters ?? [], (v) => v.counter_name, (v) => selectedCounterId = v.row_id.toString()),
-          // _commonDropdown(
-          //   label: "COUNTER *",
-          //   items: masterProv.allCounters ?? [],
-          //   itemLabel: (v) => v.counter_name,
-          //   selectedItem: (masterProv.allCounters ?? []).cast<dynamic>().firstWhere(
-          //           (c) => c.row_id.toString() == selectedCounterId,
-          //       orElse: () => null
-          //   ),
-          //   onSelected: (v) => setState(() => selectedCounterId = v?.row_id.toString()),
-          // ),
-
           _commonDropdown(
-            label: "SUPPLIER *",
+            label: "SUPPLIER",
             items: masterProv.allSuppliers ?? [],
             itemLabel: (v) => v.supplier_name ?? "",
             selectedItem: (masterProv.allSuppliers ?? []).cast<dynamic>().firstWhere(
-                    (s) => s.row_id.toString() == selectedSupplierId,
-                orElse: () => null
+                  (s) => s.row_id.toString() == selectedSupplierId,
+              orElse: () => null,
             ),
             onSelected: (v) => setState(() => selectedSupplierId = v?.row_id.toString()),
           ),
-          _box("PRICE (₹) *", priceController, isNum: true),
-          // _box("UNIT", unitController, hint: "kg/pc"),
-          _simpleDropdown("UNIT", unitList, selectedUnit, (v) => setState(() => selectedUnit = v ?? "kg")),
         ]),
-        const SizedBox(height: 16),
+        const SizedBox(height: 14),
         _formGrid(isMobile, [
+          _simpleDropdown("BASIC UNIT", basicUnitList, selectedUnit, (v) => setState(() => selectedUnit = v ?? "KG")),
+          _simpleDropdown("BULK UNIT", bulkUnitList, selectedBulkUnit, (v) => setState(() => selectedBulkUnit = v)),
+          _box("BULK CONVERSION", bulkConversionController, isNum: true, hint: "e.g. 67"),
+        ]),
+        const SizedBox(height: 14),
+        _formGrid(isMobile, [
+          _box("HSN CODE", hsnCodeController, hint: "21069099"),
           _box("SHELF LIFE (days)", shelfLifeController, isNum: true),
-          _simpleDropdown("RETURN TYPE", ["RETURNABLE", "NON-RETURNABLE"], selectedReturnType, (v) => setState(() => selectedReturnType = v)),
+          _simpleDropdown("RETURN TYPE", ["RETURNABLE", "NON-RETURNABLE", "NONE"], selectedReturnType, (v) => setState(() => selectedReturnType = v)),
+        ]),
+        const SizedBox(height: 14),
+        _formGrid(isMobile, [
+          _box("PRICE (₹)", priceController, isNum: true),
           _box("DESCRIPTION", descController, hint: "Short notes..."),
         ]),
-        const SizedBox(height: 25),
+        const SizedBox(height: 20),
         Align(
           alignment: Alignment.centerRight,
           child: SizedBox(width: isMobile ? double.infinity : 180, height: 45, child: _buildSaveButton()),
@@ -367,7 +411,6 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
     return Row(crossAxisAlignment: CrossAxisAlignment.end, children: children.map((e) => Expanded(child: Padding(padding: const EdgeInsets.only(right: 12), child: e))).toList());
   }
 
-  // --- MODERN IMAGE PICKER WITH REMOVE OPTION ---
   Widget _buildLargeImagePicker() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -379,7 +422,8 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
             InkWell(
               onTap: _pickFile,
               child: Container(
-                width: 120, height: 120,
+                width: 120,
+                height: 120,
                 decoration: BoxDecoration(color: bgLight, borderRadius: BorderRadius.circular(12), border: Border.all(color: borderCol, width: 1.5)),
                 child: attachments_uploaded.isEmpty
                     ? const Icon(Icons.add_a_photo_outlined, size: 32, color: Colors.grey)
@@ -388,7 +432,8 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
             ),
             if (attachments_uploaded.isNotEmpty)
               Positioned(
-                top: 5, right: 5,
+                top: 5,
+                right: 5,
                 child: InkWell(
                   onTap: () => setState(() => attachments_uploaded.clear()),
                   child: Container(
@@ -404,45 +449,141 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
     );
   }
 
-  // --- SCROLLABLE LIST WITH FIXED HEIGHT ---
-  Widget _buildScrollableList(List sweets, bool loading, bool isMobile) {
+  // --- DEFAULT GRID VIEW ---
+  Widget _buildGridView(List sweets, bool loading, bool isMobile, bool isTab) {
+    int crossCount = isMobile ? 1 : (isTab ? 2 : 3);
+
     return Container(
-      height: 400, // Height thodi choti kar di hai as requested
-      clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: borderCol)
-      ),
+      constraints: const BoxConstraints(minHeight: 300),
       child: Column(
         children: [
-          // --- TABLE HEADER ---
+          if (loading) const LinearProgressIndicator(minHeight: 2, color: accentGold),
+          sweets.isEmpty && !loading
+              ? Container(
+            height: 250,
+            alignment: Alignment.center,
+            child: Text("No items found", style: TextStyle(color: Colors.grey[400])),
+          )
+              : GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: sweets.length,
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: crossCount,
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
+              mainAxisExtent: 145,
+            ),
+            itemBuilder: (context, index) {
+              final item = sweets[index];
+              return Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: borderCol),
+                  boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 8)],
+                ),
+                padding: const EdgeInsets.all(12),
+                child: Row(
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                        if (item.image_url != null && item.image_url.toString().isNotEmpty) {
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            _showImageDialog(item.image_url);
+                          });
+                        }
+                      },
+                      child: Hero(
+                        tag: "img_${item.row_id}_$index",
+                        child: _tableImg(item.image_url, size: 80),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  item.sweet_name ?? "-",
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: primaryDark),
+                                ),
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(color: const Color(0xffFEF3C7), borderRadius: BorderRadius.circular(4)),
+                                child: Text("${item.shelf_life_days ?? '0'} D", style: const TextStyle(fontSize: 10, color: Color(0xffB45309), fontWeight: FontWeight.bold)),
+                              ),
+                            ],
+                          ),
+                          if (item.hindi_sweets_name != null && item.hindi_sweets_name.toString().isNotEmpty)
+                          Text(item.hindi_sweets_name.toString(), style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                          Wrap(
+                            spacing: 4,
+                            children: [
+                              _badge(item.department_name ?? "-", const Color(0xff2563EB), const Color(0xffEFF6FF)),
+                              _badge(item.category_name ?? "-", const Color(0xff475569), const Color(0xffF1F5F9)),
+                            ],
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text("₹${item.price ?? '0'}", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: successGreen)),
+                              Text("Unit: ${item.unit ?? 'KG'}", style: const TextStyle(fontSize: 11, color: Colors.blueGrey)),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _badge(String text, Color textCol, Color bgCol) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(color: bgCol, borderRadius: BorderRadius.circular(4)),
+      child: Text(text, style: TextStyle(fontSize: 10, color: textCol, fontWeight: FontWeight.w600)),
+    );
+  }
+
+  // --- LIST VIEW ---
+  Widget _buildScrollableList(List sweets, bool loading, bool isMobile) {
+    return Container(
+      height: 400,
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: borderCol)),
+      child: Column(
+        children: [
           Container(
             padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
             color: bgLight,
             child: Row(
               children: [
-                // Expanded(flex: 1, child: Text("IMG", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.blueGrey))),
-                SizedBox(
-                  width: 50,
-                  child: Text("IMG", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.blueGrey)),
-                ),
-                Container(width: 60),
-                Expanded(flex: 3, child: Text("ITEM NAME", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.blueGrey))),
-                // Expanded(flex: 2, child: Text("SHOP", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.blueGrey))),
-                Expanded(flex: 2, child: Text("DEPT", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.blueGrey))),
-                Expanded(flex: 2, child: Text("CATEGORY", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.blueGrey))),
-                Expanded(flex: 2, child: Text("SUPPLIER", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.blueGrey))),
-                // Expanded(flex: 2, child: Text("COUNTER", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.blueGrey))),
-                // Expanded(flex: 1, child: Text("PRICE", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.blueGrey))),
-                Expanded(flex: 1, child: Text("S.LIFE", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.blueGrey))),
+                const SizedBox(width: 50, child: Text("IMG", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.blueGrey))),
+                const SizedBox(width: 20),
+                const Expanded(flex: 3, child: Text("ITEM NAME", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.blueGrey))),
+                const Expanded(flex: 2, child: Text("DEPARTMENT", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.blueGrey))),
+                const Expanded(flex: 2, child: Text("CATEGORY", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.blueGrey))),
+                const Expanded(flex: 2, child: Text("SUPPLIER", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.blueGrey))),
+                const Expanded(flex: 1, child: Text("PRICE", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.blueGrey))),
+                const Expanded(flex: 1, child: Text("S.LIFE", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.blueGrey))),
               ],
             ),
           ),
-
           if (loading) const LinearProgressIndicator(minHeight: 2, color: accentGold),
-
-          // --- TABLE BODY ---
           Expanded(
             child: sweets.isEmpty && !loading
                 ? Center(child: Text("No items found", style: TextStyle(color: Colors.grey[400])))
@@ -455,43 +596,38 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
                   padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 20),
                   child: Row(
                     children: [
-                      // 1. Image Column with Click functionality
-                      // Expanded(
-                      //   flex: 1,
-                      //   child: GestureDetector(
-                      //     onTap: () {
-                      //       if(item.image_url != null && item.image_url != "") {
-                      //         _showImageDialog(item.image_url);
-                      //       }
-                      //     },
-                      //     child: Hero(
-                      //       tag: "img_${item.row_id}", // Animation ke liye
-                      //       child: _tableImg(item.image_url),
-                      //     ),
-                      //   ),
-                      // ),
                       SizedBox(
-                        width: 50, // Fixed cell width for Image Column
+                        width: 50,
                         child: GestureDetector(
                           onTap: () {
                             if (item.image_url != null && item.image_url != "") {
-                              _showImageDialog(item.image_url);
+                              WidgetsBinding.instance.addPostFrameCallback((_) {
+                                _showImageDialog(item.image_url);
+                              });
                             }
                           },
                           child: Hero(
-                            tag: "img_${item.row_id}",
-                            child: _tableImg(item.image_url),
+                            tag: "img_list_${item.row_id}_$i",
+                            child: _tableImg(item.image_url, size: 42),
                           ),
                         ),
                       ),
-                      Container(width: 60),
-                      Expanded(flex: 3, child: Text(item.sweet_name ?? "-", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: primaryDark))),
-                      // Expanded(flex: 2, child: Text(item.shop_name ?? "-", style: const TextStyle(fontSize: 12, color: Colors.blueGrey))),
+                      const SizedBox(width: 20),
+                      Expanded(
+                        flex: 3,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(item.sweet_name ?? "-", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: primaryDark)),
+                            if (item.hindi_sweets_name != null && item.hindi_sweets_name.toString().isNotEmpty)
+                              Text(item.hindi_sweets_name.toString(), style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                          ],
+                        ),
+                      ),
                       Expanded(flex: 2, child: Text(item.department_name ?? "-", style: const TextStyle(fontSize: 12, color: Colors.blueGrey))),
                       Expanded(flex: 2, child: Text(item.category_name ?? "-", style: const TextStyle(fontSize: 12))),
                       Expanded(flex: 2, child: Text(item.supplier_name ?? "-", style: const TextStyle(fontSize: 12, color: Colors.blueGrey))),
-                      // Expanded(flex: 2, child: Text(item.counter_name ?? "-", style: const TextStyle(fontSize: 12, color: Colors.blueGrey))),
-                      // Expanded(flex: 1, child: Text("₹${item.price}", style: const TextStyle(fontWeight: FontWeight.bold, color: successGreen))),
+                      Expanded(flex: 1, child: Text("₹${item.price ?? '0'}", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: successGreen))),
                       Expanded(flex: 1, child: Text("${item.shelf_life_days ?? '0'} D", style: const TextStyle(fontSize: 12))),
                     ],
                   ),
@@ -504,13 +640,11 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
     );
   }
 
-// Image Thumbnail Helper
-  Widget _tableImg(String? path) {
+  Widget _tableImg(String? path, {double size = 42}) {
     final bool hasImage = path != null && path.trim().isNotEmpty;
-
     return Container(
-      width: 42,
-      height: 42,
+      width: size,
+      height: size,
       decoration: BoxDecoration(
         color: const Color(0xffF8FAFC),
         borderRadius: BorderRadius.circular(8),
@@ -521,103 +655,39 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
         child: hasImage
             ? Image.network(
           "$serverUrlMedia$path",
-          fit: BoxFit.cover, // Perfectly crops image into 1:1 ratio
-          loadingBuilder: (context, child, loadingProgress) {
-            if (loadingProgress == null) return child;
-            return Center(
-              child: SizedBox(
-                width: 14,
-                height: 14,
-                child: CircularProgressIndicator(
-                  strokeWidth: 1.5,
-                  color: Colors.grey.shade400,
-                ),
-              ),
-            );
-          },
-          errorBuilder: (c, e, s) => Container(
-            color: const Color(0xffF1F5F9),
-            child: const Icon(
-              Icons.image_not_supported_outlined,
-              size: 18,
-              color: Color(0xff94A3B8),
-            ),
-          ),
+          fit: BoxFit.cover,
+          errorBuilder: (c, e, s) => const Icon(Icons.fastfood_outlined, size: 18, color: Color(0xff94A3B8)),
         )
-            : Container(
-          color: const Color(0xffF1F5F9),
-          child: const Icon(
-            Icons.fastfood_outlined,
-            size: 18,
-            color: Color(0xff94A3B8),
-          ),
-        ),
+            : const Icon(Icons.fastfood_outlined, size: 18, color: Color(0xff94A3B8)),
       ),
     );
   }
 
-// --- MST DIALOG TO SHOW FULL IMAGE ---
   void _showImageDialog(String path) {
     showDialog(
       context: context,
       barrierDismissible: true,
       builder: (context) => Dialog(
         backgroundColor: Colors.transparent,
-        insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
         child: Stack(
           alignment: Alignment.center,
           children: [
-            // Background Click to Close
-            GestureDetector(
-              onTap: () => Navigator.pop(context),
-              child: Container(color: Colors.transparent),
-            ),
-
-            // Main Content Box
+            GestureDetector(onTap: () => Navigator.pop(context), child: Container(color: Colors.transparent)),
             Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Flexible container to prevent bottom overflow on smaller screens
                 Flexible(
                   child: Container(
-                    constraints: BoxConstraints(
-                      maxHeight: MediaQuery.of(context).size.height * 0.75, // Max 75% height of screen
-                      maxWidth: 600, // Max width standard
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(15),
-                      boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 20)],
-                    ),
+                    constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.75, maxWidth: 600),
+                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15)),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(15),
-                      child: InteractiveViewer( // Pinch to zoom feature added
-                        child: Image.network(
-                          "$serverUrlMedia$path",
-                          fit: BoxFit.contain,
-                          loadingBuilder: (context, child, progress) => progress == null
-                              ? child
-                              : const Padding(
-                            padding: EdgeInsets.all(50),
-                            child: CircularProgressIndicator(),
-                          ),
-                          errorBuilder: (context, error, stackTrace) => const Padding(
-                            padding: EdgeInsets.all(40),
-                            child: Icon(Icons.broken_image, size: 50, color: Colors.grey),
-                          ),
-                        ),
-                      ),
+                      child: InteractiveViewer(child: Image.network("$serverUrlMedia$path", fit: BoxFit.contain)),
                     ),
                   ),
                 ),
                 const SizedBox(height: 12),
-
-                // Close Button below image
-                IconButton(
-                  onPressed: () => Navigator.pop(context),
-                  icon: const Icon(Icons.cancel, color: Colors.white, size: 38),
-                  tooltip: "Close",
-                ),
+                IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.cancel, color: Colors.white, size: 38)),
               ],
             ),
           ],
@@ -625,16 +695,6 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
       ),
     );
   }
-
-  // Widget _tableImg(String? path) {
-  //   return Container(
-  //     width: 40, height: 40,
-  //     decoration: BoxDecoration(color: bgLight, borderRadius: BorderRadius.circular(6)),
-  //     child: (path != null && path.isNotEmpty)
-  //         ? ClipRRect(borderRadius: BorderRadius.circular(6), child: Image.network("$serverUrlMedia$path", fit: BoxFit.cover))
-  //         : const Icon(Icons.fastfood, size: 18, color: Colors.grey),
-  //   );
-  // }
 
   Widget _box(String label, TextEditingController ctrl, {bool isNum = false, String? hint}) {
     return Column(
@@ -648,7 +708,6 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
             hintText: hint ?? label.toLowerCase(),
             controller: ctrl,
             keyboardType: isNum ? TextInputType.number : TextInputType.text,
-            // STRICT VALIDATION: No spaces at start
             inputFormatters: [
               FilteringTextInputFormatter.deny(RegExp(r'^\s+')),
               if (isNum) FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
@@ -659,28 +718,11 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
     );
   }
 
-  // Widget _commonDropdown(String label, List items, String Function(dynamic) itemLabel, Function(dynamic) onSelected) {
-  //   return Column(
-  //     crossAxisAlignment: CrossAxisAlignment.start,
-  //     children: [
-  //       Text(label, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: Colors.blueGrey)),
-  //       const SizedBox(height: 6),
-  //       SizedBox(
-  //         height: 40,
-  //         child: CustomDropdownSearch<dynamic>(
-  //           items: items,
-  //           itemLabelBuilder: itemLabel,
-  //           compareFn: (i, s) => i.row_id.toString() == s.row_id.toString(),
-  //           onChanged: (val) => setState(() => onSelected(val)),
-  //           hintText: "Select",
-  //         ),
-  //       ),
-  //     ],
-  //   );
-  // }
-
-
-  Widget _commonDropdown({required String label,required List items,required String Function(dynamic) itemLabel, required Function(dynamic) onSelected,
+  Widget _commonDropdown({
+    required String label,
+    required List items,
+    required String Function(dynamic) itemLabel,
+    required Function(dynamic) onSelected,
     dynamic selectedItem,
   }) {
     return Column(
@@ -703,10 +745,6 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
     );
   }
 
-
-
-
-
   Widget _simpleDropdown(String label, List<String> items, String? currentValue, Function(String?) onSel) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -717,43 +755,31 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
           height: 40,
           padding: const EdgeInsets.only(left: 12, right: 4),
           decoration: BoxDecoration(
-            color: Colors.white, // Ek dum white background
+            color: Colors.white,
             borderRadius: BorderRadius.circular(4),
             border: Border.all(color: Colors.grey.shade200),
             boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4))],
           ),
-          child: Row(
-            children: [
-              Expanded(
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton<String>(
-                    dropdownColor: Colors.white,
-                    menuMaxHeight: 250,
-                    isExpanded: true,
-                    value: currentValue,
-                    icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 20),
-                    hint: const Text("Select Type", style: TextStyle(fontSize: 12, color: Colors.grey)),
-                    items: items.map((e) => DropdownMenuItem(
-                        value: e,
-                        child: Text(e, style: const TextStyle(fontSize: 12, color: Color(0xff1A2B4C)))
-                    )).toList(),
-                    onChanged: (v) => onSel(v),
-                  ),
-                ),
-              ),
-              // Agar value selected hai toh "Clear" button dikhao
-              // if (currentValue != null)
-              //   IconButton(
-              //     icon: const Icon(Icons.cancel, size: 18, color: Colors.grey),
-              //     onPressed: () => onSel(null), // Unselect logic
-              //   ),
-            ],
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
+              dropdownColor: Colors.white,
+              menuMaxHeight: 250,
+              isExpanded: true,
+              value: currentValue,
+              icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 20),
+              hint: const Text("Select", style: TextStyle(fontSize: 12, color: Colors.grey)),
+              items: items
+                  .map((e) => DropdownMenuItem(
+                  value: e,
+                  child: Text(e, style: const TextStyle(fontSize: 12, color: Color(0xff1A2B4C)))))
+                  .toList(),
+              onChanged: (v) => onSel(v),
+            ),
           ),
         ),
       ],
     );
   }
-
 
   Widget _buildSaveButton() {
     return ElevatedButton(
@@ -790,7 +816,9 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
       var data = res['rsp']['data']?['filesInfo'];
       if (data != null) {
         attachments_uploaded.clear();
-        for (var e in data) { attachments_uploaded.add({"foPa": e['foPa'].toString()}); }
+        for (var e in data) {
+          attachments_uploaded.add({"foPa": e['foPa'].toString()});
+        }
         setState(() {});
       }
     }
