@@ -415,7 +415,7 @@ class ApiController {
   static fetchInventory({context,params}) async{
     var token = await getloggedinUserToken();
     var res = await ApiService().fetchInventory(param: params,token: token);
-    //print("fetchInventory response:-----$res");
+    print("fetchInventory response:-----$res");
     List<InventoryModel> data = [];
     if (res != null && res['status'] == 0) {
       for (var i = 0; i < res['data'].length; i++) {

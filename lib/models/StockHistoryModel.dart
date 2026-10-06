@@ -12,6 +12,7 @@ class StockHistoryModel {
   var unit;
   var counter_name;
   var shop_id;
+  var basic_quantity_with_unit;
 
   StockHistoryModel({
     this.transaction_id,
@@ -27,6 +28,7 @@ class StockHistoryModel {
     this.unit,
     this.counter_name,
     this.shop_id,
+    this.basic_quantity_with_unit,
   });
 
   // --- FROM JSON ---
@@ -45,6 +47,7 @@ class StockHistoryModel {
       unit: json['unit'],
       counter_name: json['counter_name'],
       shop_id: json['shop_id'],
+      basic_quantity_with_unit: json['basic_quantity_with_unit'],
     );
   }
 
@@ -64,6 +67,7 @@ class StockHistoryModel {
       'unit': unit,
       'counter_name': counter_name,
       'shop_id': shop_id,
+      'basic_quantity_with_unit': basic_quantity_with_unit,
     };
   }
 }

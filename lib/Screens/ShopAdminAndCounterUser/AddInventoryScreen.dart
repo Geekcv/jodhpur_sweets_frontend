@@ -459,13 +459,14 @@ class _AddInventoryScreenState extends ConsumerState<AddInventoryScreen> {
               children: [
                 _hCell("SR.", 1),
                 _hCell("ITEM", 3),
-                _hCell("QTY", 2, isCenter: true),
+                _hCell("QTY", 2, isCenter: false),
+                _hCell("ACTUAL QTY", 2, isCenter: false),
                 if (!isMobile) ...[
-                  _hCell("MIN", 1, isCenter: true), // Added Min
-                  _hCell("MAX", 1, isCenter: true), // Added Max
+                  _hCell("MIN", 1, isCenter: false), // Added Min
+                  _hCell("MAX", 1, isCenter: false), // Added Max
                   _hCell("COUNTER", 3),
                 ],
-                _hCell("EXPIRY", 2, isCenter: true),
+                _hCell("EXPIRY", 2, isCenter: false),
               ],
             ),
           ),
@@ -510,7 +511,8 @@ class _AddInventoryScreenState extends ConsumerState<AddInventoryScreen> {
                     // 3. CURRENT QTY
                     Expanded(
                         flex: 2,
-                        child: Center(
+                        child: Align(
+                          alignment: Alignment.centerLeft,
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
@@ -523,23 +525,37 @@ class _AddInventoryScreenState extends ConsumerState<AddInventoryScreen> {
                         )
                     ),
 
+                    Expanded(
+                        flex: 2,
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: isLowStock ? Colors.red.withOpacity(0.1) : Colors.green.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text("${item.basic_quantity_with_unit}",
+                                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: isLowStock ? Colors.red : Colors.green)),
+                          ),
+                        )
+                    ),
+
                     // 4. MIN/MAX & COUNTER (Desktop Only)
                     if (!isMobile) ...[
-                      Expanded(flex: 1, child: Center(child: Text("${item.minStock ?? 0}", style: const TextStyle(fontSize: 11)))),
-                      Expanded(flex: 1, child: Center(child: Text("${item.maxStock ?? 0}", style: const TextStyle(fontSize: 11)))),
+                      Expanded(flex: 1, child: Text("${item.minStock ?? 0}", style: const TextStyle(fontSize: 11))),
+                      Expanded(flex: 1, child: Text("${item.maxStock ?? 0}", style: const TextStyle(fontSize: 11))),
                       Expanded(flex: 3, child: Text(item.counterName ?? "-", style: const TextStyle(fontSize: 11, color: Colors.blueGrey))),
                     ],
 
                     // 5. EXPIRY
                     Expanded(
                         flex: 2,
-                        child: Center(
-                          child: Text(
-                            item.expiryDate != null
-                                ? DateFormat('dd MMM yy').format(DateTime.parse(item.expiryDate.toString()))
-                                : "-",
-                            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: primaryDark),
-                          ),
+                        child: Text(
+                          item.expiryDate != null
+                              ? DateFormat('dd MMM yy').format(DateTime.parse(item.expiryDate.toString()))
+                              : "-",
+                          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: primaryDark),
                         )
                     ),
                   ],

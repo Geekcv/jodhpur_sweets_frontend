@@ -14,6 +14,7 @@ class InventoryModel {
   var location;
   var shopId;
   var crOn;
+  var basic_quantity_with_unit;
 
   InventoryModel({
     this.rowId,
@@ -31,6 +32,7 @@ class InventoryModel {
     this.location,
     this.shopId,
     this.crOn,
+    this.basic_quantity_with_unit,
   });
 
   // From JSON
@@ -50,6 +52,7 @@ class InventoryModel {
     location = json['location'];
     shopId = json['shop_id'];
     crOn = json['cr_on'];
+    basic_quantity_with_unit = json['basic_quantity_with_unit'];
   }
 
   // To JSON
@@ -70,6 +73,7 @@ class InventoryModel {
     data['location'] = location;
     data['shop_id'] = shopId;
     data['cr_on'] = crOn;
+    data['basic_quantity_with_unit'] = basic_quantity_with_unit;
     return data;
   }
 }

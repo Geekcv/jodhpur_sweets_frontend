@@ -507,14 +507,31 @@ class _MainDashboardState extends ConsumerState<MainDashboard> with TickerProvid
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                  _titles[_selectedIndex] ?? "Overview",
-                  style: const TextStyle(
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Sirf jab selectedIndex Master Console ki screens (4, 5, 6, 7, 8, 9, 19) par ho tabhi arrow dikhega
+                  // if (const [4, 5, 6, 7, 8, 9, 19].contains(_selectedIndex)) ...[
+                  //   IconButton(
+                  //     icon: const Icon(Icons.arrow_back_rounded, color: Color(0xff1E293B), size: 20),
+                  //     tooltip: "Back to Dashboard",
+                  //     onPressed: () {
+                  //       setState(() {
+                  //         _selectedIndex = 0; // Wapas Dashboard (index 0) par le aayega
+                  //       });
+                  //     },
+                  //   ),
+                  //   const SizedBox(width: 4),
+                  // ],
+                  Text(
+                    _titles[_selectedIndex] ?? "Overview",
+                    style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w800,
                       color: Color(0xff1E293B),
-                      // letterSpacing: -0.5
-                  )
+                    ),
+                  ),
+                ],
               ),
               // Text(
               //   formattedDate,

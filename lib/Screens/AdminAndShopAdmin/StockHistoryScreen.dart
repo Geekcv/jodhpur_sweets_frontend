@@ -128,12 +128,13 @@ class _StockHistoryScreenState extends ConsumerState<StockHistoryScreen> {
             child: Row(
               children: [
                 _hCell("SR.", 1),
-                _hCell("SHOP NAME", 4),
-                _hCell("ITEM NAME", 4),
-                _hCell("TYPE", 2, isCenter: true),
-                _hCell("QTY", 2, isCenter: true),
-                if (!isMobile) _hCell("COUNTER", 3),
-                _hCell("DATE", 3, isCenter: true),
+                _hCell("SHOP NAME", 2),
+                _hCell("ITEM NAME", 3),
+                _hCell("TYPE", 2, isCenter: false),
+                _hCell("QTY", 2, isCenter: false),
+                _hCell("Actual Qty", 2, isCenter: false),
+                if (!isMobile) _hCell("COUNTER", 2),
+                _hCell("DATE", 2, isCenter: false),
               ],
             ),
           ),
@@ -164,11 +165,12 @@ class _StockHistoryScreenState extends ConsumerState<StockHistoryScreen> {
       child: Row(
         children: [
           Expanded(flex: 1, child: Text("${index + 1}.", style: const TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.w500))),
-          Expanded(flex: 4, child: Text(item.shop_name ?? "-", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xff334155)))),
-          Expanded(flex: 4, child: Text(item.sweet_name ?? "-", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xff334155)))),
+          Expanded(flex: 2, child: Text(item.shop_name ?? "-", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xff334155)))),
+          Expanded(flex: 3, child: Text(item.sweet_name ?? "-", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xff334155)))),
           Expanded(
             flex: 2,
-            child: Center(
+            child: Align(
+              alignment: Alignment.centerLeft,
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
                 decoration: BoxDecoration(color: typeColor.withOpacity(0.1), borderRadius: BorderRadius.circular(6)),
@@ -186,9 +188,10 @@ class _StockHistoryScreenState extends ConsumerState<StockHistoryScreen> {
               ),
             ),
           ),
-          Expanded(flex: 2, child: Center(child: Text("${item.quantity} ${item.unit ?? ''}", style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)))),
-          if (!isMobile) Expanded(flex: 3, child: Text(item.counter_name ?? "-", style: const TextStyle(fontSize: 12, color: Colors.blueGrey))),
-          Expanded(flex: 3, child: Center(child: Text(_formatDate(item.cr_on), style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600)))),
+          Expanded(flex: 2, child: Text("${item.quantity} ${item.unit ?? ''}", style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13))),
+          Expanded(flex: 2, child: Text("${item.basic_quantity_with_unit}", style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13))),
+          if (!isMobile) Expanded(flex: 2, child: Text(item.counter_name ?? "-", style: const TextStyle(fontSize: 12, color: Colors.blueGrey))),
+          Expanded(flex: 2, child: Text(_formatDate(item.cr_on), style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600))),
         ],
       ),
     );
