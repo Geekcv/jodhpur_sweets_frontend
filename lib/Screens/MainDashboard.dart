@@ -474,7 +474,9 @@ class _MainDashboardState extends ConsumerState<MainDashboard> with TickerProvid
       child: Row(
         children: [
           // 1. Sidebar Toggle Button
-          Material(
+          const [4, 5, 6, 7, 8, 9, 19].contains(_selectedIndex)
+              ? const SizedBox.shrink()
+              : Material(
             color: Colors.transparent,
             child: InkWell(
               borderRadius: BorderRadius.circular(10),
@@ -511,18 +513,18 @@ class _MainDashboardState extends ConsumerState<MainDashboard> with TickerProvid
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   // Sirf jab selectedIndex Master Console ki screens (4, 5, 6, 7, 8, 9, 19) par ho tabhi arrow dikhega
-                  // if (const [4, 5, 6, 7, 8, 9, 19].contains(_selectedIndex)) ...[
-                  //   IconButton(
-                  //     icon: const Icon(Icons.arrow_back_rounded, color: Color(0xff1E293B), size: 20),
-                  //     tooltip: "Back to Dashboard",
-                  //     onPressed: () {
-                  //       setState(() {
-                  //         _selectedIndex = 0; // Wapas Dashboard (index 0) par le aayega
-                  //       });
-                  //     },
-                  //   ),
-                  //   const SizedBox(width: 4),
-                  // ],
+                  if (const [4, 5, 6, 7, 8, 9, 19].contains(_selectedIndex)) ...[
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back_rounded, color: Color(0xff1E293B), size: 20),
+                      tooltip: "Back to Dashboard",
+                      onPressed: () {
+                        setState(() {
+                          _selectedIndex = 0; // Wapas Dashboard (index 0) par le aayega
+                        });
+                      },
+                    ),
+                    const SizedBox(width: 4),
+                  ],
                   Text(
                     _titles[_selectedIndex] ?? "Overview",
                     style: const TextStyle(

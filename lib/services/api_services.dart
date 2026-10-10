@@ -26,10 +26,14 @@ class ApiService extends ChangeNotifier {
 
 
   addShop({token, param}) async {
+
+    // print("row id:-------------------${param['row_id']}");
     var data = {
       "fn": "common_fn",
       "se": "cr_shop",
       "data": {
+        if(param['row_id']!=null)
+        "row_id": param['row_id'],
         "shop_name": param['shop_name'],
         "address": param['address'],
         "city": param['city'],
@@ -262,6 +266,8 @@ class ApiService extends ChangeNotifier {
       "fn": "common_fn",
       "se": "cr_sweets",
       "data": {
+        if (param['row_id'] != null)
+          "row_id": param['row_id'],
         "category_id": param['category_id'].toString(),
         "department_id": param['department_id'].toString(),
         "supplier_id": param['supplier_id'].toString(),

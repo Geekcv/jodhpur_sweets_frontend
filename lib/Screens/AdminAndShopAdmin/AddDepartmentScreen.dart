@@ -216,7 +216,7 @@ class _AddDepartmentScreenState extends ConsumerState<AddDepartmentScreen> {
 
   Widget _buildResponsiveHeader(BuildContext context, List<FetchShopModel> shops) {
     return LayoutBuilder(builder: (context, constraints) {
-      bool isMobile = constraints.maxWidth < 950; // Increased breakpoint for better spacing
+      bool isMobile = constraints.maxWidth < 950;
 
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -229,7 +229,6 @@ class _AddDepartmentScreenState extends ConsumerState<AddDepartmentScreen> {
               )),
           const SizedBox(height: 30),
 
-          // Form and Button Section
           Row(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
@@ -255,8 +254,7 @@ class _AddDepartmentScreenState extends ConsumerState<AddDepartmentScreen> {
       child: Wrap(
         spacing: 12,
         runSpacing: 12,
-        // alignment: isMobile ? WrapAlignment.start : WrapAlignment.end, // Push to right on Desktop
-        alignment: WrapAlignment.start, // Push to right on Desktop
+        alignment: WrapAlignment.start,
         crossAxisAlignment: WrapCrossAlignment.end,
         children: [
           // if(LoginUserDetails.isAdmin)
@@ -264,13 +262,14 @@ class _AddDepartmentScreenState extends ConsumerState<AddDepartmentScreen> {
           _compactField("NAME *", nameController, "Department Name", 200),
           _compactField("DESCRIPTION", descController, "Short description...", 350),
 
-          // Save Button
+          // Save / Update Button
           Padding(
-            padding: const EdgeInsets.only(bottom: 2), // Align with textfields
+            padding: const EdgeInsets.only(bottom: 2),
             child: ElevatedButton.icon(
               onPressed: isLoading ? null : handleDepartmentSubmit,
               style: ElevatedButton.styleFrom(
-                backgroundColor: successGreen,
+                // --- EDIT: Dynamic button color for edit mode ---
+                backgroundColor: editingRowId != null ? Colors.blue : successGreen,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
@@ -278,8 +277,10 @@ class _AddDepartmentScreenState extends ConsumerState<AddDepartmentScreen> {
               ),
               icon: isLoading
                   ? const SizedBox(width: 15, height: 15, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                  : const Icon(Icons.save, size: 16),
-              label: const Text("SAVE", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+              // --- EDIT: Dynamic icon for edit mode ---
+                  : Icon(editingRowId != null ? Icons.edit_outlined : Icons.save, size: 16),
+              // --- EDIT: Dynamic label for edit mode ---
+              label: Text(editingRowId != null ? "UPDATE" : "SAVE", style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
             ),
           ),
         ],
@@ -305,7 +306,7 @@ class _AddDepartmentScreenState extends ConsumerState<AddDepartmentScreen> {
             style: const TextStyle(fontSize: 13),
             decoration: InputDecoration(
               hintText: hint,
-              hintStyle: TextStyle(fontSize: 12,color: Colors.grey),
+              hintStyle: const TextStyle(fontSize: 12,color: Colors.grey),
               isDense: true,
               fillColor: Colors.white,
               filled: true,
@@ -326,13 +327,13 @@ class _AddDepartmentScreenState extends ConsumerState<AddDepartmentScreen> {
       color: tableHeaderBg,
       child: Row(
         children: [
-          SizedBox(width: 40, child: Text("S.N.", style: _hStyle)),
-          // Expanded(flex: 3, child: Text("SHOP NAME", style: _hStyle)),
-          Expanded(flex: 3, child: Text("DEPARTMENT NAME", style: _hStyle)),
-          Expanded(flex: 4, child: Text("DESCRIPTION", style: _hStyle)),
-          Expanded(flex: 2, child: Text("CREATED DATE", style: _hStyle)),
-          // if(LoginUserDetails.isAdmin)
-          // SizedBox(width: 80, child: Text("ACTIONS", textAlign: TextAlign.right, style: _hStyle)),
+          const SizedBox(width: 40, child: Text("S.N.", style: _hStyle)),
+          const Expanded(flex: 3, child: Text("DEPARTMENT NAME", style: _hStyle)),
+          const Expanded(flex: 4, child: Text("DESCRIPTION", style: _hStyle)),
+          const Expanded(flex: 2, child: Text("CREATED DATE", style: _hStyle)),
+          // --- EDIT: Enabled ACTIONS header for Admin ---
+          if (LoginUserDetails.isAdmin || LoginUserDetails.role == 'ADMIN')
+            const SizedBox(width: 80, child: Text("ACTIONS", textAlign: TextAlign.right, style: _hStyle)),
         ],
       ),
     );
@@ -346,32 +347,29 @@ class _AddDepartmentScreenState extends ConsumerState<AddDepartmentScreen> {
           SizedBox(width: 40, child: Text(index.toString().padLeft(2, '0'), style: const TextStyle(color: Colors.grey, fontSize: 13))),
           // Expanded(flex: 3, child: Text(dept.shop_name ?? "-", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: primaryDark))),
           Expanded(flex: 3, child: Text(dept.department_name ?? "-", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: primaryDark))),
-        Expanded(flex: 4, child: Text((dept.description != null && dept.description.toString().trim().isNotEmpty) ? dept.description : "-", style: TextStyle(fontSize: 13, color: Colors.grey[700]), maxLines: 1, overflow: TextOverflow.ellipsis)),
+          Expanded(flex: 4, child: Text((dept.description != null && dept.description.toString().trim().isNotEmpty) ? dept.description : "-", style: TextStyle(fontSize: 13, color: Colors.grey[700]), maxLines: 1, overflow: TextOverflow.ellipsis)),
           Expanded(flex: 2, child: Text(formatDate(dept.cr_on.toString()), style: const TextStyle(fontSize: 13, color: Colors.black87))),
 
-          // if(LoginUserDetails.isAdmin)
-          // SizedBox(
-          //   width: 80,
-          //   child: Row(
-          //     mainAxisAlignment: MainAxisAlignment.end,
-          //     children: [
-          //       _actionBtn(Icons.edit_outlined, Colors.blue, () {
-          //         nameController.text = dept.department_name ?? "";
-          //         descController.text = dept.description ?? "";
-          //         if (LoginUserDetails.isAdmin) {
-          //           shop_id = dept.shop_id;
-          //         }
-          //         setState(() {
-          //           editingRowId = dept.row_id;
-          //         });
-          //       }),
-          //       // const SizedBox(width: 8),
-          //       // _actionBtn(Icons.delete_outline, Colors.redAccent, () {
-          //       //   // TODO: Map Delete Logic
-          //       // }),
-          //     ],
-          //   ),
-          // ),
+          // --- EDIT: Enabled Admin Access Action Button ---
+          if (LoginUserDetails.isAdmin || LoginUserDetails.role == 'ADMIN')
+            SizedBox(
+              width: 80,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  _actionBtn(Icons.edit_outlined, Colors.blue, () {
+                    nameController.text = dept.department_name ?? "";
+                    descController.text = dept.description ?? "";
+                    if (LoginUserDetails.isAdmin) {
+                      shop_id = dept.shop_id;
+                    }
+                    setState(() {
+                      editingRowId = dept.row_id;
+                    });
+                  }),
+                ],
+              ),
+            ),
         ],
       ),
     );

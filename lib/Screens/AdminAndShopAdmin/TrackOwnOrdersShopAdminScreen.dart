@@ -829,8 +829,8 @@ class _TrackOwnOrdersShopAdminScreenState
                   fontSize: 16,
                   fontWeight: FontWeight.w700)),
           const SizedBox(height: 4),
-          const Text("Try adjusting search terms or status filters.",
-              style: TextStyle(color: Color(0xff94A3B8), fontSize: 13)),
+          // const Text("Try adjusting search terms or status filters.",
+          //     style: TextStyle(color: Color(0xff94A3B8), fontSize: 13)),
         ],
       ),
     );

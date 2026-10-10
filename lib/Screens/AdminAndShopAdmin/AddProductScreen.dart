@@ -207,13 +207,13 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
                       child: Row(
                         children: [
                           IconButton(
-                            icon: Icon(Icons.grid_view_rounded, size: 20, color: isGridView ? accentGold : Colors.grey),
+                            icon: Icon(Icons.grid_view_rounded, size: 20, color: isGridView ? Colors.blue : Colors.grey),
                             onPressed: () => setState(() => isGridView = true),
                             tooltip: "Grid View",
                           ),
                           Container(width: 1, height: 20, color: borderCol),
                           IconButton(
-                            icon: Icon(Icons.format_list_bulleted_rounded, size: 20, color: !isGridView ? accentGold : Colors.grey),
+                            icon: Icon(Icons.format_list_bulleted_rounded, size: 20, color: !isGridView ? Colors.blue : Colors.grey),
                             onPressed: () => setState(() => isGridView = false),
                             tooltip: "List View",
                           ),

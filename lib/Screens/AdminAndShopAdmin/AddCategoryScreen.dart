@@ -186,7 +186,7 @@ class _AddCategoryScreenState extends ConsumerState<AddCategoryScreen> {
               // 2. Category Name (Using CustomTextInput)
               _box(isWide ? 250 : double.infinity, "CATEGORY NAME *", catNameController),
 
-              // 3. Save Button
+              // Save / Update Button --- EDIT: Dynamic background color and label for edit mode ---
               Padding(
                 padding: const EdgeInsets.only(bottom: 2),
                 child: SizedBox(
@@ -194,7 +194,7 @@ class _AddCategoryScreenState extends ConsumerState<AddCategoryScreen> {
                   child: ElevatedButton.icon(
                     onPressed: isLoading ? null : _submitCategory,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: successGreen,
+                      backgroundColor: editingRowId != null ? Colors.blue : successGreen,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(horizontal: 25),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
@@ -202,8 +202,8 @@ class _AddCategoryScreenState extends ConsumerState<AddCategoryScreen> {
                     ),
                     icon: isLoading
                         ? const SizedBox(width: 15, height: 15, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                        : const Icon(Icons.save, size: 16),
-                    label: const Text("SAVE", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                        : Icon(editingRowId != null ? Icons.edit_outlined : Icons.save, size: 16),
+                    label: Text(editingRowId != null ? "UPDATE" : "SAVE", style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
                   ),
                 ),
               ),
@@ -322,8 +322,9 @@ class _AddCategoryScreenState extends ConsumerState<AddCategoryScreen> {
           const Expanded(flex: 2, child: Text("DEPARTMENT", style: _hStyle)),
           const Expanded(flex: 3, child: Text("CATEGORY NAME", style: _hStyle)),
           const Expanded(flex: 2, child: Text("CREATED DATE", style: _hStyle)),
-          // if(LoginUserDetails.isAdmin)
-          // const SizedBox(width: 80, child: Text("ACTIONS", textAlign: TextAlign.right, style: _hStyle)),
+          // --- EDIT: Enabled ACTIONS header strictly for Admin ---
+          if (LoginUserDetails.isAdmin || LoginUserDetails.role == 'ADMIN')
+            const SizedBox(width: 80, child: Text("ACTIONS", textAlign: TextAlign.right, style: _hStyle)),
         ],
       ),
     );
@@ -339,28 +340,28 @@ class _AddCategoryScreenState extends ConsumerState<AddCategoryScreen> {
           Expanded(flex: 2, child: Text(cat.department_name ?? "-", style: const TextStyle(fontSize: 14,fontWeight: FontWeight.bold, color: primaryDark))),
           Expanded(flex: 3, child: Text(cat.category_name ?? "-", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: primaryDark))),
           Expanded(flex: 2, child: Text(formatDate(cat.cr_on?.toString()),style: const TextStyle(fontSize: 13, color: Colors.black87))),
-          // if(LoginUserDetails.isAdmin)
-          // SizedBox(
-          //   width: 80,
-          //   child: Row(
-          //     mainAxisAlignment: MainAxisAlignment.end,
-          //     children: [
-          //       _actionBtn(Icons.edit_outlined, Colors.blue, () {
-          //         setState(() {
-          //           editingRowId = cat.row_id;
-          //           catNameController.text = cat.category_name ?? "";
-          //           selectedDeptId = cat.department_id;
-          //
-          //           if (LoginUserDetails.isAdmin) {
-          //             shop_id = cat.shop_id;
-          //           }
-          //         });
-          //       }),
-          //       // const SizedBox(width: 8),
-          //       // _actionBtn(Icons.delete_outline, Colors.redAccent, () {}),
-          //     ],
-          //   ),
-          // ),
+
+          // --- EDIT: Enabled Admin access action button to populate form controllers for editing ---
+          if (LoginUserDetails.isAdmin || LoginUserDetails.role == 'ADMIN')
+            SizedBox(
+              width: 80,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  _actionBtn(Icons.edit_outlined, Colors.blue, () {
+                    setState(() {
+                      editingRowId = cat.row_id;
+                      catNameController.text = cat.category_name ?? "";
+                      selectedDeptId = cat.department_id;
+
+                      if (LoginUserDetails.isAdmin) {
+                        shop_id = cat.shop_id;
+                      }
+                    });
+                  }),
+                ],
+              ),
+            ),
         ],
       ),
     );

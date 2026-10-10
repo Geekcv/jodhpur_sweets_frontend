@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../controllers/api_controller.dart';
 import '../../provider/provider.dart';
 import '../../widgets/TextInputField.dart';
+import '../LoginUserDetails.dart'; // --- EDIT: Imported LoginUserDetails for Admin check ---
 
 
 class AddSupplierScreen extends ConsumerStatefulWidget {
@@ -101,7 +102,6 @@ class _AddSupplierScreenState extends ConsumerState<AddSupplierScreen> {
             _buildQuickAddForm(),
 
             if (showErrors)
-            if (showErrors)
               const Padding(
                 padding: EdgeInsets.only(top: 8, left: 5),
                 child: Text("* All fields are mandatory with valid 10-digit phone",
@@ -165,7 +165,7 @@ class _AddSupplierScreenState extends ConsumerState<AddSupplierScreen> {
               _box(180, "PASSWORD", controllers['password']!, isPass: true),
               _box(350, "FULL ADDRESS", controllers['address']!),
 
-              // SAVE BUTTON
+              // SAVE / UPDATE BUTTON --- EDIT: Dynamic button styling and text for edit mode ---
               Padding(
                 padding: const EdgeInsets.only(bottom: 2),
                 child: SizedBox(
@@ -173,7 +173,7 @@ class _AddSupplierScreenState extends ConsumerState<AddSupplierScreen> {
                   child: ElevatedButton.icon(
                     onPressed: isLoading ? null : _submitSupplier,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: successGreen,
+                      backgroundColor: editingRowId != null ? Colors.blue : successGreen,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(horizontal: 25),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
@@ -181,8 +181,8 @@ class _AddSupplierScreenState extends ConsumerState<AddSupplierScreen> {
                     ),
                     icon: isLoading
                         ? const SizedBox(width: 15, height: 15, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                        : const Icon(Icons.save, size: 16),
-                    label: const Text("SAVE SUPPLIER", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                        : Icon(editingRowId != null ? Icons.edit_outlined : Icons.save, size: 16),
+                    label: Text(editingRowId != null ? "UPDATE SUPPLIER" : "SAVE SUPPLIER", style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
                   ),
                 ),
               ),
@@ -247,14 +247,15 @@ class _AddSupplierScreenState extends ConsumerState<AddSupplierScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
       color: const Color(0xffF8FAFC),
-      child: const Row(
+      child: Row(
         children: [
-          SizedBox(width: 50, child: Text("S.N.", style: _hStyle)),
-          Expanded(flex: 3, child: Text("SUPPLIER NAME", style: _hStyle)),
-          Expanded(flex: 2, child: Text("CONTACT", style: _hStyle)),
-          Expanded(flex: 2, child: Text("PASSWORD", style: _hStyle)),
-          Expanded(flex: 4, child: Text("ADDRESS", style: _hStyle)),
-          // SizedBox(width: 80, child: Text("ACTIONS", textAlign: TextAlign.right, style: _hStyle)),
+          const SizedBox(width: 50, child: Text("S.N.", style: _hStyle)),
+          const Expanded(flex: 3, child: Text("SUPPLIER NAME", style: _hStyle)),
+          const Expanded(flex: 2, child: Text("CONTACT", style: _hStyle)),
+          const Expanded(flex: 2, child: Text("PASSWORD", style: _hStyle)),
+          const Expanded(flex: 4, child: Text("ADDRESS", style: _hStyle)),
+          if (LoginUserDetails.isAdmin || LoginUserDetails.role == 'ADMIN')
+            const SizedBox(width: 80, child: Text("ACTIONS", textAlign: TextAlign.right, style: _hStyle)),
         ],
       ),
     );
@@ -276,29 +277,27 @@ class _AddSupplierScreenState extends ConsumerState<AddSupplierScreen> {
           Expanded(flex: 2, child: Text(s.phone ?? "-", style: const TextStyle(fontSize: 13, color: Colors.black87, fontWeight: FontWeight.w500))),
           Expanded(flex: 2, child: Text(s.password ?? "-", style: const TextStyle(fontSize: 13, color: Colors.black87, fontWeight: FontWeight.w500))),
           Expanded(flex: 4, child: Text(s.address ?? "-", style: const TextStyle(fontSize: 13, color: Colors.black87, fontWeight: FontWeight.w500), maxLines: 1, overflow: TextOverflow.ellipsis)),
-          // SizedBox(
-          //   width: 80,
-          //   child: Row(
-          //     mainAxisAlignment: MainAxisAlignment.end,
-          //     children: [
-          //       _actionBtn(Icons.edit_outlined, Colors.blue, () {
-          //         setState(() {
-          //           editingRowId = s.row_id;
-          //           controllers['name']!.text = s.supplier_name ?? "";
-          //           controllers['phone']!.text = s.phone ?? "";
-          //           controllers['email']!.text = s.email ?? "";
-          //           controllers['address']!.text = s.address ?? "";
-          //           controllers['password']!.text = s. ?? "";
-          //         });
-          //
-          //         // Agar list niche hai toh scroll up karein
-          //         // _scrollController.animateTo(0, duration: const Duration(milliseconds: 500), curve: Curves.easeIn);
-          //       }),
-          //       const SizedBox(width: 8),
-          //       // _actionBtn(Icons.delete_outline, Colors.redAccent, () {}),
-          //     ],
-          //   ),
-          // ),
+
+          // --- EDIT: Enabled Admin access action button to populate form controllers for editing ---
+          if (LoginUserDetails.isAdmin || LoginUserDetails.role == 'ADMIN')
+            SizedBox(
+              width: 80,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  _actionBtn(Icons.edit_outlined, Colors.blue, () {
+                    setState(() {
+                      editingRowId = s.row_id;
+                      controllers['name']!.text = s.supplier_name ?? "";
+                      controllers['phone']!.text = s.phone ?? "";
+                      controllers['email']!.text = s.email ?? "";
+                      controllers['address']!.text = s.address ?? "";
+                      controllers['password']!.text = s.password ?? "";
+                    });
+                  }),
+                ],
+              ),
+            ),
         ],
       ),
     );

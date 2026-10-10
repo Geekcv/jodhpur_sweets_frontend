@@ -21,6 +21,8 @@ class _AddShopScreenState extends ConsumerState<AddShopScreen> {
   bool showErrors = false;
   bool show_password = false;
 
+  String? editingRowId;
+
   static const Color primaryDark = Color(0xff1A2B4C);
   static const Color borderCol = Color(0xffE2E8F0);
   static const Color tableHeaderBg = Color(0xffF8FAFC);
@@ -60,6 +62,7 @@ class _AddShopScreenState extends ConsumerState<AddShopScreen> {
     setState(() => isLoading = true);
 
     final shopData = {
+      if (editingRowId != null) "row_id": editingRowId,
       "shop_name": controllers['shop_name']!.text.trim(),
       "address": controllers['address']!.text.trim(),
       "city": controllers['city']!.text.trim(),
@@ -86,6 +89,7 @@ class _AddShopScreenState extends ConsumerState<AddShopScreen> {
   }
 
   void _clearForm() {
+    editingRowId = null;
     controllers.forEach((key, ctrl) => ctrl.clear());
     setState(() => showErrors = false);
   }
@@ -175,8 +179,8 @@ class _AddShopScreenState extends ConsumerState<AddShopScreen> {
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: crossAxisCount,
                   crossAxisSpacing: 20,
-                  mainAxisSpacing: 10, // Thodi spacing badha di hai readability ke liye
-                  mainAxisExtent: 70, // Label + Input + Error space ke liye 70 safe hai
+                  mainAxisSpacing: 10,
+                  mainAxisExtent: 70,
                 ),
                 children: [
                   _box("SHOP NAME", controllers['shop_name']!),
@@ -190,17 +194,15 @@ class _AddShopScreenState extends ConsumerState<AddShopScreen> {
                   _box("STATE", controllers['state']!),
                   _box("FULL ADDRESS", controllers['address']!),
 
-                  // --- SAVE BUTTON AS A GRID ITEM ---
-                  // Isko Align mein wrap kiya hai taaki height fixed rahe aur parent error na aaye
                   Align(
                     alignment: Alignment.center,
                     child: SizedBox(
                       width: double.infinity,
-                      height: 42, // Consistent height
+                      height: 42,
                       child: ElevatedButton.icon(
                         onPressed: isLoading ? null : _submitShop,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xff108548),
+                          backgroundColor: editingRowId != null ? Colors.blue : const Color(0xff108548),
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                           elevation: 0,
@@ -211,9 +213,9 @@ class _AddShopScreenState extends ConsumerState<AddShopScreen> {
                             height: 18,
                             child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
                         )
-                            : const Icon(Icons.check_circle_outline, size: 18),
+                            : Icon(editingRowId != null ? Icons.edit_outlined : Icons.check_circle_outline, size: 18),
                         label: Text(
-                            isLoading ? "SAVING..." : "SAVE SHOP",
+                            isLoading ? "SAVING..." : (editingRowId != null ? "UPDATE SHOP" : "SAVE SHOP"),
                             style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)
                         ),
                       ),
@@ -301,7 +303,7 @@ class _AddShopScreenState extends ConsumerState<AddShopScreen> {
           Expanded(flex: 2, child: Text("PASSWORD", style: _hStyle)),
           Expanded(flex: 2, child: Text("CITY", style: _hStyle)),
           Expanded(flex: 2, child: Text("GST NO.", style: _hStyle)),
-          // SizedBox(width: 80, child: Text("ACTIONS", textAlign: TextAlign.right, style: _hStyle)),
+          SizedBox(width: 80, child: Text("ACTIONS", textAlign: TextAlign.right, style: _hStyle)),
         ],
       ),
     );
@@ -319,17 +321,29 @@ class _AddShopScreenState extends ConsumerState<AddShopScreen> {
           Expanded(flex: 2, child: Text(shop.password ?? "-", style: const TextStyle(fontSize: 13, color: Colors.black54))),
           Expanded(flex: 2, child: Text(shop.city ?? "-", style: const TextStyle(fontSize: 13, color: Colors.black87))),
           Expanded(flex: 2, child: Text(shop.gst_number ?? "-", style: const TextStyle(fontSize: 12, color: Colors.blueGrey, fontWeight: FontWeight.bold))),
-          // SizedBox(
-          //   width: 80,
-          //   child: Row(
-          //     mainAxisAlignment: MainAxisAlignment.end,
-          //     children: [
-          //       _actionBtn(Icons.edit_outlined, Colors.blue, () {}),
-          //       const SizedBox(width: 8),
-          //       _actionBtn(Icons.delete_outline, Colors.redAccent, () {}),
-          //     ],
-          //   ),
-          // ),
+          SizedBox(
+            width: 80,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                _actionBtn(Icons.edit_outlined, Colors.blue, () {
+                  setState(() {
+                    editingRowId = shop.row_id;
+                    controllers['shop_name']!.text = shop.shop_name ?? '';
+                    controllers['owner_name']!.text = shop.owner_name ?? '';
+                    controllers['password']!.text = shop.password ?? '';
+                    controllers['phone']!.text = shop.phone ?? '';
+                    controllers['email']!.text = shop.email ?? '';
+                    controllers['gst_number']!.text = shop.gst_number ?? '';
+                    controllers['pincode']!.text = shop.pincode ?? '';
+                    controllers['city']!.text = shop.city ?? '';
+                    controllers['state']!.text = shop.state ?? '';
+                    controllers['address']!.text = shop.address ?? '';
+                  });
+                }),
+              ],
+            ),
+          ),
         ],
       ),
     );
